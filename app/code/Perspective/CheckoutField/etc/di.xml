@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Checkout\Block\Checkout\LayoutProcessor">
+        <plugin name="ps_checkout_field" type="Perspective\CheckoutField\Plugin\Block\Checkout\LayoutProcessorPlugin" sortOrder="90"/>
+    </type>
+    <preference for="Perspective\CheckoutField\Api\VatCheckInterface" type="Perspective\CheckoutField\Model\VatCheck"/>
+    <type name="Magento\Checkout\Model\ShippingInformationManagement">
+        <plugin name="ps_add_vat_number_to_quote" type="Perspective\CheckoutField\Plugin\Checkout\Model\ShippingInformationManagementPlugin" sortOrder="5"/>
+    </type>
+    <type name="Magento\Checkout\Model\ShippingInformationManagement">
+        <plugin name="ps_add_vat_number_to_quote_guest" type="Perspective\CheckoutField\Plugin\Checkout\Model\GuestShippingInformationManagementPlugin" sortOrder="10"/>
+    </type>
+</config>
