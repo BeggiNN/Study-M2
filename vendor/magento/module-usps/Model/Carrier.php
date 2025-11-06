@@ -94,13 +94,6 @@ class Carrier extends AbstractCarrierOnline implements \Magento\Shipping\Model\C
     protected $_request = null;
 
     /**
-     * Rate result data
-     *
-     * @var Result|null
-     */
-    protected $_result = null;
-
-    /**
      * Default cgi gateway url
      *
      * @var string
@@ -2066,7 +2059,7 @@ class Carrier extends AbstractCarrierOnline implements \Magento\Shipping\Model\C
      * @param \Magento\Framework\DataObject|null $params
      * @return array|bool
      */
-    public function getContainerTypes(\Magento\Framework\DataObject $params = null)
+    public function getContainerTypes(?\Magento\Framework\DataObject $params = null)
     {
         if ($params === null) {
             return $this->_getAllowedContainers();
@@ -2101,7 +2094,7 @@ class Carrier extends AbstractCarrierOnline implements \Magento\Shipping\Model\C
      * @param \Magento\Framework\DataObject|null $params
      * @return array
      */
-    public function getDeliveryConfirmationTypes(\Magento\Framework\DataObject $params = null)
+    public function getDeliveryConfirmationTypes(?\Magento\Framework\DataObject $params = null)
     {
         if ($params == null) {
             return [];

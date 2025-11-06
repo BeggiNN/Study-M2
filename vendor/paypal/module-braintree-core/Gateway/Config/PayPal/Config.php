@@ -1,24 +1,28 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
-
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Config\PayPal;
 
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\ScopeInterface;
 use PayPal\Braintree\Model\Config\Source\Color;
+use PayPal\Braintree\Model\Config\Source\CreditColor;
 use PayPal\Braintree\Model\Config\Source\Shape;
 use PayPal\Braintree\Model\Config\Source\Size;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Payment\Model\CcConfig;
+use PayPal\Braintree\Model\StoreConfigResolver;
 
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
     public const KEY_ACTIVE = 'active';
     public const KEY_TITLE = 'title';
+    public const KEY_SEND_CART_LINE_ITEMS = 'send_cart_line_items';
     public const KEY_DISPLAY_ON_SHOPPING_CART = 'display_on_shopping_cart';
     public const KEY_ALLOW_TO_EDIT_SHIPPING_ADDRESS = 'allow_shipping_address_override';
     public const KEY_MERCHANT_NAME_OVERRIDE = 'merchant_name_override';
@@ -33,44 +37,60 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     public const KEY_BUTTON_SHAPE = 'shape';
     public const KEY_BUTTON_SIZE = 'size';
     public const KEY_BUTTON_LABEL = 'label';
+    public const KEY_SKIP_ORDER_REVIEW_STEP = 'skip_order_review_step';
+    public const KEY_SEND_PACKAGE_TRACKING = 'send_package_tracking';
+    public const KEY_TRACKING_NOTIFY_PAYER = 'tracking_notify_payer';
 
     /**
      * @var CcConfig
      */
-    private $ccConfig;
+    private CcConfig $ccConfig;
 
     /**
      * @var array
      */
-    private $icon = [];
+    private array $icon = [];
 
     /**
      * @var Size
      */
-    private $sizeConfigSource;
+    private Size $sizeConfigSource;
 
     /**
      * @var Color
      */
-    private $colorConfigSource;
+    private Color $colorConfigSource;
 
     /**
      * @var Shape
      */
-    private $shapeConfigSource;
+    private Shape $shapeConfigSource;
 
     /**
-     * @var Shape
+     * @var ScopeConfigInterface
      */
-    private $scopeConfigResolver;
+    private ScopeConfigInterface $scopeConfigResolver;
+
+    /**
+     * @var CreditColor
+     */
+    private CreditColor $creditColorSource;
+
+    /**
+     * @var StoreConfigResolver
+     */
+    private StoreConfigResolver $storeConfigResolver;
 
     /**
      * Config constructor.
+     *
      * @param ScopeConfigInterface $scopeConfig
      * @param CcConfig $ccConfig
      * @param Size $sizeConfigSource
      * @param Color $colorConfigSource
      * @param Shape $shapeConfigSource
+     * @param CreditColor $creditColorSource
+     * @param StoreConfigResolver $storeConfigResolver
      * @param string|null $methodCode
      * @param string $pathPattern
      */
@@ -80,8 +100,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         Size $sizeConfigSource,
         Color $colorConfigSource,
         Shape $shapeConfigSource,
-        string $methodCode = null,
-        $pathPattern = self::DEFAULT_PATH_PATTERN
+        CreditColor $creditColorSource,
+        StoreConfigResolver $storeConfigResolver,
+        ?string $methodCode = null,
+        string $pathPattern = self::DEFAULT_PATH_PATTERN
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->scopeConfigResolver = $scopeConfig;
@@ -89,16 +111,19 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         $this->sizeConfigSource = $sizeConfigSource;
         $this->colorConfigSource = $colorConfigSource;
         $this->shapeConfigSource = $shapeConfigSource;
+        $this->creditColorSource = $creditColorSource;
+        $this->storeConfigResolver = $storeConfigResolver;
     }
 
     /**
      * Get Payment configuration status
      *
+     * @param int|null $storeId
      * @return bool
      */
-    public function isActive(): bool
+    public function isActive(?int $storeId = null): bool
     {
-        return (bool) $this->getValue(self::KEY_ACTIVE);
+        return (bool) $this->getValue(self::KEY_ACTIVE, $storeId);
     }
 
     /**
@@ -126,7 +151,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      *
      * @return string|null
      */
-    public function getMerchantName()
+    public function getMerchantName(): ?string
     {
         return $this->getValue(self::KEY_MERCHANT_NAME_OVERRIDE);
     }
@@ -136,7 +161,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      *
      * @return mixed|null
      */
-    public function getMerchantCountry()
+    public function getMerchantCountry(): mixed
     {
         return $this->scopeConfigResolver->getValue(
             'paypal/general/merchant_country',
@@ -159,7 +184,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      *
      * @return string|null
      */
-    public function getTitle()
+    public function getTitle(): ?string
     {
         return $this->getValue(self::KEY_TITLE);
     }
@@ -170,9 +195,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string $area
      * @param string $style
      * @param string $type
-     * @return string|array
+     * @return mixed|null
      */
-    private function getButtonStyle(string $area, string $style, string $type)
+    private function getButtonStyle(string $area, string $style, string $type): mixed
     {
         return $this->getValue('button_location_' . $area . '_type_' . $type . '_' . $style);
     }
@@ -184,10 +209,24 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string $type
      * @return string|null
      */
-    public function getButtonColor(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
+    public function getButtonColor(string $area = self::BUTTON_AREA_CART, string $type = 'paypal'): ?string
     {
         $value = $this->getButtonStyle($area, self::KEY_BUTTON_COLOR, $type);
         $options = $this->colorConfigSource->toRawValues();
+        return $options[$value];
+    }
+
+    /**
+     * Get credit button color mapped to the value expected by the PayPal Credit
+     *
+     * @param string $area
+     * @param string $type
+     * @return string|null
+     */
+    public function getCreditButtonColor(string $area = self::BUTTON_AREA_CART, string $type = 'credit'): ?string
+    {
+        $value = $this->getButtonStyle($area, self::KEY_BUTTON_COLOR, $type);
+        $options = $this->creditColorSource->toRawValues();
         return $options[$value];
     }
 
@@ -198,7 +237,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string $type
      * @return string
      */
-    public function getButtonShape(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
+    public function getButtonShape(string $area = self::BUTTON_AREA_CART, string $type = 'paypal'): string
     {
         $value = $this->getButtonStyle($area, self::KEY_BUTTON_SHAPE, $type);
         $options = $this->shapeConfigSource->toRawValues();
@@ -211,8 +250,10 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string $area
      * @param string $type
      * @return string
+     * @deprecated as Size field is redundant
+     * @see no alternatives
      */
-    public function getButtonSize(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
+    public function getButtonSize(string $area = self::BUTTON_AREA_CART, string $type = 'paypal'): string
     {
         $value = $this->getButtonStyle($area, self::KEY_BUTTON_SIZE, $type);
         $options = $this->sizeConfigSource->toRawValues();
@@ -224,9 +265,9 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      *
      * @param string $area
      * @param string $type
-     * @return string
+     * @return string|null
      */
-    public function getButtonLabel(string $area = self::BUTTON_AREA_CART, string $type = 'paypal')
+    public function getButtonLabel(string $area = self::BUTTON_AREA_CART, string $type = 'paypal'): ?string
     {
         return $this->getButtonStyle($area, self::KEY_BUTTON_LABEL, $type);
     }
@@ -237,13 +278,13 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string $area
      * @param string $type
      * @param string $style
-     * @return string
+     * @return string|null
      */
     public function getMessagingStyle(
         string $area = self::BUTTON_AREA_CART,
         string $type = 'paypal',
         string $style = 'layout'
-    ) {
+    ): ?string {
         return $this->getButtonStyle($area, $style, $type);
     }
 
@@ -273,14 +314,14 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string|null $area
      * @return bool
      */
-    public function isFundingOptionCardDisabled(string $area = null): bool
+    public function isFundingOptionCardDisabled(?string $area = null): bool
     {
         if (!$area) {
             $area = self::KEY_PAYPAL_DISABLED_FUNDING_CHECKOUT;
         }
 
         if ($value = $this->getValue($area)) {
-            if (strpos($value, 'card') !== false) {
+            if (str_contains($value, 'card')) {
                 return true;
             }
         }
@@ -294,14 +335,14 @@ class Config extends \Magento\Payment\Gateway\Config\Config
      * @param string|null $area
      * @return bool
      */
-    public function isFundingOptionElvDisabled(string $area = null): bool
+    public function isFundingOptionElvDisabled(?string $area = null): bool
     {
         if (!$area) {
             $area = self::KEY_PAYPAL_DISABLED_FUNDING_CHECKOUT;
         }
 
         if ($value = $this->getValue($area)) {
-            if (strpos($value, 'elv') !== false) {
+            if (str_contains($value, 'elv')) {
                 return true;
             }
         }
@@ -330,5 +371,77 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     {
         $field = 'button_location_' . $location . '_type_' . $type . '_show';
         return (bool) $this->getValue($field);
+    }
+
+    /**
+     * Can send line items for the PayPal transactions
+     *
+     * @return bool
+     */
+    public function canSendCartLineItemsForPayPal(): bool
+    {
+        return (bool) $this->getValue(self::KEY_SEND_CART_LINE_ITEMS);
+    }
+
+    /**
+     * Can skip order review step
+     *
+     * @return bool
+     */
+    public function skipOrderReviewStep(): bool
+    {
+        return (bool) $this->getValue(self::KEY_SKIP_ORDER_REVIEW_STEP);
+    }
+
+    /**
+     * Get button styling
+     *
+     * @param string $area
+     * @return array
+     */
+    public function getMessageStyles(string $area): array
+    {
+        return [
+            'layout' => $this->getMessagingStyle($area, 'messaging', 'layout'),
+            'logo' => [
+                'type' => $this->getMessagingStyle($area, 'messaging', 'logo'),
+                'position' => $this->getMessagingStyle($area, 'messaging', 'logo_position')
+            ],
+            'text' => [
+                'color' => $this->getMessagingStyle($area, 'messaging', 'text_color')
+            ]
+        ];
+    }
+
+    /**
+     * Check if shipping tracking is enabled
+     *
+     * @param int|null $storeId
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function isShippingTrackingEnabled(?int $storeId = null): bool
+    {
+        return (bool) $this->getValue(
+            self::KEY_SEND_PACKAGE_TRACKING,
+            $storeId ?? $this->storeConfigResolver->getStoreId()
+        );
+    }
+
+    /**
+     * Check if notify payer functionality is enabled
+     *
+     * @param int|null $storeId
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function notifyPayer(?int $storeId = null): bool
+    {
+        return (bool) $this->getValue(
+            self::KEY_TRACKING_NOTIFY_PAYER,
+            $storeId ?? $this->storeConfigResolver->getStoreId()
+        );
     }
 }

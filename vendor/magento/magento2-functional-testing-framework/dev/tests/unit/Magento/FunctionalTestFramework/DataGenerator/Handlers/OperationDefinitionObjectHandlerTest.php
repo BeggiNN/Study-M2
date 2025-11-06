@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\DataGenerator\Handlers;
@@ -506,7 +507,7 @@ class OperationDefinitionObjectHandlerTest extends MagentoTestCase
             'INSTANCE'
         );
         $operationDefinitionObjectHandlerProperty->setAccessible(true);
-        $operationDefinitionObjectHandlerProperty->setValue(null);
+        $operationDefinitionObjectHandlerProperty->setValue(null, null);
 
         $mockOperationParser = $this->createMock(OperationDefinitionParser::class);
         $mockOperationParser
@@ -537,7 +538,7 @@ class OperationDefinitionObjectHandlerTest extends MagentoTestCase
 
         $property = new ReflectionProperty(ObjectManager::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($mockObjectManagerInstance);
+        $property->setValue(null, $mockObjectManagerInstance);
     }
 
     /**
@@ -552,11 +553,11 @@ class OperationDefinitionObjectHandlerTest extends MagentoTestCase
             'INSTANCE'
         );
         $operationDefinitionObjectHandlerProperty->setAccessible(true);
-        $operationDefinitionObjectHandlerProperty->setValue(null);
+        $operationDefinitionObjectHandlerProperty->setValue(null, null);
 
         $objectManagerProperty = new ReflectionProperty(ObjectManager::class, 'instance');
         $objectManagerProperty->setAccessible(true);
-        $objectManagerProperty->setValue(null);
+        $objectManagerProperty->setValue(null, null);
 
         TestLoggingUtil::getInstance()->clearMockLoggingUtil();
     }

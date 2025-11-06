@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Api;
 
@@ -12,26 +17,34 @@ use Magento\Framework\DataObject;
 interface CreditPriceRepositoryInterface
 {
     /**
-     * @param \PayPal\Braintree\Api\Data\CreditPriceDataInterface $entity
-     * @return \PayPal\Braintree\Api\Data\CreditPriceDataInterface
+     * Save credit price
+     *
+     * @param CreditPriceDataInterface $entity
+     * @return CreditPriceDataInterface
      */
     public function save(CreditPriceDataInterface $entity): CreditPriceDataInterface;
 
     /**
+     * Get credit price by product id
+     *
      * @param int $productId
-     * @return \PayPal\Braintree\Api\Data\CreditPriceDataInterface
+     * @return CreditPriceDataInterface[]|DataObject[]
      */
-    public function getByProductId($productId);
+    public function getByProductId(int $productId): array;
 
     /**
-     * @param $productId
-     * @return \PayPal\Braintree\Api\Data\CreditPriceDataInterface|\Magento\Framework\DataObject
+     * Get the cheapest by product id
+     *
+     * @param int $productId
+     * @return CreditPriceDataInterface|DataObject
      */
-    public function getCheapestByProductId($productId);
+    public function getCheapestByProductId(int $productId): CreditPriceDataInterface|DataObject;
 
     /**
+     * Delete the credit price
+     *
      * @param int $productId
-     * @return \PayPal\Braintree\Api\Data\CreditPriceDataInterface[]
+     * @return CreditPriceDataInterface[]
      */
-    public function deleteByProductId($productId);
+    public function deleteByProductId(int $productId): array;
 }

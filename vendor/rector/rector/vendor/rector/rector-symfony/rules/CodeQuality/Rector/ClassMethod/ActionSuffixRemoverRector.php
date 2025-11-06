@@ -3,11 +3,11 @@
 declare (strict_types=1);
 namespace Rector\Symfony\CodeQuality\Rector\ClassMethod;
 
-use RectorPrefix202308\Nette\Utils\Strings;
+use RectorPrefix202411\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\ClassMethod;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Rector\AbstractRector;
 use Rector\Symfony\Bridge\NodeAnalyzer\ControllerMethodAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -58,6 +58,9 @@ CODE_SAMPLE
     public function refactor(Node $node) : ?Node
     {
         if (!$this->controllerMethodAnalyzer->isAction($node)) {
+            return null;
+        }
+        if ($node->name->toString() === 'getAction') {
             return null;
         }
         $this->removeSuffix($node, 'Action');

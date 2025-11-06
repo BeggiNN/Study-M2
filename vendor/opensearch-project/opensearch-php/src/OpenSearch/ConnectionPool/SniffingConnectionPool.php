@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -25,26 +25,39 @@ use OpenSearch\Common\Exceptions\Curl\OperationTimeoutException;
 use OpenSearch\Common\Exceptions\NoNodesAvailableException;
 use OpenSearch\ConnectionPool\Selectors\SelectorInterface;
 use OpenSearch\Connections\Connection;
-use OpenSearch\Connections\ConnectionInterface;
 use OpenSearch\Connections\ConnectionFactoryInterface;
+use OpenSearch\Connections\ConnectionInterface;
 
-class SniffingConnectionPool extends AbstractConnectionPool implements ConnectionPoolInterface
+// @phpstan-ignore classConstant.deprecatedClass
+@trigger_error(SniffingConnectionPool::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0.', E_USER_DEPRECATED);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ *
+ * @phpstan-ignore class.extendsDeprecatedClass
+ */
+class SniffingConnectionPool extends AbstractConnectionPool
 {
     /**
      * @var int
      */
-    private $sniffingInterval = 300;
+    private $sniffingInterval;
 
     /**
      * @var int
      */
-    private $nextSniff = -1;
+    private $nextSniff;
 
     /**
-     * {@inheritdoc}
+     * @param ConnectionInterface[] $connections
+     * @param array<string, mixed>  $connectionPoolParams
      */
-    public function __construct($connections, SelectorInterface $selector, ConnectionFactoryInterface $factory, $connectionPoolParams)
-    {
+    public function __construct(
+        $connections,
+        SelectorInterface $selector,
+        ConnectionFactoryInterface $factory,
+        $connectionPoolParams
+    ) {
         parent::__construct($connections, $selector, $factory, $connectionPoolParams);
 
         $this->setConnectionPoolParams($connectionPoolParams);
@@ -58,8 +71,8 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
         $size = count($this->connections);
         while ($size--) {
             /**
- * @var Connection $connection
-*/
+             * @var Connection $connection
+             */
             $connection = $this->selector->select($this->connections);
             if ($connection->isAlive() === true || $connection->ping() === true) {
                 return $connection;
@@ -78,9 +91,9 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
         $this->nextSniff = -1;
     }
 
-    private function sniff(bool $force = false)
+    private function sniff(bool $force = false): void
     {
-        if ($force === false && $this->nextSniff >= time()) {
+        if ($force === false && $this->nextSniff > time()) {
             return;
         }
 
@@ -88,8 +101,8 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
 
         while ($total--) {
             /**
- * @var Connection $connection
-*/
+             * @var Connection $connection
+             */
             $connection = $this->selector->select($this->connections);
 
             if ($connection->isAlive() xor $force) {
@@ -106,6 +119,9 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
         }
 
         foreach ($this->seedConnections as $connection) {
+            /**
+             * @var Connection $connection
+             */
             if ($this->sniffConnection($connection) === true) {
                 return;
             }
@@ -120,19 +136,19 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
             return false;
         }
 
-        $nodes = $this->parseClusterState($connection->getTransportSchema(), $response);
+        $nodes = $this->parseClusterState($response);
 
         if (count($nodes) === 0) {
             return false;
         }
 
-        $this->connections = array();
+        $this->connections = [];
 
         foreach ($nodes as $node) {
-            $nodeDetails = array(
+            $nodeDetails = [
                 'host' => $node['host'],
-                'port' => $node['port']
-            );
+                'port' => $node['port'],
+            ];
             $this->connections[] = $this->connectionFactory->create($nodeDetails);
         }
 
@@ -141,19 +157,21 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
         return true;
     }
 
-    private function parseClusterState(string $transportSchema, $nodeInfo): array
+    /**
+     * @return list<array{host: string, port: int}>
+     */
+    private function parseClusterState($nodeInfo): array
     {
-        $pattern       = '/([^:]*):([0-9]+)/';
-        $schemaAddress = $transportSchema . '_address';
-        $hosts         = [];
+        $pattern = '/([^:]*):(\d+)/';
+        $hosts = [];
 
         foreach ($nodeInfo['nodes'] as $node) {
             if (isset($node['http']) === true && isset($node['http']['publish_address']) === true) {
                 if (preg_match($pattern, $node['http']['publish_address'], $match) === 1) {
-                    $hosts[] = array(
+                    $hosts[] = [
                         'host' => $match[1],
-                        'port' => (int) $match[2],
-                    );
+                        'port' => (int)$match[2],
+                    ];
                 }
             }
         }
@@ -161,10 +179,11 @@ class SniffingConnectionPool extends AbstractConnectionPool implements Connectio
         return $hosts;
     }
 
-    private function setConnectionPoolParams(array $connectionPoolParams)
+    /**
+     * @param array<string, mixed> $connectionPoolParams
+     */
+    private function setConnectionPoolParams(array $connectionPoolParams): void
     {
-        if (isset($connectionPoolParams['sniffingInterval']) === true) {
-            $this->sniffingInterval = $connectionPoolParams['sniffingInterval'];
-        }
+        $this->sniffingInterval = (int)($connectionPoolParams['sniffingInterval'] ?? 300);
     }
 }

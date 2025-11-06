@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,34 +21,46 @@ declare(strict_types=1);
 
 namespace OpenSearch;
 
-use OpenSearch\Common\Exceptions\InvalidArgumentException;
-use OpenSearch\Common\Exceptions\RuntimeException;
-use OpenSearch\Common\Exceptions\AuthenticationConfigException;
-use OpenSearch\ConnectionPool\AbstractConnectionPool;
-use OpenSearch\ConnectionPool\Selectors\RoundRobinSelector;
-use OpenSearch\ConnectionPool\StaticNoPingConnectionPool;
-use OpenSearch\Connections\ConnectionFactory;
-use OpenSearch\Connections\ConnectionFactoryInterface;
-use OpenSearch\Namespaces\NamespaceBuilderInterface;
-use OpenSearch\Serializers\SmartSerializer;
+use Aws\Credentials\CredentialProvider;
+use Aws\Credentials\Credentials;
+use Aws\Credentials\CredentialsInterface;
 use GuzzleHttp\Ring\Client\CurlHandler;
 use GuzzleHttp\Ring\Client\CurlMultiHandler;
 use GuzzleHttp\Ring\Client\Middleware;
+use OpenSearch\Common\Exceptions\AuthenticationConfigException;
+use OpenSearch\Common\Exceptions\InvalidArgumentException;
+use OpenSearch\Common\Exceptions\RuntimeException;
+use OpenSearch\ConnectionPool\AbstractConnectionPool;
+use OpenSearch\ConnectionPool\Selectors\RoundRobinSelector;
+use OpenSearch\ConnectionPool\Selectors\SelectorInterface;
+use OpenSearch\ConnectionPool\StaticNoPingConnectionPool;
+use OpenSearch\Connections\ConnectionFactory;
+use OpenSearch\Connections\ConnectionFactoryInterface;
+use OpenSearch\Connections\ConnectionInterface;
+use OpenSearch\Handlers\SigV4Handler;
+use OpenSearch\Namespaces\NamespaceBuilderInterface;
+use OpenSearch\Serializers\SerializerInterface;
+use OpenSearch\Serializers\SmartSerializer;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use ReflectionClass;
 
+// @phpstan-ignore classConstant.deprecatedClass
+@trigger_error(ClientBuilder::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0.', E_USER_DEPRECATED);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ */
 class ClientBuilder
 {
+    public const ALLOWED_METHODS_FROM_CONFIG = ['includePortInHostHeader'];
+
     /**
-     * @var Transport
+     * @var Transport|null
      */
     private $transport;
 
-    /**
-     * @var callable
-     */
-    private $endpoint;
+    private ?EndpointFactoryInterface $endpointFactory = null;
 
     /**
      * @var NamespaceBuilderInterface[]
@@ -56,37 +68,37 @@ class ClientBuilder
     private $registeredNamespacesBuilders = [];
 
     /**
-     * @var ConnectionFactoryInterface
+     * @var ConnectionFactoryInterface|null
      */
     private $connectionFactory;
 
     /**
-     * @var callable
+     * @var callable|null
      */
     private $handler;
 
     /**
-     * @var LoggerInterface
+     * @var LoggerInterface|null
      */
     private $logger;
 
     /**
-     * @var LoggerInterface
+     * @var LoggerInterface|null
      */
     private $tracer;
 
     /**
-     * @var string
+     * @var string|AbstractConnectionPool
      */
     private $connectionPool = StaticNoPingConnectionPool::class;
 
     /**
-     * @var string
+     * @var string|SerializerInterface|null
      */
     private $serializer = SmartSerializer::class;
 
     /**
-     * @var string
+     * @var string|SelectorInterface|null
      */
     private $selector = RoundRobinSelector::class;
 
@@ -98,7 +110,7 @@ class ClientBuilder
     ];
 
     /**
-     * @var array
+     * @var array|null
      */
     private $hosts;
 
@@ -108,9 +120,24 @@ class ClientBuilder
     private $connectionParams;
 
     /**
-     * @var int
+     * @var int|null
      */
     private $retries;
+
+    /**
+     * @var null|callable
+     */
+    private $sigV4CredentialProvider;
+
+    /**
+     * @var null|string
+     */
+    private $sigV4Region;
+
+    /**
+     * @var null|string
+     */
+    private $sigV4Service;
 
     /**
      * @var bool
@@ -138,15 +165,20 @@ class ClientBuilder
     private $includePortInHostHeader = false;
 
     /**
+     * @var string|null
+     */
+    private $basicAuthentication = null;
+
+    /**
      * Create an instance of ClientBuilder
      */
     public static function create(): ClientBuilder
     {
-        return new static();
+        return new self();
     }
 
     /**
-     * Can supply first parm to Client::__construct() when invoking manually or with dependency injection
+     * Can supply first param to Client::__construct() when invoking manually or with dependency injection
      */
     public function getTransport(): Transport
     {
@@ -154,15 +186,18 @@ class ClientBuilder
     }
 
     /**
-     * Can supply second parm to Client::__construct() when invoking manually or with dependency injection
+     * Can supply second param to Client::__construct() when invoking manually or with dependency injection
+     *
+     * @deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\ClientBuilder::getEndpointFactory() instead.
      */
     public function getEndpoint(): callable
     {
-        return $this->endpoint;
+        @trigger_error(__METHOD__ . '() is deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\ClientBuilder::getEndpointFactory() instead.', E_USER_DEPRECATED);
+        return fn ($c) => $this->endpointFactory->getEndpoint('OpenSearch\\Endpoints\\' . $c);
     }
 
     /**
-     * Can supply third parm to Client::__construct() when invoking manually or with dependency injection
+     * Can supply third param to Client::__construct() when invoking manually or with dependency injection
      *
      * @return NamespaceBuilderInterface[]
      */
@@ -188,9 +223,9 @@ class ClientBuilder
      */
     public static function fromConfig(array $config, bool $quiet = false): Client
     {
-        $builder = new static();
+        $builder = new self();
         foreach ($config as $key => $value) {
-            $method = "set$key";
+            $method = in_array($key, self::ALLOWED_METHODS_FROM_CONFIG, true) ? $key : "set$key";
             $reflection = new ReflectionClass($builder);
             if ($reflection->hasMethod($method)) {
                 $func = $reflection->getMethod($method);
@@ -300,11 +335,20 @@ class ClientBuilder
      * Set the endpoint
      *
      * @param callable $endpoint
+     *
+     * @deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\ClientBuilder::setEndpointFactory() instead.
      */
     public function setEndpoint(callable $endpoint): ClientBuilder
     {
-        $this->endpoint = $endpoint;
+        @trigger_error(__METHOD__ . '() is deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\ClientBuilder::setEndpointFactory() instead.', E_USER_DEPRECATED);
+        $this->endpointFactory = new LegacyEndpointFactory($endpoint);
 
+        return $this;
+    }
+
+    public function setEndpointFactory(EndpointFactoryInterface $endpointFactory): ClientBuilder
+    {
+        $this->endpointFactory = $endpointFactory;
         return $this;
     }
 
@@ -403,14 +447,7 @@ class ClientBuilder
      */
     public function setBasicAuthentication(string $username, string $password): ClientBuilder
     {
-        if (isset($this->connectionParams['client']['curl']) === false) {
-            $this->connectionParams['client']['curl'] = [];
-        }
-
-        $this->connectionParams['client']['curl'] += [
-            CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
-            CURLOPT_USERPWD  => $username.':'.$password
-        ];
+        $this->basicAuthentication = $username.':'.$password;
 
         return $this;
     }
@@ -452,6 +489,45 @@ class ClientBuilder
     }
 
     /**
+     * Set the credential provider for SigV4 request signing. The value provider should be a
+     * callable object that will return
+     *
+     * @param callable|bool|array|CredentialsInterface|null $credentialProvider
+     */
+    public function setSigV4CredentialProvider($credentialProvider): ClientBuilder
+    {
+        if ($credentialProvider !== null && $credentialProvider !== false) {
+            $this->sigV4CredentialProvider = $this->normalizeCredentialProvider($credentialProvider);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set the region for SigV4 signing.
+     *
+     * @param string|null $region
+     */
+    public function setSigV4Region($region): ClientBuilder
+    {
+        $this->sigV4Region = $region;
+
+        return $this;
+    }
+
+    /**
+     * Set the service for SigV4 signing.
+     *
+     * @param string|null $service
+     */
+    public function setSigV4Service($service): ClientBuilder
+    {
+        $this->sigV4Service = $service;
+
+        return $this;
+    }
+
+    /**
      * Set sniff on start
      *
      * @param bool $sniffOnStart enable or disable sniff on start
@@ -470,7 +546,7 @@ class ClientBuilder
      * @param string $cert The name of a file containing a PEM formatted certificate.
      * @param string $password if the certificate requires a password
      */
-    public function setSSLCert(string $cert, string $password = null): ClientBuilder
+    public function setSSLCert(string $cert, ?string $password = null): ClientBuilder
     {
         $this->sslCert = [$cert, $password];
 
@@ -483,7 +559,7 @@ class ClientBuilder
      * @param string $key The name of a file containing a private SSL key
      * @param string $password if the private key requires a password
      */
-    public function setSSLKey(string $key, string $password = null): ClientBuilder
+    public function setSSLKey(string $key, ?string $password = null): ClientBuilder
     {
         $this->sslKey = [$key, $password];
 
@@ -525,6 +601,18 @@ class ClientBuilder
             $this->handler = ClientBuilder::defaultHandler();
         }
 
+        if (!is_null($this->sigV4CredentialProvider)) {
+            if (is_null($this->sigV4Region)) {
+                throw new RuntimeException("A region must be supplied for SigV4 request signing.");
+            }
+
+            if (is_null($this->sigV4Service)) {
+                $this->setSigV4Service("es");
+            }
+
+            $this->handler = new SigV4Handler($this->sigV4Region, $this->sigV4Service, $this->sigV4CredentialProvider, $this->handler);
+        }
+
         $sslOptions = null;
         if (isset($this->sslKey)) {
             $sslOptions['ssl_key'] = $this->sslKey;
@@ -559,30 +647,28 @@ class ClientBuilder
 
         $this->connectionParams['client']['port_in_header'] = $this->includePortInHostHeader;
 
-        if (is_null($this->connectionFactory)) {
-            if (is_null($this->connectionParams)) {
-                $this->connectionParams = [];
+        if (! is_null($this->basicAuthentication)) {
+            if (isset($this->connectionParams['client']['curl']) === false) {
+                $this->connectionParams['client']['curl'] = [];
             }
 
+            $this->connectionParams['client']['curl'] += [
+                CURLOPT_HTTPAUTH => CURLAUTH_BASIC,
+                CURLOPT_USERPWD  => $this->basicAuthentication
+            ];
+        }
+
+        if (is_null($this->connectionFactory)) {
             // Make sure we are setting Content-Type and Accept (unless the user has explicitly
             // overridden it
             if (! isset($this->connectionParams['client']['headers'])) {
                 $this->connectionParams['client']['headers'] = [];
             }
-            $apiVersioning = getenv('ELASTIC_CLIENT_APIVERSIONING');
             if (! isset($this->connectionParams['client']['headers']['Content-Type'])) {
-                if ($apiVersioning === 'true' || $apiVersioning === '1') {
-                    $this->connectionParams['client']['headers']['Content-Type'] = ['application/vnd.elasticsearch+json;compatible-with=7'];
-                } else {
-                    $this->connectionParams['client']['headers']['Content-Type'] = ['application/json'];
-                }
+                $this->connectionParams['client']['headers']['Content-Type'] = ['application/json'];
             }
             if (! isset($this->connectionParams['client']['headers']['Accept'])) {
-                if ($apiVersioning === 'true' || $apiVersioning === '1') {
-                    $this->connectionParams['client']['headers']['Accept'] = ['application/vnd.elasticsearch+json;compatible-with=7'];
-                } else {
-                    $this->connectionParams['client']['headers']['Accept'] = ['application/json'];
-                }
+                $this->connectionParams['client']['headers']['Accept'] = ['application/json'];
             }
 
             $this->connectionFactory = new ConnectionFactory($this->handler, $this->connectionParams, $this->serializer, $this->logger, $this->tracer);
@@ -600,21 +686,8 @@ class ClientBuilder
 
         $this->buildTransport();
 
-        if (is_null($this->endpoint)) {
-            $serializer = $this->serializer;
-
-            $this->endpoint = function ($class) use ($serializer) {
-                $fullPath = '\\OpenSearch\\Endpoints\\' . $class;
-
-                $reflection = new ReflectionClass($fullPath);
-                $constructor = $reflection->getConstructor();
-
-                if ($constructor && $constructor->getParameters()) {
-                    return new $fullPath($serializer);
-                } else {
-                    return new $fullPath();
-                }
-            };
+        if (is_null($this->endpointFactory)) {
+            $this->endpointFactory = new EndpointFactory($this->serializer);
         }
 
         $registeredNamespaces = [];
@@ -625,12 +698,12 @@ class ClientBuilder
             $registeredNamespaces[$builder->getName()] = $builder->getObject($this->transport, $this->serializer);
         }
 
-        return $this->instantiate($this->transport, $this->endpoint, $registeredNamespaces);
+        return $this->instantiate($this->transport, $this->endpointFactory, $registeredNamespaces);
     }
 
-    protected function instantiate(Transport $transport, callable $endpoint, array $registeredNamespaces): Client
+    protected function instantiate(Transport $transport, EndpointFactoryInterface $endpointFactory, array $registeredNamespaces): Client
     {
-        return new Client($transport, $endpoint, $registeredNamespaces);
+        return new Client($transport, $endpointFactory, $registeredNamespaces);
     }
 
     private function buildLoggers(): void
@@ -650,13 +723,6 @@ class ClientBuilder
 
         if (is_string($this->connectionPool)) {
             $this->connectionPool = new $this->connectionPool(
-                $connections,
-                $this->selector,
-                $this->connectionFactory,
-                $this->connectionPoolArgs
-            );
-        } elseif (is_null($this->connectionPool)) {
-            $this->connectionPool = new StaticNoPingConnectionPool(
                 $connections,
                 $this->selector,
                 $this->connectionFactory,
@@ -690,7 +756,7 @@ class ClientBuilder
     }
 
     /**
-     * @return \OpenSearch\Connections\Connection[]
+     * @return ConnectionInterface[]
      * @throws RuntimeException
      */
     private function buildConnectionsFromHosts(array $hosts): array
@@ -757,5 +823,39 @@ class ClientBuilder
         }
 
         return $host;
+    }
+
+    private function normalizeCredentialProvider($provider): ?callable
+    {
+        if ($provider === null || $provider === false) {
+            return null;
+        }
+
+        if (is_callable($provider)) {
+            return $provider;
+        }
+
+        SigV4Handler::assertDependenciesInstalled();
+
+        if ($provider === true) {
+            return CredentialProvider::defaultProvider();
+        }
+
+        if ($provider instanceof CredentialsInterface) {
+            return CredentialProvider::fromCredentials($provider);
+        } elseif (is_array($provider) && isset($provider['key']) && isset($provider['secret'])) {
+            return CredentialProvider::fromCredentials(
+                new Credentials(
+                    $provider['key'],
+                    $provider['secret'],
+                    isset($provider['token']) ? $provider['token'] : null,
+                    isset($provider['expires']) ? $provider['expires'] : null
+                )
+            );
+        }
+
+        throw new InvalidArgumentException('Credentials must be an instance of Aws\Credentials\CredentialsInterface, an'
+            . ' associative array that contains "key", "secret", and an optional "token" key-value pairs, a credentials'
+            . ' provider function, or true.');
     }
 }

@@ -26,6 +26,8 @@ use function sprintf;
 
 /**
  * Translator.
+ *
+ * @final
  */
 class Translator implements TranslatorInterface
 {
@@ -345,7 +347,8 @@ class Translator implements TranslatorInterface
      */
     public function translate($message, $textDomain = 'default', $locale = null)
     {
-        $locale      = $locale ?: $this->getLocale();
+        $locale      = $locale === '' ? null : $locale;
+        $locale    ??= $this->getLocale();
         $translation = $this->getTranslatedMessage($message, $locale, $textDomain);
 
         if ($translation !== null && $translation !== '') {
@@ -380,7 +383,7 @@ class Translator implements TranslatorInterface
         $textDomain = 'default',
         $locale = null
     ) {
-        $locale      = $locale ?: $this->getLocale();
+        $locale    ??= $this->getLocale();
         $translation = $this->getTranslatedMessage($singular, $locale, $textDomain);
 
         if (is_string($translation)) {
@@ -492,7 +495,7 @@ class Translator implements TranslatorInterface
         $textDomain = 'default',
         $locale = null
     ) {
-        $locale = $locale ?: '*';
+        $locale ??= '*';
 
         if (! isset($this->files[$textDomain])) {
             $this->files[$textDomain] = [];
@@ -604,12 +607,12 @@ class Translator implements TranslatorInterface
             }
         }
 
-        $messagesLoaded  = false;
-        $messagesLoaded |= $this->loadMessagesFromRemote($textDomain, $locale);
-        $messagesLoaded |= $this->loadMessagesFromPatterns($textDomain, $locale);
-        $messagesLoaded |= $this->loadMessagesFromFiles($textDomain, $locale);
+        $messagesLoaded  = 0;
+        $messagesLoaded |= (int) $this->loadMessagesFromRemote($textDomain, $locale);
+        $messagesLoaded |= (int) $this->loadMessagesFromPatterns($textDomain, $locale);
+        $messagesLoaded |= (int) $this->loadMessagesFromFiles($textDomain, $locale);
 
-        if (! $messagesLoaded) {
+        if ($messagesLoaded === 0) {
             $discoveredTextDomain = null;
             if ($this->isEventManagerEnabled()) {
                 $until = static fn($r): bool => $r instanceof TextDomain;
@@ -628,10 +631,9 @@ class Translator implements TranslatorInterface
             }
 
             $this->messages[$textDomain][$locale] = $discoveredTextDomain;
-            $messagesLoaded                       = true;
         }
 
-        if ($messagesLoaded && $cache !== null) {
+        if ($cache !== null) {
             $cache->setItem($cacheId, $this->messages[$textDomain][$locale]);
         }
     }
@@ -754,7 +756,7 @@ class Translator implements TranslatorInterface
      */
     public function getAllMessages($textDomain = 'default', $locale = null)
     {
-        $locale = $locale ?: $this->getLocale();
+        $locale ??= $this->getLocale();
 
         if (! isset($this->messages[$textDomain][$locale])) {
             $this->loadMessages($textDomain, $locale);

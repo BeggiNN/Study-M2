@@ -17,10 +17,11 @@
             <testCaseId value="MC-22625"/>
             <useCaseId value="MC-21926"/>
             <group value="checkout"/>
-            <group value="guest_checkout"/>
         </annotations>
 
         <before>
+            <magentoCLI command="config:set {{EnableFlatRateConfigData.path}} {{EnableFlatRateConfigData.value}}" stepKey="enableFlatRate"/>
+
             <!-- Enable Free Shipping Method and set Minimum Order Amount to 100-->
             <magentoCLI command="config:set {{AdminFreeshippingActiveConfigData.path}} {{AdminFreeshippingActiveConfigData.enabled}}" stepKey="enableFreeShippingMethod" />
             <magentoCLI command="config:set {{AdminFreeshippingMinimumOrderAmountConfigData.path}} {{AdminFreeshippingMinimumOrderAmountConfigData.hundred}}" stepKey="setFreeShippingMethodMinimumOrderAmountToBe100" />
@@ -124,7 +125,7 @@
         <!-- Assert Shipping total is not yet calculated -->
         <actionGroup ref="AssertStorefrontNotCalculatedValueInShippingTotalInOrderSummaryActionGroup" stepKey="assertNotYetCalculated"/>
 
-        <!--  Assert order cannot be placed and error message will shown. -->
+        <!--  Assert order cannot be placed and error message will be shown. -->
         <actionGroup ref="AssertStorefrontOrderIsNotPlacedActionGroup" stepKey="assertOrderCannotBePlaced">
             <argument name="error" value="The shipping method is missing. Select the shipping method and try again."/>
         </actionGroup>
@@ -143,7 +144,7 @@
         <!-- Place order assert succeed -->
         <actionGroup ref="ClickPlaceOrderActionGroup" stepKey="checkoutPlaceOrder"/>
 
-        <!-- Loged in Customer Test Scenario -->
+        <!-- Logged in Customer Test Scenario -->
         <!-- Login with created Customer -->
         <actionGroup ref="LoginToStorefrontActionGroup" stepKey="loginAsCustomer">
             <argument name="Customer" value="$$createCustomer$$"/>

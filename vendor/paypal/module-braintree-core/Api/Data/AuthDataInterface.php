@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Api\Data;
 
@@ -13,7 +18,7 @@ interface AuthDataInterface
      *
      * @return string|null
      */
-    public function getClientToken();
+    public function getClientToken(): ?string;
 
     /**
      * Merchant display name
@@ -30,6 +35,8 @@ interface AuthDataInterface
     public function getActionSuccess(): string;
 
     /**
+     * Is logged in
+     *
      * @return bool
      */
     public function isLoggedIn(): bool;
@@ -44,40 +51,40 @@ interface AuthDataInterface
     /**
      * Set Braintree client token
      *
-     * @param string $value
+     * @param string|null $value
      * @return string|null
      */
-    public function setClientToken($value);
+    public function setClientToken(string|null $value): ?string;
 
     /**
      * Set Merchant display name
      *
-     * @param string $value
+     * @param string|null $value
      * @return string|null
      */
-    public function setDisplayName($value);
+    public function setDisplayName(string|null $value): ?string;
 
     /**
      * Set URL To success page
      *
-     * @param string $value
+     * @param string|null $value
      * @return string|null
      */
-    public function setActionSuccess($value);
+    public function setActionSuccess(string|null $value): ?string;
 
     /**
      * Set if user is logged in
      *
      * @param bool $value
-     * @return bool|null
+     * @return bool
      */
-    public function setIsLoggedIn($value);
+    public function setIsLoggedIn(bool $value): bool;
 
     /**
      * Set current store code
      *
-     * @param string $value
+     * @param string|null $value
      * @return string|null
      */
-    public function setStoreCode($value);
+    public function setStoreCode(string|null $value): ?string;
 }

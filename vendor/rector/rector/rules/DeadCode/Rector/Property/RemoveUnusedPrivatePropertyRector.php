@@ -8,14 +8,16 @@ use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Property;
+use PhpParser\Node\Stmt\Return_;
 use PhpParser\Node\Stmt\TraitUse;
 use PhpParser\NodeTraverser;
 use PHPStan\Analyser\Scope;
 use Rector\BetterPhpDocParser\PhpDoc\DoctrineAnnotationTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
-use Rector\Core\PhpParser\NodeFinder\PropertyFetchFinder;
-use Rector\Core\Rector\AbstractScopeAwareRector;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\DeadCode\NodeAnalyzer\PropertyWriteonlyAnalyzer;
+use Rector\PhpParser\NodeFinder\PropertyFetchFinder;
+use Rector\Rector\AbstractScopeAwareRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -25,7 +27,7 @@ final class RemoveUnusedPrivatePropertyRector extends AbstractScopeAwareRector
 {
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\NodeFinder\PropertyFetchFinder
+     * @var \Rector\PhpParser\NodeFinder\PropertyFetchFinder
      */
     private $propertyFetchFinder;
     /**
@@ -33,10 +35,16 @@ final class RemoveUnusedPrivatePropertyRector extends AbstractScopeAwareRector
      * @var \Rector\DeadCode\NodeAnalyzer\PropertyWriteonlyAnalyzer
      */
     private $propertyWriteonlyAnalyzer;
-    public function __construct(PropertyFetchFinder $propertyFetchFinder, PropertyWriteonlyAnalyzer $propertyWriteonlyAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
+     */
+    private $phpDocInfoFactory;
+    public function __construct(PropertyFetchFinder $propertyFetchFinder, PropertyWriteonlyAnalyzer $propertyWriteonlyAnalyzer, PhpDocInfoFactory $phpDocInfoFactory)
     {
         $this->propertyFetchFinder = $propertyFetchFinder;
         $this->propertyWriteonlyAnalyzer = $propertyWriteonlyAnalyzer;
+        $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -134,8 +142,8 @@ CODE_SAMPLE
     }
     private function removePropertyAssigns(Class_ $class, string $propertyName) : void
     {
-        $this->traverseNodesWithCallable($class, function (Node $node) use($class, $propertyName) : ?int {
-            if (!$node instanceof Expression) {
+        $this->traverseNodesWithCallable($class, function (Node $node) use($class, $propertyName) {
+            if (!$node instanceof Expression && !$node instanceof Return_) {
                 return null;
             }
             if (!$node->expr instanceof Assign) {
@@ -145,7 +153,11 @@ CODE_SAMPLE
             if (!$this->propertyFetchFinder->isLocalPropertyFetchByName($assign->var, $class, $propertyName)) {
                 return null;
             }
-            return NodeTraverser::REMOVE_NODE;
+            if ($node instanceof Expression) {
+                return NodeTraverser::REMOVE_NODE;
+            }
+            $node->expr = $node->expr->expr;
+            return $node;
         });
     }
 }

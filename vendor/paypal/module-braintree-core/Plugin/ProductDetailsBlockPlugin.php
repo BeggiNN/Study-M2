@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Plugin;
 
@@ -10,7 +15,7 @@ class ProductDetailsBlockPlugin
     /**
      * @var \PayPal\Braintree\Block\Credit\Calculator\Listing\Product
      */
-    protected $listingBlock;
+    protected \PayPal\Braintree\Block\Credit\Calculator\Listing\Product $listingBlock;
 
     /**
      * ProductDetailsBlockPlugin constructor
@@ -24,6 +29,8 @@ class ProductDetailsBlockPlugin
     }
 
     /**
+     * Get product details html
+     *
      * @param ListProduct $subject
      * @param callable $proceed
      * @param Product $product

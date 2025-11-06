@@ -27,6 +27,8 @@ use const PHP_EOL;
 
 /**
  * Helper for rendering menus from navigation containers.
+ *
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
  */
 class Menu extends AbstractHelper
 {
@@ -756,7 +758,6 @@ class Menu extends AbstractHelper
     /**
      * Render a partial with the given "model".
      *
-     * @param array                  $params
      * @param null|AbstractContainer $container
      * @param null|string|array      $partial
      * @return Partial|string

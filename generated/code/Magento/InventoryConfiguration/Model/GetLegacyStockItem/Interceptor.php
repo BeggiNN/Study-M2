@@ -8,10 +8,10 @@ class Interceptor extends \Magento\InventoryConfiguration\Model\GetLegacyStockIt
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $stockItemFactory, \Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory $legacyStockItemCriteriaFactory, \Magento\CatalogInventory\Api\StockItemRepositoryInterface $legacyStockItemRepository, \Magento\InventoryCatalogApi\Model\GetProductIdsBySkusInterface $getProductIdsBySkus, ?\Magento\InventoryConfiguration\Model\LegacyStockItem\CacheStorage $cacheStorage = null)
+    public function __construct(\Magento\CatalogInventory\Api\Data\StockItemInterfaceFactory $stockItemFactory, \Magento\CatalogInventory\Api\StockItemCriteriaInterfaceFactory $legacyStockItemCriteriaFactory, \Magento\CatalogInventory\Api\StockItemRepositoryInterface $legacyStockItemRepository, \Magento\InventoryCatalogApi\Model\GetProductIdsBySkusInterface $getProductIdsBySkus, ?\Magento\InventoryConfiguration\Model\LegacyStockItem\CacheStorage $cacheStorage = null, ?\Magento\InventoryConfiguration\Model\GetLegacyStockItemsInterface $getLegacyStockItems = null)
     {
         $this->___init();
-        parent::__construct($stockItemFactory, $legacyStockItemCriteriaFactory, $legacyStockItemRepository, $getProductIdsBySkus, $cacheStorage);
+        parent::__construct($stockItemFactory, $legacyStockItemCriteriaFactory, $legacyStockItemRepository, $getProductIdsBySkus, $cacheStorage, $getLegacyStockItems);
     }
 
     /**

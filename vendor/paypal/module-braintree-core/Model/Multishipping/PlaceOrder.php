@@ -1,12 +1,16 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Multishipping;
 
+use BadMethodCallException;
+use Exception;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Payment\Gateway\Command\CommandException;
 use PayPal\Braintree\Gateway\Command\GetPaymentNonceCommand;
 use PayPal\Braintree\Model\Ui\ConfigProvider;
 use PayPal\Braintree\Observer\DataAssignObserver;
@@ -20,7 +24,7 @@ use Magento\Sales\Api\OrderManagementInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 
 /**
- * Order payments processing for multishipping checkout flow.
+ * Order payments processing for multi shipping checkout flow.
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
@@ -29,17 +33,17 @@ class PlaceOrder implements PlaceOrderInterface
     /**
      * @var OrderManagementInterface
      */
-    private $orderManagement;
+    private OrderManagementInterface $orderManagement;
 
     /**
      * @var OrderPaymentExtensionInterfaceFactory
      */
-    private $paymentExtensionFactory;
+    private OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory;
 
     /**
      * @var GetPaymentNonceCommand
      */
-    private $getPaymentNonceCommand;
+    private GetPaymentNonceCommand $getPaymentNonceCommand;
 
     /**
      * @param OrderManagementInterface $orderManagement
@@ -67,18 +71,23 @@ class PlaceOrder implements PlaceOrderInterface
 
         $errorList = [];
         $firstOrder = $this->orderManagement->place(array_shift($orderList));
+        if ($firstOrder->getBaseGrandTotal() === 0.0) {
+            $firstOrder = $this->orderManagement->place(array_shift($orderList));
+        }
         // get payment token from first placed order
         $paymentToken = $this->getPaymentToken($firstOrder);
 
-        foreach ($orderList as $order) {
-            try {
-                /** @var OrderInterface $order */
-                $orderPayment = $order->getPayment();
-                $this->setVaultPayment($orderPayment, $paymentToken);
-                $this->orderManagement->place($order);
-            } catch (\Exception $e) {
-                $incrementId = $order->getIncrementId();
-                $errorList[$incrementId] = $e;
+        if (!empty($orderList)) {
+            foreach ($orderList as $order) {
+                try {
+                    /** @var OrderInterface $order */
+                    $orderPayment = $order->getPayment();
+                    $this->setVaultPayment($orderPayment, $paymentToken);
+                    $this->orderManagement->place($order);
+                } catch (Exception $e) {
+                    $incrementId = $order->getIncrementId();
+                    $errorList[$incrementId] = $e;
+                }
             }
         }
 
@@ -91,6 +100,8 @@ class PlaceOrder implements PlaceOrderInterface
      * @param OrderPaymentInterface $orderPayment
      * @param PaymentTokenInterface $paymentToken
      * @return void
+     * @throws LocalizedException
+     * @throws CommandException
      */
     private function setVaultPayment(OrderPaymentInterface $orderPayment, PaymentTokenInterface $paymentToken): void
     {
@@ -143,7 +154,7 @@ class PlaceOrder implements PlaceOrderInterface
      *
      * @param OrderInterface $order
      * @return PaymentTokenInterface
-     * @throws \BadMethodCallException
+     * @throws BadMethodCallException
      */
     private function getPaymentToken(OrderInterface $order): PaymentTokenInterface
     {
@@ -152,7 +163,7 @@ class PlaceOrder implements PlaceOrderInterface
         $paymentToken = $extensionAttributes->getVaultPaymentToken();
 
         if ($paymentToken === null) {
-            throw new \BadMethodCallException('Vault Payment Token should be defined for placed order payment.');
+            throw new BadMethodCallException('Vault Payment Token should be defined for placed order payment.');
         }
 
         return $paymentToken;

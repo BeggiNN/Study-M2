@@ -1,5 +1,12 @@
 <?xml version="1.0"?>
-<payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd">
+<!--
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+-->
+<payment xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Payment:etc/payment.xsd">
     <groups>
         <group id="braintree_group">
             <label>Braintree</label>
@@ -28,4 +35,9 @@
             <allow_multiple_address>0</allow_multiple_address>
         </method>
     </methods>
+    <credit_cards>
+        <type id="UPD" order="140">
+            <label>Union Pay through Discover</label>
+        </type>
+    </credit_cards>
 </payment>

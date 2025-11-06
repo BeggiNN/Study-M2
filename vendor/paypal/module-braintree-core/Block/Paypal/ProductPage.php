@@ -1,26 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Paypal;
 
 use Magento\Catalog\Model\Product;
-use Magento\Checkout\Model\Session;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
-use Magento\Directory\Model\Currency;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Locale\ResolverInterface;
-use Magento\Framework\Registry;
-use Magento\Framework\View\Element\Template\Context;
 use Magento\GroupedProduct\Model\Product\Type\Grouped;
-use Magento\Payment\Model\MethodInterface;
-use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
-use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
-use PayPal\Braintree\Gateway\Config\PayPalPayLater\Config as PayPalPayLaterConfig;
 use PayPal\Braintree\Model\Ui\ConfigProvider;
 
 /**
@@ -31,72 +24,11 @@ use PayPal\Braintree\Model\Ui\ConfigProvider;
 class ProductPage extends Button
 {
     /**
-     * @var Registry
-     */
-    protected Registry $registry;
-
-    /**
-     * @var Currency
-     */
-    protected Currency $currency;
-
-    /**
-     * ProductPage constructor.
-     * @param Context $context
-     * @param ResolverInterface $localeResolver
-     * @param Session $checkoutSession
-     * @param Config $config
-     * @param PayPalCreditConfig $payPalCreditConfig
-     * @param PayPalPayLaterConfig $payPalPayLaterConfig
-     * @param BraintreeConfig $braintreeConfig
-     * @param ConfigProvider $configProvider
-     * @param MethodInterface $payment
-     * @param Registry $registry
-     * @param Currency $currency
-     * @param array $data
-     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
-     */
-    public function __construct(
-        Context $context,
-        ResolverInterface $localeResolver,
-        Session $checkoutSession,
-        Config $config,
-        PayPalCreditConfig $payPalCreditConfig,
-        PayPalPayLaterConfig $payPalPayLaterConfig,
-        BraintreeConfig $braintreeConfig,
-        ConfigProvider $configProvider,
-        MethodInterface $payment,
-        Registry $registry,
-        Currency $currency,
-        array $data = []
-    ) {
-        parent::__construct(
-            $context,
-            $localeResolver,
-            $checkoutSession,
-            $config,
-            $payPalCreditConfig,
-            $payPalPayLaterConfig,
-            $braintreeConfig,
-            $configProvider,
-            $payment,
-            $data
-        );
-
-        $this->registry = $registry;
-        $this->currency = $currency;
-    }
-
-    /**
      * @inheritdoc
      */
     public function isActive(): bool
     {
-        if (parent::isActive() === true) {
-            return $this->config->isProductPageButtonEnabled();
-        }
-
-        return false;
+        return $this->config->isProductPageButtonEnabled();
     }
 
     /**
@@ -134,14 +66,14 @@ class ProductPage extends Button
         $product = $this->registry->registry('product');
         if ($product) {
             if ($product->getTypeId() === Configurable::TYPE_CODE) {
-                return $product->getFinalPrice();
+                return (float) $product->getFinalPrice();
             }
             if ($product->getTypeId() === Grouped::TYPE_CODE) {
                 $groupedProducts = $product->getTypeInstance()->getAssociatedProducts($product);
-                return $groupedProducts[0]->getPrice();
+                return (float) $groupedProducts[0]->getPrice();
             }
 
-            return $product->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
+            return (float) $product->getPriceInfo()->getPrice('final_price')->getAmount()->getValue();
         }
 
         return 100.00; // TODO There must be a better return value than this?
@@ -174,7 +106,10 @@ class ProductPage extends Button
      */
     public function getActionSuccess(): string
     {
-        return $this->getUrl('braintree/paypal/oneclick', ['_secure' => true]);
+        //return $this->getUrl('braintree/paypal/oneclick', ['_secure' => true]);
+        return $this->skipOrderReviewStep()
+            ? $this->getUrl('checkout/onepage/success', ['_secure' => true])
+            : $this->getUrl('braintree/paypal/review', ['_secure' => true]);
     }
 
     /**
@@ -196,6 +131,9 @@ class ProductPage extends Button
      */
     public function getButtonColor(string $type): string
     {
+        if ($type === 'credit') {
+            return $this->config->getCreditButtonColor(Config::BUTTON_AREA_PDP);
+        }
         return $this->config->getButtonColor(Config::BUTTON_AREA_PDP, $type);
     }
 
@@ -204,6 +142,8 @@ class ProductPage extends Button
      *
      * @param string $type
      * @return string
+     * @deprecated as Size field is redundant
+     * @see no alternatives
      */
     public function getButtonSize(string $type): string
     {
@@ -233,57 +173,33 @@ class ProductPage extends Button
     }
 
     /**
-     * Get messaging layout
+     * Get button config
      *
-     * @param string $type
-     * @return string
+     * @return array
+     * @throws InputException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
-    public function getMessagingLayout(string $type): string
+    public function getButtonConfig(): array
     {
-        return $this->config->getMessagingStyle(Config::BUTTON_AREA_PDP, $type, 'layout');
+        return [
+            'clientToken' => $this->getClientToken(),
+            'currency' => $this->getCurrency(),
+            'environment' => $this->getEnvironment(),
+            'merchantCountry' => $this->getMerchantCountry(),
+            'isCreditActive' => $this->isCreditActive(),
+            'skipOrderReviewStep' => $this->skipOrderReviewStep(),
+            'pageType' => 'product-details',
+        ];
     }
 
     /**
-     * Get messaging logo
-     *
-     * @param string $type
-     * @return string
-     */
-    public function getMessagingLogo(string $type): string
-    {
-        return $this->config->getMessagingStyle(Config::BUTTON_AREA_PDP, $type, 'logo');
-    }
-
-    /**
-     * Get messaging logo position
-     *
-     * @param string $type
-     * @return string
-     */
-    public function getMessagingLogoPosition(string $type): string
-    {
-        return $this->config->getMessagingStyle(Config::BUTTON_AREA_PDP, $type, 'logo_position');
-    }
-
-    /**
-     * Get messaging text color
-     *
-     * @param string $type
-     * @return string
-     */
-    public function getMessagingTextColor(string $type): string
-    {
-        return $this->config->getMessagingStyle(Config::BUTTON_AREA_PDP, $type, 'text_color');
-    }
-
-    /**
-     *
+     * Get button styling
      *
      * @return array
      */
-    public function getCartLineItems(): array
+    public function getMessageStyles(): array
     {
-        // @TODO manage line items request from PDP for the PayPal buttons
-        return [];
+        return $this->config->getMessageStyles(Config::BUTTON_AREA_PDP);
     }
 }

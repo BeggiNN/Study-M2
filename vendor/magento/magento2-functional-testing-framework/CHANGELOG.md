@@ -1,10 +1,179 @@
 Magento Functional Testing Framework Changelog
 ================================================
 
-4.3.5
+5.0.6
 ---------
 ### Fixes
-* Fixed ANSI Color codes getting appended to output of bin/magento command.
+* Updated copyright check to use the new Adobe copyright.
+* Resolved errors caused by whitespace-only comments.
+* Addressed deprecation warnings from spomky-labs/otphp.
+
+5.0.5
+---------
+### Enhancements
+* Bumped aws/aws-sdk-php package to 3.344.6
+* Bumped composer/composer to 2.8.9
+* Bumped codeception/codeception to 5.3.2
+* Bumped codeception/module-asserts to 3.2.0
+* Bumped csharpru/vault-php to 4.4.1
+* Bumped laminas/laminas-diactoros to 3.6.0
+* Bumped nikic/php-parser to 5.5.0
+* Bumped php-coveralls/php-coveralls to 2.8.0
+* Bumped behat/gherkin to 4.14.0
+* Bumped symfony/css-selector to 7.3.0
+* Bumped symfony/mime to 6.4.21
+* Bumped symfony/string to 7.3.0
+* Bumped symfony/event-dispatcher to 7.3.0
+* Bumped symfony/filesystem to 7.3.0
+* Bumped symfony/console to 6.4.22
+* Bumped symfony/service-contracts to 3.6.0
+
+5.0.4
+---------
+### Enhancements
+* Bumped aws/aws-sdk-php package to 3.342.28
+* Bumped composer/composer to 2.8.8
+* Bumped codeception/codeception to 5.2.1
+* Bumped codeception/module-webdriver to 4.0.3
+* Bumped guzzlehttp/guzzle to 7.9.3
+* Bumped monolog/monolog to 3.9.0
+* Updated cache package version to @v4
+
+5.0.3
+---------
+### Fixes
+* Allowed additional actions to read from credentials file to fix page builder failures.
+* Added support for chrome 131
+
+5.0.2
+---------
+### Fixes
+* Removed support for chrome 131
+
+5.0.1
+---------
+### Enhancement
+* Provided support for chrome 131
+
+5.0.0
+---------
+### Enhancements
+* Provided support for PHP 8.4
+* Dropped the support for PHP 8.1
+* Removed unwanted dependent packages
+* Removed the dependency of codeception/module-sequence and implemented internal adjustments to address PHP 8.4 deprecations.
+
+4.8.3
+---------
+### Enhancements
+* Bumped aws/aws-sdk-php package to 3.323.4
+* Bumped composer/composer to 2.8.1
+* Bumped laminas/laminas-diactoros to 3.4.1
+* Bumped nikic/php-parser to 5.3.1
+* Bumped squizlabs/php_codesniffer to 3.10.3
+* Remove any unused files remaining after upgrading Codeception.
+
+4.8.2
+---------
+### Enhancements
+* Bumped brainmaestro/composer-git-hook  to ^3.0
+* Bumped nikic/php-parser to 5.1.0
+* Bumped monolog/monolog to 3.7.0
+* Bumped guzzlehttp/guzzle to 7.9.2
+
+4.8.1
+---------
+### Enhancements
+* Bumped allure-codeception to ^2.4
+* Bumped squizlabs/php_codesniffer to 3.10.1
+* Bumped composer/composer to 2.7.7
+* Bumped monolog/monolog to 3.6.0
+* Bumped spomky-labs/otphp to 11.3.0
+* Bumped aws-sdk-php to 3.314.1
+
+### Fixes
+* Unneeded reports are shown when MFTF Static tests fail.
+
+4.8.0
+---------
+### Enhancements
+* Bumped phpunit/phpunit to ^10.0
+* Bumped allure-framework/allure-phpunit to ^3
+* Bumped codeception/module-webdriver ^4.0
+
+### Fixes
+* Fixed Class "Magento\FunctionalTestingFramework\StaticCheck\ActionGroupArgumentsCheck" not found on running vendor/bin/mftf build:project --upgrade.
+
+4.7.2
+---------
+### Enhancements
+* Fail static test when introduced filename does not equal the MFTF object name
+  contained within.
+
+4.7.1
+---------
+### Enhancements
+*  Bumped all symfony dependencies to `^6.0
+*  Removed abandoned package codacy/coverage
+*  Removed abandoned package sebastian/phpcpd
+*  Bumped monolog/monolog to ^3.0
+*  Bumped nikic/php-parser to ^5.0
+
+4.7.0
+---------
+### Enhancements
+*  Bumped all symfony dependencies to `^6.0
+*  Unit Test for PTS enabled doesn't apply filter fix
+
+4.6.1
+---------
+### Enhancements
+* Supported setting custom timeout value for `magentoCLI` command via an environment variable `MAGENTO_CLI_WAIT_TIMEOUT`.
+
+4.6.0
+---------
+### Enhancements
+* Added Support for PHP 8.3 and enabled PR checks for PHP 8.3.
+* Bumped `symfony/console` dependency to `^6.0`.
+* Bumped `laminas/laminas-diactoros` dependency to `^3.0`.
+* Added no-ansi option to bin/mftf command.
+
+### Fixes
+* Fixed 8.3 deprecation errors.
+* Fixed The build with PTS enabled doesn't apply filter issue.
+* Change MFTF command <magentoCLI> to maintain Magento CLI output.
+
+4.5.0
+---------
+### Enhancements
+* Increase browser resolution to 1920x1080.
+* Add metadata to ACQE Repositories.
+* Add magento admin password to credentials example.
+
+### Fixes
+* Fixed test failure while running any test suite with an argument.
+
+4.4.2
+---------
+### Fixes
+* Fixed PHP 8.2 deprecation warnings.
+
+4.4.1
+---------
+* Same as previous release
+
+4.4.0
+---------
+### Enhancements
+* Bumped `doctrine/annotations` dependency to `^2.0`.
+* Bumped `squizlabs/php_codesniffer` dependency to `^3.7`.
+* Bumped `php-webdriver/webdriver` dependency to `^1.14`.
+* Bumped `symfony/string` dependency to `^6.3`.
+* Bumped `symfony/dotenv` dependency to `^6.3`.
+* Bumped `symfony/finder` dependency to `^6.3`.
+* Bumped `symfony/http-foundation` dependency to `^6.3`.
+* Bumped `symfony/mime` dependency to `^6.3`.
+* Enhanced MFTF Modularity Test with "allow failure list".
 
 4.3.4
 ---------

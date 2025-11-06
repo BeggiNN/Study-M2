@@ -3,7 +3,6 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 
 define([
     'jquery',
@@ -28,7 +27,7 @@ define([
          * Init list of validators
          */
         initialize: function () {
-            var config = this.getConfig();
+            let config = this.getConfig();
 
             if (config[verify3DSecure.getCode()].enabled) {
                 verify3DSecure.setConfig(config[verify3DSecure.getCode()]);

@@ -33,7 +33,7 @@ class Header extends Template
     public function __construct(
         Context $context,
         array $data = [],
-        Escaper $escaper = null
+        ?Escaper $escaper = null
     ) {
         parent::__construct($context, $data);
         $this->escaper = $escaper ?: ObjectManager::getInstance()->get(Escaper::class);
@@ -59,7 +59,6 @@ class Header extends Template
                 ScopeInterface::SCOPE_STORE
             );
         }
-        $this->_data['welcome'] =  $this->escaper->escapeQuote($this->_data['welcome'], true);
-        return __($this->_data['welcome']);
+        return $this->escaper->escapeQuote(__($this->_data['welcome'])->render(), true);
     }
 }

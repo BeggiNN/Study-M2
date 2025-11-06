@@ -7,7 +7,9 @@ use PhpParser\Node;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Namespace_;
+use PhpParser\Node\Stmt\Use_;
 use PhpParser\Node\Stmt\UseUse;
+use Rector\PhpParser\Node\CustomNode\FileWithoutNamespace;
 final class AliasUsesResolver
 {
     /**
@@ -25,10 +27,10 @@ final class AliasUsesResolver
      */
     public function resolveFromNode(Node $node, array $stmts) : array
     {
-        if (!$node instanceof Namespace_) {
-            /** @var Namespace_[] $namespaces */
+        if (!$node instanceof Namespace_ && !$node instanceof FileWithoutNamespace) {
+            /** @var Namespace_[]|FileWithoutNamespace[] $namespaces */
             $namespaces = \array_filter($stmts, static function (Stmt $stmt) : bool {
-                return $stmt instanceof Namespace_;
+                return $stmt instanceof Namespace_ || $stmt instanceof FileWithoutNamespace;
             });
             if (\count($namespaces) !== 1) {
                 return [];
@@ -44,7 +46,11 @@ final class AliasUsesResolver
     public function resolveFromStmts(array $stmts) : array
     {
         $aliasedUses = [];
-        $this->useImportsTraverser->traverserStmts($stmts, static function (UseUse $useUse, string $name) use(&$aliasedUses) : void {
+        /** @param Use_::TYPE_* $useType */
+        $this->useImportsTraverser->traverserStmts($stmts, static function (int $useType, UseUse $useUse, string $name) use(&$aliasedUses) : void {
+            if ($useType !== Use_::TYPE_NORMAL) {
+                return;
+            }
             if (!$useUse->alias instanceof Identifier) {
                 return;
             }

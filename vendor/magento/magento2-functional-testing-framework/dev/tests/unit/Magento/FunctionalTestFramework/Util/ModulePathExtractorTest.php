@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Util;
@@ -159,7 +160,7 @@ class ModulePathExtractorTest extends MagentoTestCase
 
         $objectManagerProperty = new ReflectionProperty(ObjectManager::class, 'instance');
         $objectManagerProperty->setAccessible(true);
-        $objectManagerProperty->setValue($objectManagerMockInstance);
+        $objectManagerProperty->setValue(null, $objectManagerMockInstance);
 
         $resolver = ModuleResolver::getInstance();
         $property = new ReflectionProperty(ModuleResolver::class, 'enabledModuleNameAndPaths');

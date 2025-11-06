@@ -1,9 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
- 
+
 use Magento\FunctionalTestingFramework\Module\MagentoSequence;
 
 if (!function_exists('msq')) {
@@ -13,7 +13,7 @@ if (!function_exists('msq')) {
      * @param null $id
      * @return string
      */
-    function msq($id = null)
+    function msq(?string $id = null)
     {
         if ($id and isset(MagentoSequence::$hash[$id])) {
             return MagentoSequence::$hash[$id];
@@ -34,7 +34,7 @@ if (!function_exists('msqs')) {
      * @param null $id
      * @return string
      */
-    function msqs($id = null)
+    function msqs(?string $id = null)
     {
         if ($id and isset(MagentoSequence::$suiteHash[$id])) {
             return MagentoSequence::$suiteHash[$id];

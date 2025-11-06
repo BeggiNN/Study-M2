@@ -3,8 +3,10 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-?>
-<script>
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
+
+/** @var SecureHtmlRenderer $secureRenderer */
+$scriptString = <<<SCRIPT
     require([
         'uiLayout',
         'jquery'
@@ -25,5 +27,7 @@
             $('body').trigger('contentUpdated');
         })
     })
-</script>
+SCRIPT;
+echo $secureRenderer->renderTag('script', [], $scriptString, false);
+?>
 <!-- ko template: getTemplate() --><!-- /ko -->

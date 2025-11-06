@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\StaticCheck;
@@ -59,6 +59,11 @@ class CreatedDataFromOutsideActionGroupCheck implements StaticCheckInterface
      * @var ScriptUtil
      */
     private $scriptUtil;
+
+    /**
+     * @var array
+     */
+    private $actionGroupXmlFile = [];
 
     /**
      * Checks test dependencies, determined by references in tests versus the dependencies listed in the Magento module

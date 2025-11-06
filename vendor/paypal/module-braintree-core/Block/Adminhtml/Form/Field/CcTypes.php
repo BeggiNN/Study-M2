@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
 
 use PayPal\Braintree\Helper\CcType;
@@ -14,7 +15,7 @@ class CcTypes extends Select
     /**
      * @var CcType
      */
-    private $ccTypeHelper;
+    private CcType $ccTypeHelper;
 
     /**
      * Constructor
@@ -49,9 +50,9 @@ class CcTypes extends Select
      * Sets name for input element
      *
      * @param string $value
-     * @return $this
+     * @return self
      */
-    public function setInputName($value)
+    public function setInputName(string $value): CcTypes
     {
         return $this->setName($value . '[]');
     }

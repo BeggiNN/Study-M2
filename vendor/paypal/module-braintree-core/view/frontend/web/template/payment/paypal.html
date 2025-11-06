@@ -24,11 +24,16 @@
         <fieldset class="braintree-paypal-fieldset" data-bind='attr: {id: "payment_form_" + getCode()}'>
             <div id="paypal-container"></div>
         </fieldset>
+        <div class="payment-method-billing-address">
+            <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
+            <!-- ko template: getTemplate() --><!-- /ko -->
+            <!--/ko-->
+        </div>
         <div class="checkout-agreements-block">
             <each args="$parent.getRegion('before-place-order')" render=""></each>
         </div>
         <!-- ko if: (vaultEnabler.isVaultEnabled())-->
-        <div class="field choice" data-bind="visible: !isReviewRequired()">
+        <div class="field choice braintree-paypal-vault" data-bind="visible: !isReviewRequired()">
             <input type="checkbox"
                    name="vault[is_enabled]"
                    class="checkbox"
@@ -50,11 +55,6 @@
         </div>
         <!-- /ko -->
         <div class="actions-toolbar braintree-paypal-actions" data-bind="visible: isReviewRequired()">
-            <div class="payment-method-billing-address">
-                <!-- ko foreach: $parent.getRegion(getBillingAddressFormName()) -->
-                <!-- ko template: getTemplate() --><!-- /ko -->
-                <!--/ko-->
-            </div>
             <div class="payment-method-item braintree-paypal-account">
                 <span class="payment-method-type">PayPal</span>
                 <span class="payment-method-description" text="customerEmail()"></span>
@@ -62,25 +62,22 @@
             <div class="primary">
                 <button data-button="paypal-place" data-role="review-save"
                         type="submit"
-                        data-bind="attr: {id: getCode() + '_place_order', title: $t('Place Order')}, enable: (isActive()), click: placeOrder"
+                        data-bind="attr: {id: getCode() + '_place_order', title: $t('Place Order')},
+                            enable: (isActive()),
+                            click: placeOrder"
                         class="action primary checkout"
                         disabled>
                     <span translate="'Place Order'"></span>
                 </button>
             </div>
         </div>
-        <div class="actions-toolbar" data-bind="visible: !isReviewRequired()">
+        <div class="actions-toolbar braintree-paypal-buttons" data-bind="visible: !isReviewRequired()">
             <div data-bind="attr: {id: getPayPalButtonId()}"></div>
             <!-- ko if: (isCreditEnabled())-->
             <div data-bind="attr: {id: getCreditButtonId()}"></div>
             <!-- /ko -->
-            <!-- ko if: (isPaylaterEnabled())-->
-            <div data-bind="attr: {id: getPaylaterButtonId()}"></div>
-            <!-- /ko -->
-            <!-- ko if: (isPaylaterMessageEnabled())-->
-            <div data-pp-message data-pp-placement="payment"
-                 data-bind='attr: {"data-pp-amount": getGrandTotalAmount(), "data-pp-style-layout": getMessagingLayout(), "data-pp-style-logo-type": getMessagingLogo(), "data-pp-style-logo-position": getMessagingLogoPosition(), "data-pp-style-text-color": getMessagingTextColor()}'
-            ></div>
+            <!-- ko if: (isPayLaterEnabled())-->
+            <div data-bind="attr: {id: getPayLaterButtonId()}"></div>
             <!-- /ko -->
         </div>
     </div>

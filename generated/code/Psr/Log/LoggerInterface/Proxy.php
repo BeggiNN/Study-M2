@@ -69,7 +69,17 @@ class Proxy implements \Psr\Log\LoggerInterface, \Magento\Framework\ObjectManage
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -90,72 +100,72 @@ class Proxy implements \Psr\Log\LoggerInterface, \Magento\Framework\ObjectManage
     /**
      * {@inheritdoc}
      */
-    public function emergency(\Stringable|string $message, array $context = [])
+    public function emergency(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->emergency($message, $context);
+        $this->_getSubject()->emergency($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function alert(\Stringable|string $message, array $context = [])
+    public function alert(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->alert($message, $context);
+        $this->_getSubject()->alert($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function critical(\Stringable|string $message, array $context = [])
+    public function critical(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->critical($message, $context);
+        $this->_getSubject()->critical($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function error(\Stringable|string $message, array $context = [])
+    public function error(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->error($message, $context);
+        $this->_getSubject()->error($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function warning(\Stringable|string $message, array $context = [])
+    public function warning(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->warning($message, $context);
+        $this->_getSubject()->warning($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function notice(\Stringable|string $message, array $context = [])
+    public function notice(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->notice($message, $context);
+        $this->_getSubject()->notice($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function info(\Stringable|string $message, array $context = [])
+    public function info(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->info($message, $context);
+        $this->_getSubject()->info($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function debug(\Stringable|string $message, array $context = [])
+    public function debug(\Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->debug($message, $context);
+        $this->_getSubject()->debug($message, $context);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function log($level, \Stringable|string $message, array $context = [])
+    public function log($level, \Stringable|string $message, array $context = []) : void
     {
-        return $this->_getSubject()->log($level, $message, $context);
+        $this->_getSubject()->log($level, $message, $context);
     }
 }

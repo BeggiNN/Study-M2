@@ -8,7 +8,7 @@ class Interceptor extends \Magento\CatalogSearch\Model\Indexer\Fulltext implemen
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\CatalogSearch\Model\Indexer\Fulltext\Action\FullFactory $fullActionFactory, \Magento\CatalogSearch\Model\Indexer\IndexerHandlerFactory $indexerHandlerFactory, \Magento\CatalogSearch\Model\ResourceModel\Fulltext $fulltextResource, \Magento\CatalogSearch\Model\Indexer\IndexSwitcherInterface $indexSwitcher, \Magento\CatalogSearch\Model\Indexer\Scope\StateFactory $indexScopeStateFactory, \Magento\Framework\Indexer\DimensionProviderInterface $dimensionProvider, array $data, ?\Magento\Indexer\Model\ProcessManager $processManager = null, ?int $batchSize = null, ?\Magento\Framework\App\DeploymentConfig $deploymentConfig = null)
+    public function __construct(\Magento\CatalogSearch\Model\Indexer\Fulltext\Action\FullFactory $fullActionFactory, \Magento\CatalogSearch\Model\Indexer\IndexerHandlerFactory $indexerHandlerFactory, \Magento\CatalogSearch\Model\ResourceModel\Fulltext $fulltextResource, \Magento\CatalogSearch\Model\Indexer\IndexSwitcherInterface $indexSwitcher, \Magento\CatalogSearch\Model\Indexer\Scope\StateFactory $indexScopeStateFactory, \Magento\Framework\Indexer\DimensionProviderInterface $dimensionProvider, array $data = [], ?\Magento\Indexer\Model\ProcessManager $processManager = null, ?int $batchSize = null, ?\Magento\Framework\App\DeploymentConfig $deploymentConfig = null)
     {
         $this->___init();
         parent::__construct($fullActionFactory, $indexerHandlerFactory, $fulltextResource, $indexSwitcher, $indexScopeStateFactory, $dimensionProvider, $data, $processManager, $batchSize, $deploymentConfig);

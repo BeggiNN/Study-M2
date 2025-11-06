@@ -1,5 +1,82 @@
 # Changelog
 
+## 6.21.0
+* Add `fail_on_duplicate_payment_method_for_customer` option to 
+  * `ClientToken`
+  * `PaymentMethod`
+  * `CreditCard`
+* Add `blik_aliases` to LocalPaymentCompleted webhook
+* Deprecate `SamsungPayCard`
+* Updated expiring pinned vendor SSL certificates
+
+## 6.20.0
+* Add `payer_name`, `bic` and `iban_last_chars` to LocalPaymentCompleted webhook
+* Fixes "Array to String conversion" error when an international phone number is included in customer details
+* Add `editPaypalVaultId` to PayPalAccount
+* Add `aniFirstNameResponseCode` and `aniLastNameResponseCode` to CreditCardVerification
+* Add `shippingTaxAmount` to Transaction
+* Add `networkTokenizationAttributes` parameter to `Transaction.sale`
+* Add `CREDIT_CARD_NETWORK_TOKENIZATION_ATTRIBUTE_CRYPTOGRAM_IS_REQUIRED` to validation error codes.
+
+## 6.19.0
+* Add `foreignRetailer` to Transaction
+* Add `internationalPhone` to `Address` and `Customer`
+* Add `fundingSourceDescription` to PayPalAccount
+* Add missing `GooglePayCard` error code
+* Add `REFUND_FAILED` to WebhookNotification
+* Add `final_capture` to Transaction `submitForPartialSettlement`
+* Deprecate `paypalTrackingId` in favor of `paypalTrackerId`
+
+## 6.18.0
+* Deprecate `CreditCard::credit` in favor of `Transaction::credit`
+* Deprecate `CreditCard::sale` in favor of `Transaction::sale`
+* Add `domains` parameter support to `ClientToken::generate`
+* Refactor key validation in `ClientTokenGateway`
+
+## 6.17.0
+* Add `UNDER_REVIEW` Dispute Status
+* Add `DISPUTE_UNDER_REVIEW` WebhookNotification
+* Add `debitNetwork` support `Transaction` and `TransactionSearch`
+* Add `process_debit_as_credit` to `TransactionOptionsCreditCardRequest`
+
+## 6.16.0
+* Deprecate `threeDSecureToken` in favor of `threeDSecureAuthenticationId`
+* Deprecate `venmoSdkSession`, `venmoSdkPaymentMethodCode`, and `isVenmoSdk()`
+* Add `PICKUP_IN_STORE` to `ShippingMethod` enum
+* Add to `CreditCardVerification` create request
+  * `externalVault`
+  * `paymentMethodNonce`
+  * `riskData`
+  * `threeDSecureAuthenticationId`
+  * `threeDSecurePassThru` 
+* Add `phoneNumber` to `Address`, `CreditCardGateway`, `PaymentMethodGateway` and `CustomerGateway`
+* Add `packages` to `Transaction`
+* Add `packageTracking` method to `TransactionGateway` to make request to add tracking information to transactions
+* Add check for empty `liabilityShift` in `RiskData`
+* Add `imageUrl`, `upcCode`, and `upcType` to `lineItems` in `TransactionGateway`
+
+## 6.15.0
+* Add `billingAddress` and `shippingAddress` to `VenmoProfileData` for `PaymentMethodCustomerDataUpdated` webhook
+* Add `MetaCheckoutCard` and `MetaCheckoutToken` payment methods
+* Add `MetaCheckoutCardDetails` and `MetaCheckoutTokenDetails` to Transaction object
+* Add `verificationAddOns` and `additionalProcessorResponse` to `PaymentMethodCreate` for ACH Network Check
+* Add `dateOfBirth` and `countryCode` to `industry_data`
+
+## 6.14.0
+* Add `arrivalDate` and `ticketIssuerAddress` to Transaction object
+* Add `SUBSCRIPTION_BILLING_SKIPPED` WebhookNotification
+
+## 6.13.0 
+* Add `retry_ids` and `retry_transaction_id` to Transaction object
+* Add `processing_overrides` to `Transaction.sale` options
+
+## 6.12.0
+* Add subscriptions for SEPA direct debit account
+* Add `merchant_advice_code` and `merchant_advice_code_text` to `Transaction`
+
+## 6.11.2 
+*  `TestingGateway` methods return type is `Result\Error` for validation errors.
+
 ## 6.11.1
 * Resolved various dynamic property warnings for PHP 8.2 (thanks to @mvoelker & @markdavidsonEE)
 

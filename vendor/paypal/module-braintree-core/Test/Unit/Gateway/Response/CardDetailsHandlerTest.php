@@ -1,39 +1,40 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Response;
 
-use Braintree\Result\Successful;
 use Braintree\Transaction;
 use PayPal\Braintree\Gateway\Response\CardDetailsHandler;
 use Magento\Payment\Gateway\Data\PaymentDataObject;
 use Magento\Sales\Model\Order\Payment;
 use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \PayPal\Braintree\Gateway\Response\CardDetailsHandler
+     * @var CardDetailsHandler
      */
-    private $cardHandler;
+    private CardDetailsHandler $cardHandler;
 
     /**
-     * @var \Magento\Sales\Model\Order\Payment|\PHPUnit\Framework\MockObject\MockObject
+     * @var Payment|MockObject
      */
-    private $payment;
+    private Payment|MockObject $payment;
 
     /**
-     * @var \PayPal\Braintree\Gateway\Config\Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $config;
+    private Config|MockObject $config;
 
     /**
-     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
+     * @var SubjectReader|MockObject
      */
-    private $subjectReaderMock;
+    private SubjectReader|MockObject $subjectReaderMock;
 
     protected function setUp(): void
     {
@@ -45,9 +46,6 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
         $this->cardHandler = new CardDetailsHandler($this->config, $this->subjectReaderMock);
     }
 
-    /**
-     * @covers \PayPal\Braintree\Gateway\Response\CardDetailsHandler::handle
-     */
     public function testHandle()
     {
         $paymentData = $this->getPaymentDataObjectMock();
@@ -82,11 +80,11 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
     /**
      * Create mock for gateway config
      */
-    private function initConfigMock()
+    private function initConfigMock(): void
     {
         $this->config = $this->getMockBuilder(Config::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCctypesMapper'])
+            ->onlyMethods(['getCctypesMapper'])
             ->getMock();
 
         $this->config->expects(static::once())
@@ -103,13 +101,13 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Create mock for payment data object and order payment
-     * @return \PHPUnit\Framework\MockObject\MockObject
+     * @return MockObject
      */
-    private function getPaymentDataObjectMock()
+    private function getPaymentDataObjectMock(): MockObject
     {
         $this->payment = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'setCcLast4',
                 'setCcExpMonth',
                 'setCcExpYear',
@@ -119,7 +117,7 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
             ->getMock();
 
         $mock = $this->getMockBuilder(PaymentDataObject::class)
-            ->setMethods(['getPayment'])
+            ->onlyMethods(['getPayment'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -132,9 +130,9 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Create Braintree transaction
-     * @return \Braintree\Transaction
+     * @return Transaction
      */
-    private function getBraintreeTransaction()
+    private function getBraintreeTransaction(): Transaction
     {
         $attributes = [
             'creditCard' => [
@@ -145,8 +143,7 @@ class CardDetailsHandlerTest extends \PHPUnit\Framework\TestCase
                 'last4' => 1231
             ]
         ];
-        $transaction = Transaction::factory($attributes);
 
-        return $transaction;
+        return Transaction::factory($attributes);
     }
 }

@@ -1,14 +1,16 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Controller\Paypal;
 
-use InvalidArgumentException;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\Exception\InvalidArgumentException;
 use Magento\Quote\Api\Data\CartInterface;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\Redirect;
@@ -17,17 +19,17 @@ use PayPal\Braintree\Gateway\Config\PayPal\Config;
 /**
  * Abstract class AbstractAction
  */
-abstract class AbstractAction extends Action
+abstract class AbstractAction extends Action implements ActionInterface
 {
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
      * @var Session
      */
-    protected $checkoutSession;
+    protected Session $checkoutSession;
 
     /**
      * Constructor
@@ -71,7 +73,7 @@ abstract class AbstractAction extends Action
      * @return void
      * @throws InvalidArgumentException
      */
-    protected function validateQuote($quote)
+    protected function validateQuote(CartInterface $quote): void
     {
         if (!$quote || !$quote->getItemsCount()) {
             throw new InvalidArgumentException(__('We can\'t initialize checkout.'));

@@ -3,61 +3,65 @@
  * See COPYING.txt for license details.
  */
 
-module.exports = (function (glob, fs, _, fst, pc) {
-    'use strict';
-    return {
-        readFiles: function (paths) {
-            var data = [];
+'use strict';
 
-            _.each(paths, function (path) {
-                data = _.union(data, fst.getData(path));
-            });
+var glob = require('glob'),
+    fs = require('fs'),
+    _ = require('underscore'),
+    fst = require('../tools/fs-tools'),
+    pc = require('../configs/path');
 
-            return data;
-        },
+module.exports = {
+    readFiles: function (paths) {
+        var data = [];
 
-        getFilesForValidate: function () {
-            var blackListFiles = glob.sync(pc.static.blacklist + '*.txt'),
-                whiteListFiles = glob.sync(pc.static.whitelist + '*.txt'),
-                blackList = this.readFiles(blackListFiles).filter(this.isListEntryValid),
-                whiteList = this.readFiles(whiteListFiles).filter(this.isListEntryValid),
-                files = [],
-                entireBlackList = [];
+        _.each(paths, function (path) {
+            data = _.union(data, fst.getData(path));
+        });
 
-            fst.arrayRead(blackList, function (data) {
-                entireBlackList = _.union(entireBlackList, data);
-            });
+        return data;
+    },
 
-            fst.arrayRead(whiteList, function (data) {
-                files = _.difference(data, entireBlackList);
-            });
+    getFilesForValidate: function () {
+        var blackListFiles = glob.sync(pc.static.blacklist + '*.txt'),
+            whiteListFiles = glob.sync(pc.static.whitelist + '*.txt'),
+            blackList = this.readFiles(blackListFiles).filter(this.isListEntryValid),
+            whiteList = this.readFiles(whiteListFiles).filter(this.isListEntryValid),
+            files = [],
+            entireBlackList = [];
 
-            return files;
-        },
+        fst.arrayRead(blackList, function (data) {
+            entireBlackList = _.union(entireBlackList, data);
+        });
 
-        isListEntryValid: function (line) {
-            line = line.trim();
-            return line.length > 0 && line.startsWith('// ') !== true;
-        },
+        fst.arrayRead(whiteList, function (data) {
+            files = _.difference(data, entireBlackList);
+        });
 
-        getFiles: function (file) {
-            var files;
+        return files;
+    },
 
-            if (file) {
-                return file.split(',');
-            }
+    isListEntryValid: function(line) {
+        line = line.trim();
+        return line.length > 0 && line.startsWith('// ') !== true;
+    },
 
-            if (!fs.existsSync(pc.static.tmp)) {
-                fst.write(pc.static.tmp, this.getFilesForValidate());
-            }
+    getFiles: function (file) {
+        var files;
 
-            files = fst.getData(pc.static.tmp);
-            if (files.length === 1 && files[0] === '') {
-                files = [];
-            }
-
-            return files;
+        if (file) {
+            return file.split(',');
         }
-    };
-})(require('glob'),require('fs'),require('underscore'),require('../tools/fs-tools'),require('../configs/path'));
 
+        if (!fs.existsSync(pc.static.tmp)) {
+            fst.write(pc.static.tmp, this.getFilesForValidate());
+        }
+
+        files = fst.getData(pc.static.tmp);
+        if (files.length === 1 && files[0] === '') {
+            files = [];
+        }
+
+        return files;
+    }
+};

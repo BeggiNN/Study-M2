@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\GooglePay\Auth;
 
@@ -9,27 +14,27 @@ class Data implements AuthDataInterface
     /**
      * @var string
      */
-    private $clientToken;
+    private string $clientToken;
 
     /**
      * @var string
      */
-    private $displayName;
+    private string $displayName;
 
     /**
      * @var string
      */
-    private $actionSuccess;
+    private string $actionSuccess;
 
     /**
      * @var bool
      */
-    private $isLoggedIn;
+    private bool $isLoggedIn;
 
     /**
      * @var string
      */
-    private $storeCode;
+    private string $storeCode;
 
     /**
      * @inheritdoc
@@ -74,40 +79,40 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setClientToken($value)
+    public function setClientToken(string|null $value): ?string
     {
-        $this->clientToken = $value;
+        return $this->clientToken = $value;
     }
 
     /**
      * @inheritdoc
      */
-    public function setDisplayName($value)
+    public function setDisplayName(string|null $value): ?string
     {
-        $this->displayName = $value;
+        return $this->displayName = $value;
     }
 
     /**
      * @inheritdoc
      */
-    public function setActionSuccess($value)
+    public function setActionSuccess(string|null $value): ?string
     {
-        $this->actionSuccess = $value;
+        return $this->actionSuccess = $value;
     }
 
     /**
      * @inheritdoc
      */
-    public function setIsLoggedIn($value)
+    public function setIsLoggedIn(bool $value): bool
     {
-        $this->isLoggedIn = $value;
+        return $this->isLoggedIn = $value;
     }
 
     /**
      * @inheritdoc
      */
-    public function setStoreCode($value)
+    public function setStoreCode(string|null $value): ?string
     {
-        $this->storeCode = $value;
+        return $this->storeCode = $value;
     }
 }

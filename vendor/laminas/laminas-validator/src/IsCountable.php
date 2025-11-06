@@ -36,6 +36,7 @@ use function is_numeric;
  * }&array<string, mixed>
  * @property Options&array<string, mixed> $options Required to stop Psalm getting confused about the declaration
  *                                                 on AbstractValidator
+ * @final
  */
 class IsCountable extends AbstractValidator
 {
@@ -145,6 +146,8 @@ class IsCountable extends AbstractValidator
     /**
      * Returns the count option
      *
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in 3.0
+     *
      * @return int|null
      */
     public function getCount()
@@ -155,6 +158,8 @@ class IsCountable extends AbstractValidator
     /**
      * Returns the min option
      *
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in 3.0
+     *
      * @return int|null
      */
     public function getMin()
@@ -164,6 +169,8 @@ class IsCountable extends AbstractValidator
 
     /**
      * Returns the max option
+     *
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in 3.0
      *
      * @return int|null
      */

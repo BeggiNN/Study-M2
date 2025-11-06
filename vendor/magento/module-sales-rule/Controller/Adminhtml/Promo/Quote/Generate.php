@@ -82,11 +82,11 @@ class Generate extends Quote implements HttpPostActionInterface
         Registry $coreRegistry,
         FileFactory $fileFactory,
         Date $dateFilter,
-        CouponGenerator $couponGenerator = null,
-        PublisherInterface $publisher = null,
-        CouponGenerationSpecInterfaceFactory $generationSpecFactory = null,
-        GetCouponCodeLengthInterface $getCouponCodeLength = null,
-        ScopeConfigInterface $scopeConfig = null
+        ?CouponGenerator $couponGenerator = null,
+        ?PublisherInterface $publisher = null,
+        ?CouponGenerationSpecInterfaceFactory $generationSpecFactory = null,
+        ?GetCouponCodeLengthInterface $getCouponCodeLength = null,
+        ?ScopeConfigInterface $scopeConfig = null
     ) {
         parent::__construct($context, $coreRegistry, $fileFactory, $dateFilter);
         $this->couponGenerator = $couponGenerator ?:
@@ -101,7 +101,10 @@ class Generate extends Quote implements HttpPostActionInterface
             ObjectManager::getInstance()->get(
                 GetCouponCodeLengthInterface::class
             );
-        $this->scopeConfig = $scopeConfig;
+        $this->scopeConfig = $scopeConfig ?:
+            ObjectManager::getInstance()->get(
+                ScopeConfigInterface::class
+            );
     }
 
     /**
@@ -110,7 +113,7 @@ class Generate extends Quote implements HttpPostActionInterface
      * @return void
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
-    public function execute(): void
+    public function execute()
     {
         if (!$this->getRequest()->isAjax()) {
             $this->_forward('noroute');
@@ -162,7 +165,6 @@ class Generate extends Quote implements HttpPostActionInterface
                 }
 
                 $data['quantity'] = $data['qty'] ?? 0;
-
                 $couponQuantityLimit = (int)$this->scopeConfig->getValue(
                     self::XML_CONFIG_COUPON_QUANTITY_LIMIT,
                     ScopeInterface::SCOPE_STORE

@@ -516,7 +516,7 @@ class AbstractBlockTest extends \PHPUnit\Framework\TestCase
     /**
      * @return array
      */
-    public function escapeHtmlDataProvider()
+    public static function escapeHtmlDataProvider()
     {
         return [
             'array data' => [
@@ -587,17 +587,17 @@ class AbstractBlockTest extends \PHPUnit\Framework\TestCase
      */
     public function testNoSid(): void
     {
-        $blockId = 'block-with-sid' . Random::getRandomNumber(1, 9999);
+        $blockId = 'block-with-sid' .Random::getRandomNumber(1, 9999);
         $block = $this->_createBlockWithLayout(
             $blockId,
             $blockId,
             \Magento\Framework\View\Element\Text::class
         );
-        $outerId = 'block-outer' . Random::getRandomNumber(1, 9999);
+        $outerId = 'block-outer' .Random::getRandomNumber(1, 9999);
         $outer = $this->_createBlockWithLayout($outerId, $outerId);
         $block->setText(
-            $text = 'Some text with ' . SidResolverInterface::SESSION_ID_QUERY_PARAM
-                . '=' . $this->session->getSessionId()
+            $text = 'Some text with ' .SidResolverInterface::SESSION_ID_QUERY_PARAM
+                .'=' .$this->session->getSessionId()
         );
         $block->setData('cache_lifetime', 3600);
         //Caching the block's content

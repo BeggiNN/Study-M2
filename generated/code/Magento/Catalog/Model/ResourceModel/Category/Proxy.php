@@ -69,7 +69,17 @@ class Proxy extends \Magento\Catalog\Model\ResourceModel\Category implements \Ma
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -309,6 +319,16 @@ class Proxy extends \Magento\Catalog\Model\ResourceModel\Category implements \Ma
     public function getCategoryWithChildren(int $categoryId) : array
     {
         return $this->_getSubject()->getCategoryWithChildren($categoryId);
+    }
+
+    /**
+     * Reset state of proxied instance
+     */
+    public function _resetState() : void
+    {
+        if ($this->_subject) {
+            $this->_subject->_resetState(); 
+        }
     }
 
     /**

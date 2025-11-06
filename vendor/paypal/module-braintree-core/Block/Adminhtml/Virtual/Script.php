@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Adminhtml\Virtual;
 
@@ -11,6 +16,8 @@ use PayPal\Braintree\Block\Payment;
 class Script extends Payment
 {
     /**
+     * Get method code
+     *
      * @return string
      */
     public function getMethodCode(): string
@@ -19,6 +26,8 @@ class Script extends Payment
     }
 
     /**
+     * Check if vault enabled
+     *
      * @return bool
      */
     public function isVaultEnabled(): bool
@@ -27,6 +36,8 @@ class Script extends Payment
     }
 
     /**
+     * Has verification
+     *
      * @return bool
      */
     public function hasVerification(): bool

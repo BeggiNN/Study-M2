@@ -3,14 +3,16 @@
 declare (strict_types=1);
 namespace Rector\Naming\Rector\Assign;
 
-use RectorPrefix202308\Nette\Utils\Strings;
+use RectorPrefix202411\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Function_;
-use Rector\Core\Rector\AbstractRector;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
+use Rector\Comments\NodeDocBlock\DocBlockUpdater;
 use Rector\Naming\Guard\BreakingVariableRenameGuard;
 use Rector\Naming\Matcher\VariableAndCallAssignMatcher;
 use Rector\Naming\Naming\ExpectedNameResolver;
@@ -18,6 +20,7 @@ use Rector\Naming\NamingConvention\NamingConventionAnalyzer;
 use Rector\Naming\PhpDoc\VarTagValueNodeRenamer;
 use Rector\Naming\ValueObject\VariableAndCallAssign;
 use Rector\Naming\VariableRenamer;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -56,11 +59,26 @@ final class RenameVariableToMatchMethodCallReturnTypeRector extends AbstractRect
      */
     private $variableRenamer;
     /**
+     * @readonly
+     * @var \Rector\Comments\NodeDocBlock\DocBlockUpdater
+     */
+    private $docBlockUpdater;
+    /**
+     * @readonly
+     * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
+     */
+    private $phpDocInfoFactory;
+    /**
      * @var string
      * @see https://regex101.com/r/JG5w9j/1
      */
     private const OR_BETWEEN_WORDS_REGEX = '#[a-z]Or[A-Z]#';
-    public function __construct(BreakingVariableRenameGuard $breakingVariableRenameGuard, ExpectedNameResolver $expectedNameResolver, NamingConventionAnalyzer $namingConventionAnalyzer, VarTagValueNodeRenamer $varTagValueNodeRenamer, VariableAndCallAssignMatcher $variableAndCallAssignMatcher, VariableRenamer $variableRenamer)
+    /**
+     * @var string
+     * @see https://regex101.com/r/TV8YXZ/1
+     */
+    private const VALID_VARIABLE_NAME_REGEX = '#^[a-zA-Z_\\x7f-\\xff][a-zA-Z0-9_\\x7f-\\xff]*$#';
+    public function __construct(BreakingVariableRenameGuard $breakingVariableRenameGuard, ExpectedNameResolver $expectedNameResolver, NamingConventionAnalyzer $namingConventionAnalyzer, VarTagValueNodeRenamer $varTagValueNodeRenamer, VariableAndCallAssignMatcher $variableAndCallAssignMatcher, VariableRenamer $variableRenamer, DocBlockUpdater $docBlockUpdater, PhpDocInfoFactory $phpDocInfoFactory)
     {
         $this->breakingVariableRenameGuard = $breakingVariableRenameGuard;
         $this->expectedNameResolver = $expectedNameResolver;
@@ -68,6 +86,8 @@ final class RenameVariableToMatchMethodCallReturnTypeRector extends AbstractRect
         $this->varTagValueNodeRenamer = $varTagValueNodeRenamer;
         $this->variableAndCallAssignMatcher = $variableAndCallAssignMatcher;
         $this->variableRenamer = $variableRenamer;
+        $this->docBlockUpdater = $docBlockUpdater;
+        $this->phpDocInfoFactory = $phpDocInfoFactory;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -116,6 +136,7 @@ CODE_SAMPLE
         if ($node->stmts === null) {
             return null;
         }
+        $hasChanged = \false;
         foreach ($node->stmts as $stmt) {
             if (!$stmt instanceof Expression) {
                 continue;
@@ -126,7 +147,7 @@ CODE_SAMPLE
             $assign = $stmt->expr;
             $variableAndCallAssign = $this->variableAndCallAssignMatcher->match($assign, $node);
             if (!$variableAndCallAssign instanceof VariableAndCallAssign) {
-                return null;
+                continue;
             }
             $call = $variableAndCallAssign->getCall();
             $expectedName = $this->expectedNameResolver->resolveForCall($call);
@@ -139,13 +160,19 @@ CODE_SAMPLE
             if ($this->shouldSkip($variableAndCallAssign, $expectedName)) {
                 continue;
             }
-            $this->renameVariable($variableAndCallAssign, $expectedName);
+            $this->renameVariable($variableAndCallAssign, $expectedName, $stmt);
+            $hasChanged = \true;
+        }
+        if ($hasChanged) {
             return $node;
         }
         return null;
     }
     private function shouldSkip(VariableAndCallAssign $variableAndCallAssign, string $expectedName) : bool
     {
+        if (Strings::match($expectedName, self::VALID_VARIABLE_NAME_REGEX) === null) {
+            return \true;
+        }
         if ($this->namingConventionAnalyzer->isCallMatchingVariableName($variableAndCallAssign->getCall(), $variableAndCallAssign->getVariableName(), $expectedName)) {
             return \true;
         }
@@ -155,11 +182,14 @@ CODE_SAMPLE
         }
         return $this->breakingVariableRenameGuard->shouldSkipVariable($variableAndCallAssign->getVariableName(), $expectedName, $variableAndCallAssign->getFunctionLike(), $variableAndCallAssign->getVariable());
     }
-    private function renameVariable(VariableAndCallAssign $variableAndCallAssign, string $expectedName) : void
+    private function renameVariable(VariableAndCallAssign $variableAndCallAssign, string $expectedName, Expression $expression) : void
     {
-        $assign = $variableAndCallAssign->getAssign();
-        $assignPhpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($assign);
-        $this->varTagValueNodeRenamer->renameAssignVarTagVariableName($assignPhpDocInfo, $variableAndCallAssign->getVariableName(), $expectedName);
         $this->variableRenamer->renameVariableInFunctionLike($variableAndCallAssign->getFunctionLike(), $variableAndCallAssign->getVariableName(), $expectedName, $variableAndCallAssign->getAssign());
+        $assignPhpDocInfo = $this->phpDocInfoFactory->createFromNode($expression);
+        if (!$assignPhpDocInfo instanceof PhpDocInfo) {
+            return;
+        }
+        $this->varTagValueNodeRenamer->renameAssignVarTagVariableName($assignPhpDocInfo, $variableAndCallAssign->getVariableName(), $expectedName);
+        $this->docBlockUpdater->updateRefactoredNodeWithPhpDocInfo($expression);
     }
 }

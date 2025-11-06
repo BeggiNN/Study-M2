@@ -37,7 +37,7 @@ use Laminas\Stdlib\ArrayUtils;
  */
 class DispatchListener extends AbstractListenerAggregate
 {
-    public function __construct(private ControllerManager $controllerManager)
+    public function __construct(private readonly ControllerManager $controllerManager)
     {
     }
 

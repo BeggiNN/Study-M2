@@ -15,6 +15,8 @@ use function array_key_exists;
  * Placeholder to make its typical usage obvious, but can be used just as easily
  * for non-Placeholder things. That said, the support for this is only
  * guaranteed to effect subsequently rendered templates, and of course Layouts.
+ *
+ * @final
  */
 class Placeholder extends AbstractHelper
 {
@@ -53,8 +55,10 @@ class Placeholder extends AbstractHelper
     /**
      * createContainer
      *
+     * @deprecated Since 2.40.0. Internal use of 'Containers' will not be part of the public API in 3.0 and users will
+     *             interact only with methods used for aggregating content.
+     *
      * @param  string $key
-     * @param  array $value
      * @return AbstractContainer
      */
     public function createContainer($key, array $value = [])
@@ -68,7 +72,10 @@ class Placeholder extends AbstractHelper
     /**
      * Retrieve a placeholder container
      *
-     * @param  string $key
+     * @deprecated  Since 2.40.0. Internal use of 'Containers' will not be part of the public API in 3.0 and users will
+     *              interact only with methods used for aggregating content.
+     *
+     * @param string $key
      * @return AbstractContainer
      */
     public function getContainer($key)
@@ -84,7 +91,10 @@ class Placeholder extends AbstractHelper
     /**
      * Does a particular container exist?
      *
-     * @param  string $key
+     * @deprecated  Since 2.40.0. Internal use of 'Containers' will not be part of the public API in 3.0 and users will
+     *              interact only with methods used for aggregating content.
+     *
+     * @param string $key
      * @return bool
      */
     public function containerExists($key)
@@ -96,7 +106,10 @@ class Placeholder extends AbstractHelper
     /**
      * Delete a specific container by name
      *
-     * @param  string $key
+     * @deprecated  Since 2.40.0. Internal use of 'Containers' will not be part of the public API in 3.0 and users will
+     *              interact only with methods used for aggregating content.
+     *
+     * @param string $key
      * @return void
      */
     public function deleteContainer($key)
@@ -107,6 +120,9 @@ class Placeholder extends AbstractHelper
 
     /**
      * Remove all containers
+     *
+     * @deprecated  Since 2.40.0. Internal use of 'Containers' will not be part of the public API in 3.0 and users will
+     *              interact only with methods used for aggregating content.
      *
      * @return void
      */

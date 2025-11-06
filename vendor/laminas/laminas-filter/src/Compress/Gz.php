@@ -30,6 +30,10 @@ use const SEEK_END;
 /**
  * Compression adapter for Gzip (ZLib)
  *
+ * @deprecated Since 2.40.0 Compression adapters will be split into multiple interfaces to clearly separate the
+ *             capability of the underlying compression or archive format. For example, tar cannot compress strings and
+ *             GZ cannot be used to create multi-file archives.
+ *
  * @psalm-type Options = array{
  *     level?: int,
  *     mode?: string,

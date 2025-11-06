@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Adminhtml\System\Config;
 
 use Magento\Framework\App\Cache\TypeListInterface;
@@ -22,12 +23,12 @@ class CountryCreditCard extends Value
     /**
      * @var Random
      */
-    protected $mathRandom;
+    protected Random $mathRandom;
 
     /**
      * @var Json
      */
-    private $serializer;
+    private mixed $serializer;
 
     /**
      * @param Context $context
@@ -35,10 +36,10 @@ class CountryCreditCard extends Value
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
      * @param Random $mathRandom
-     * @param AbstractResource $resource
-     * @param AbstractDb $resourceCollection
+     * @param AbstractResource|null $resource
+     * @param AbstractDb|null $resourceCollection
      * @param array $data
-     * @param Json $serializer
+     * @param Json|null $serializer
      */
     public function __construct(
         Context $context,
@@ -46,10 +47,10 @@ class CountryCreditCard extends Value
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
         Random $mathRandom,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
+        ?AbstractResource $resource = null,
+        ?AbstractDb $resourceCollection = null,
         array $data = [],
-        Json $serializer = null
+        ?Json $serializer = null
     ) {
         $this->mathRandom = $mathRandom;
         $this->serializer = $serializer ?: ObjectManager::getInstance()
@@ -65,6 +66,13 @@ class CountryCreditCard extends Value
     public function beforeSave()
     {
         $value = $this->getValue();
+        if (!is_array($value)) {
+            $value = $this->serializer->unserialize($value);
+            if (!empty($value)) {
+                $this->setValue($this->serializer->serialize($value));
+                return $this;
+            }
+        }
         $result = [];
         foreach ($value as $data) {
             if (empty($data['country_id']) || empty($data['cc_types'])) {

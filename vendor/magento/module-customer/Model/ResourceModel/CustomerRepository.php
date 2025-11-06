@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2025 Adobe
+ * All Rights Reserved.
  */
 
 declare(strict_types=1);
@@ -166,7 +166,7 @@ class CustomerRepository implements CustomerRepositoryInterface
         JoinProcessorInterface $extensionAttributesJoinProcessor,
         CollectionProcessorInterface $collectionProcessor,
         NotificationStorage $notificationStorage,
-        DelegatedStorage $delegatedStorage = null,
+        ?DelegatedStorage $delegatedStorage = null,
         ?GroupRepositoryInterface $groupRepository = null
     ) {
         $this->customerFactory = $customerFactory;
@@ -206,15 +206,16 @@ class CustomerRepository implements CustomerRepositoryInterface
         /** @var NewOperation|null $delegatedNewOperation */
         $delegatedNewOperation = !$customer->getId() ? $this->delegatedStorage->consumeNewOperation() : null;
         $prevCustomerData = $prevCustomerDataArr = null;
-        if ($customer->getDefaultBilling()) {
-            $this->validateDefaultAddress($customer, CustomerInterface::DEFAULT_BILLING);
-        }
-        if ($customer->getDefaultShipping()) {
-            $this->validateDefaultAddress($customer, CustomerInterface::DEFAULT_SHIPPING);
-        }
         if ($customer->getId()) {
             $prevCustomerData = $this->getById($customer->getId());
             $prevCustomerDataArr = $this->prepareCustomerData($prevCustomerData->__toArray());
+            $customer->setCreatedAt($prevCustomerData->getCreatedAt());
+        }
+        if ($customer->getDefaultBilling()) {
+            $this->validateDefaultAddress($customer, $prevCustomerData, CustomerInterface::DEFAULT_BILLING);
+        }
+        if ($customer->getDefaultShipping()) {
+            $this->validateDefaultAddress($customer, $prevCustomerData, CustomerInterface::DEFAULT_SHIPPING);
         }
         /** @var $customer \Magento\Customer\Model\Data\Customer */
         $customerArr = $customer->__toArray();
@@ -230,7 +231,6 @@ class CustomerRepository implements CustomerRepositoryInterface
         /** @var CustomerModel $customerModel */
         $customerModel = $this->customerFactory->create(['data' => $customerData]);
         $this->populateWithOrigData($customerModel, $prevCustomerDataArr);
-
         //Model's actual ID field maybe different than "id" so "id" field from $customerData may be ignored.
         $customerModel->setId($customer->getId());
         $storeId = $customerModel->getStoreId();
@@ -417,8 +417,8 @@ class CustomerRepository implements CustomerRepositoryInterface
      * Retrieve customers which match a specified criteria.
      *
      * This call returns an array of objects, but detailed information about each object’s attributes might not be
-     * included. See https://devdocs.magento.com/codelinks/attributes.html#CustomerRepositoryInterface to determine
-     * which call to use to get detailed information about all attributes for an object.
+     * included. See https://developer.adobe.com/commerce/webapi/rest/attributes#CustomerRepositoryInterface
+     * to determine which call to use to get detailed information about all attributes for an object.
      *
      * @param \Magento\Framework\Api\SearchCriteriaInterface $searchCriteria
      * @return \Magento\Customer\Api\Data\CustomerSearchResultsInterface
@@ -550,6 +550,14 @@ class CustomerRepository implements CustomerRepositoryInterface
     {
         if (isset($customerData[CustomerInterface::CUSTOM_ATTRIBUTES])) {
             foreach ($customerData[CustomerInterface::CUSTOM_ATTRIBUTES] as $attribute) {
+                if (empty($attribute['value'])
+                    && !empty($attribute['selected_options'])
+                    && is_array($attribute['selected_options'])
+                ) {
+                    $attribute['value'] = implode(',', array_map(function ($option): string {
+                        return $option['value'] ?? '';
+                    }, $attribute['selected_options']));
+                }
                 $customerData[$attribute['attribute_code']] = $attribute['value'];
             }
             unset($customerData[CustomerInterface::CUSTOM_ATTRIBUTES]);
@@ -561,23 +569,24 @@ class CustomerRepository implements CustomerRepositoryInterface
      * To validate default address
      *
      * @param CustomerInterface $customer
+     * @param CustomerInterface|null $prevCustomerData
      * @param string $defaultAddressType
      * @return void
      * @throws InputException
      */
     private function validateDefaultAddress(
         CustomerInterface $customer,
+        ?CustomerInterface $prevCustomerData,
         string $defaultAddressType
     ): void {
-        $addressId = $defaultAddressType === CustomerInterface::DEFAULT_BILLING ? $customer->getDefaultBilling()
-            : $customer->getDefaultShipping();
-        if ($customer->getAddresses()) {
-            foreach ($customer->getAddresses() as $address) {
-                if ((int) $addressId === (int) $address->getId()) {
+        $defaultAddressId = $defaultAddressType === CustomerInterface::DEFAULT_BILLING ?
+            (int) $customer->getDefaultBilling() : (int) $customer->getDefaultShipping();
+        if ($prevCustomerData && $prevCustomerData->getAddresses()) {
+            foreach ($prevCustomerData->getAddresses() as $address) {
+                if ($defaultAddressId === (int) $address->getId()) {
                     return;
                 }
             }
-
             throw new InputException(
                 __(
                     'The %fieldName value is invalid. Set the correct value and try again.',

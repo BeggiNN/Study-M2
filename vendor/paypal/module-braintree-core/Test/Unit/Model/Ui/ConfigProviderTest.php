@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Model\Ui;
 
 use PayPal\Braintree\Gateway\Config\Config;
@@ -19,39 +20,39 @@ use Magento\Framework\View\Asset\Source;
  */
 class ConfigProviderTest extends TestCase
 {
-    const SDK_URL = 'https://js.braintreegateway.com/v2/braintree.js';
-    const CLIENT_TOKEN = 'token';
-    const MERCHANT_ACCOUNT_ID = '245345';
+    private const SDK_URL = 'https://js.braintreegateway.com/v2/braintree.js';
+    private const CLIENT_TOKEN = 'token';
+    private const MERCHANT_ACCOUNT_ID = '245345';
 
     /**
      * @var Config|MockObject
      */
-    private $config;
+    private Config|MockObject $config;
 
     /**
      * @var BraintreeAdapter|MockObject
      */
-    private $braintreeAdapter;
+    private BraintreeAdapter|MockObject $braintreeAdapter;
 
     /**
-     * @var ConfigProvider
+     * @var ConfigProvider|MockObject
      */
-    private $configProvider;
+    private ConfigProvider|MockObject $configProvider;
 
     /**
      * @var PayPalConfig|MockObject
      */
-    private $payPalConfig;
+    private PayPalConfig|MockObject $payPalConfig;
 
     /**
-     * @var CcConfig
+     * @var CcConfig|MockObject
      */
-    private $ccConfig;
+    private CcConfig|MockObject $ccConfig;
 
     /**
-     * @var Source
+     * @var Source|MockObject
      */
-    private $assetSource;
+    private Source|MockObject $assetSource;
 
     protected function setUp(): void
     {
@@ -128,7 +129,7 @@ class ConfigProviderTest extends TestCase
     /**
      * @return array
      */
-    public function getConfigDataProvider()
+    public static function getConfigDataProvider(): array
     {
         return [
             [
@@ -143,7 +144,7 @@ class ConfigProviderTest extends TestCase
                     'isCvvEnabled' => true,
                     'isVerify3DSecure' => true,
                     'is3DSAlwaysRequested' => true,
-                    'getThresholdAmount' => (float)20,
+                    'getThresholdAmount' => 20.0,
                     'get3DSecureSpecificCountries' => ['GB', 'US', 'CA'],
                     'getEnvironment' => 'test-environment',
                     'getMerchantId' => 'test-merchant-id',
@@ -166,7 +167,6 @@ class ConfigProviderTest extends TestCase
                             'ccVaultCode' => ConfigProvider::CC_VAULT_CODE,
                             'style' => [
                                 'shape' => null,
-                                'size' => null,
                                 'color' => null
                             ],
                             'disabledFunding' => [
@@ -194,7 +194,7 @@ class ConfigProviderTest extends TestCase
     /**
      * @return array
      */
-    public function getClientTokenDataProvider()
+    public static function getClientTokenDataProvider(): array
     {
         return [
             [

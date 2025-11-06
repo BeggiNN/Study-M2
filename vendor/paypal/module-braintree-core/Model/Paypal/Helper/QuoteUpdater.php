@@ -1,8 +1,10 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Model\Paypal\Helper;
 
 use InvalidArgumentException;
@@ -22,27 +24,34 @@ class QuoteUpdater extends AbstractHelper
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var CartRepositoryInterface
      */
-    private $quoteRepository;
+    private CartRepositoryInterface $quoteRepository;
 
     /**
      * @var ManagerInterface
      */
-    private $eventManager;
+    private ManagerInterface $eventManager;
 
     /**
      * @var ResourceConnection
      */
-    private $resource;
+    private ResourceConnection $resource;
 
     /**
      * @var Region
      */
-    private $region;
+    private Region $region;
+
+    /**
+     * Flag on whether shipping address holds the full name details.
+     *
+     * @var bool|null
+     */
+    private ?bool $hasShippingAddressFullName = null;
 
     /**
      * QuoteUpdater constructor
@@ -77,7 +86,7 @@ class QuoteUpdater extends AbstractHelper
      * @throws InvalidArgumentException
      * @throws LocalizedException
      */
-    public function execute($nonce, array $details, Quote $quote)
+    public function execute(string $nonce, array $details, Quote $quote): void
     {
         if (empty($nonce) || empty($details)) {
             throw new InvalidArgumentException('The "nonce" and "details" fields do not exist.');
@@ -96,7 +105,7 @@ class QuoteUpdater extends AbstractHelper
      * @param array $details
      * @return void
      */
-    private function updateQuote(Quote $quote, array $details)
+    private function updateQuote(Quote $quote, array $details): void
     {
         $this->eventManager->dispatch('braintree_paypal_update_quote_before', [
             'quote' => $quote,
@@ -129,9 +138,11 @@ class QuoteUpdater extends AbstractHelper
     }
 
     /**
+     * Clean up address
+     *
      * @param Quote $quote
      */
-    private function cleanUpAddress(Quote $quote)
+    private function cleanUpAddress(Quote $quote): void
     {
         $connection = $this->resource->getConnection();
         $tableName = $this->resource->getTableName('quote_address');
@@ -148,7 +159,7 @@ class QuoteUpdater extends AbstractHelper
      * @param array $details
      * @return void
      */
-    private function updateQuoteAddress(Quote $quote, array $details)
+    private function updateQuoteAddress(Quote $quote, array $details): void
     {
         if (!$quote->getIsVirtual()) {
             $this->updateShippingAddress($quote, $details);
@@ -165,12 +176,20 @@ class QuoteUpdater extends AbstractHelper
      * @param array $details
      * @return void
      */
-    private function updateShippingAddress(Quote $quote, array $details)
+    private function updateShippingAddress(Quote $quote, array $details): void
     {
         $shippingAddress = $quote->getShippingAddress();
-        $shippingAddress->setFirstname($details['shippingAddress']['recipientFirstName']);
-        $shippingAddress->setLastname($details['shippingAddress']['recipientLastName']);
+
+        // Default
+        $shippingAddress->setFirstname($details['firstName']);
+        $shippingAddress->setLastname($details['lastName']);
         $shippingAddress->setEmail($details['email']);
+
+        // If full shipping address name is provided, use it.
+        if ($this->hasShippingFullName($details)) {
+            $shippingAddress->setFirstname($details['shippingAddress']['recipientFirstName']);
+            $shippingAddress->setLastname($details['shippingAddress']['recipientLastName']);
+        }
 
         $shippingAddress->setCollectShippingRates(true);
 
@@ -190,14 +209,26 @@ class QuoteUpdater extends AbstractHelper
      * @param array $details
      * @return void
      */
-    private function updateBillingAddress(Quote $quote, array $details)
+    private function updateBillingAddress(Quote $quote, array $details): void
     {
         $billingAddress = $quote->getBillingAddress();
-        $billingAddress->setFirstname($details['shippingAddress']['recipientFirstName']);
-        $billingAddress->setLastname($details['shippingAddress']['recipientLastName']);
+
+        // If full shipping address name is set, use it as default, otherwise use account's name.
+        $billingAddress->setFirstname(
+            $this->hasShippingFullName($details)
+                ? $details['shippingAddress']['recipientFirstName']
+                : $details['firstName']
+        );
+
+        $billingAddress->setLastname(
+            $this->hasShippingFullName($details)
+                ? $details['shippingAddress']['recipientLastName']
+                : $details['lastName']
+        );
+
         $billingAddress->setEmail($details['email']);
 
-        if ($this->config->isRequiredBillingAddress() && !empty($details['billingAddress'])) {
+        if (!empty($details['billingAddress']) && $this->config->isRequiredBillingAddress()) {
             $billingAddress->setFirstname($details['firstName']);
             $billingAddress->setLastname($details['lastName']);
 
@@ -219,12 +250,12 @@ class QuoteUpdater extends AbstractHelper
      * @param array $addressData
      * @return void
      */
-    private function updateAddressData(Address $address, array $addressData)
+    private function updateAddressData(Address $address, array $addressData): void
     {
         $street = $addressData['streetAddress'];
 
         if (isset($addressData['extendedAddress'])) {
-            $street = $street . ' ' . $addressData['extendedAddress'];
+            $street .= ' ' . $addressData['extendedAddress'];
         }
         $address->setStreet($street);
         $address->setCity($addressData['locality']);
@@ -245,5 +276,25 @@ class QuoteUpdater extends AbstractHelper
         // PayPal's address supposes not saving against customer account
         $address->setSaveInAddressBook(false);
         $address->setSameAsBilling(false);
+    }
+
+    /**
+     * Validate whether both first & last name is included in the shipping data.
+     *
+     * @param array $data
+     * @return bool
+     */
+    private function hasShippingFullName(array $data): bool
+    {
+        if ($this->hasShippingAddressFullName !== null) {
+            return $this->hasShippingAddressFullName;
+        }
+
+        $this->hasShippingAddressFullName =
+            isset($data['shippingAddress']['recipientFirstName'], $data['shippingAddress']['recipientLastName'])
+            && trim($data['shippingAddress']['recipientFirstName']) !== ''
+            && trim($data['shippingAddress']['recipientLastName']) !== '';
+
+        return $this->hasShippingAddressFullName;
     }
 }

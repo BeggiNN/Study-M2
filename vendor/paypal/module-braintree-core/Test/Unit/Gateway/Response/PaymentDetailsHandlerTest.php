@@ -1,47 +1,48 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Response;
 
 use Braintree\Transaction;
+use Magento\Framework\App\State;
 use PayPal\Braintree\Gateway\Response\PaymentDetailsHandler;
 use Magento\Payment\Gateway\Data\PaymentDataObject;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
 class PaymentDetailsHandlerTest extends \PHPUnit\Framework\TestCase
 {
-    const TRANSACTION_ID = '432erwwe';
+    public const TRANSACTION_ID = '432erwwe';
 
     /**
-     * @var \PayPal\Braintree\Gateway\Response\PaymentDetailsHandler
+     * @var PaymentDetailsHandler
      */
-    private $paymentHandler;
+    private PaymentDetailsHandler $paymentHandler;
 
     /**
-     * @var \Magento\Sales\Model\Order\Payment|MockObject
+     * @var Payment|MockObject
      */
-    private $payment;
+    private Payment|MockObject $payment;
 
     /**
      * @var SubjectReader|MockObject
      */
-    private $subjectReader;
+    private MockObject|SubjectReader $subjectReader;
 
     /**
-     * @var \Magento\Framework\App\State|MockObject
+     * @var State|MockObject
      */
-    private $appState;
+    private State|MockObject $appState;
 
     protected function setUp(): void
     {
         $this->payment = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'setCcTransId',
                 'setLastTransId',
                 'setAdditionalInformation'
@@ -50,7 +51,7 @@ class PaymentDetailsHandlerTest extends \PHPUnit\Framework\TestCase
         $this->subjectReader = $this->getMockBuilder(SubjectReader::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->appState = $this->getMockBuilder(\Magento\Framework\App\State::class)
+        $this->appState = $this->getMockBuilder(State::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -64,9 +65,6 @@ class PaymentDetailsHandlerTest extends \PHPUnit\Framework\TestCase
         $this->paymentHandler = new PaymentDetailsHandler($this->subjectReader, $this->appState);
     }
 
-    /**
-     * @covers \PayPal\Braintree\Gateway\Response\PaymentDetailsHandler::handle
-     */
     public function testHandle()
     {
         $paymentData = $this->getPaymentDataObjectMock();
@@ -91,10 +89,10 @@ class PaymentDetailsHandlerTest extends \PHPUnit\Framework\TestCase
      * Create mock for payment data object and order payment
      * @return MockObject
      */
-    private function getPaymentDataObjectMock()
+    private function getPaymentDataObjectMock(): MockObject
     {
         $mock = $this->getMockBuilder(PaymentDataObject::class)
-            ->setMethods(['getPayment'])
+            ->onlyMethods(['getPayment'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -109,7 +107,7 @@ class PaymentDetailsHandlerTest extends \PHPUnit\Framework\TestCase
      * Create Braintree transaction
      * @return Transaction
      */
-    private function getBraintreeTransaction()
+    private function getBraintreeTransaction(): Transaction
     {
         $attributes = [
             'id' => self::TRANSACTION_ID,

@@ -1,5 +1,18 @@
+includes:
+	- phpstan-baseline.neon.php
 parameters:
     paths:
-        - src/main
+        - src/
+        - tests/php/
     rememberPossiblyImpureFunctionValues: false
-    level: 1
+    level: max
+    exceptions:
+        reportUncheckedExceptionDeadCatch: true
+        implicitThrows: false
+        check:
+            missingCheckedExceptionInThrows: true
+            tooWideThrowType: true
+    ignoreErrors:
+        -
+            identifier: missingType.checkedException
+            path: tests/*

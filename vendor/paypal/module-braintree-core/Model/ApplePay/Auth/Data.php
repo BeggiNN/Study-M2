@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\ApplePay\Auth;
 
@@ -11,34 +12,34 @@ use PayPal\Braintree\Api\Data\AuthDataInterface;
 class Data implements AuthDataInterface
 {
     /**
-     * @var string $clientToken
+     * @var ?string $clientToken
      */
-    private $clientToken;
+    private ?string $clientToken;
 
     /**
      * @var string $displayName
      */
-    private $displayName;
+    private string $displayName;
 
     /**
      * @var string $actionSuccess
      */
-    private $actionSuccess;
+    private string $actionSuccess;
 
     /**
      * @var bool $isLoggedIn
      */
-    private $isLoggedIn;
+    private bool $isLoggedIn;
 
     /**
      * @var string $storeCode
      */
-    private $storeCode;
+    private string $storeCode;
 
     /**
      * @inheritdoc
      */
-    public function getClientToken()
+    public function getClientToken(): ?string
     {
         return $this->clientToken;
     }
@@ -70,7 +71,7 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setClientToken($value)
+    public function setClientToken(string|null $value): ?string
     {
         return $this->clientToken = $value;
     }
@@ -86,7 +87,7 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setDisplayName($value)
+    public function setDisplayName($value): ?string
     {
         return $this->displayName = $value;
     }
@@ -94,7 +95,7 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setIsLoggedIn($value)
+    public function setIsLoggedIn($value): bool
     {
         return $this->isLoggedIn = $value;
     }
@@ -102,7 +103,7 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setStoreCode($value)
+    public function setStoreCode($value): ?string
     {
         return $this->storeCode = $value;
     }
@@ -110,7 +111,7 @@ class Data implements AuthDataInterface
     /**
      * @inheritdoc
      */
-    public function setActionSuccess($value)
+    public function setActionSuccess($value): ?string
     {
         return $this->actionSuccess = $value;
     }

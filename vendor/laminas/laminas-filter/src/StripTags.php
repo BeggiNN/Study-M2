@@ -37,6 +37,8 @@ class StripTags extends AbstractFilter
 {
     /**
      * Unique ID prefix used for allowing comments
+     *
+     * @deprecated This unused constant will be removed in 3.0
      */
     public const UNIQUE_ID_PREFIX = '__Laminas_Filter_StripTags__';
 
@@ -102,6 +104,8 @@ class StripTags extends AbstractFilter
     /**
      * Returns the tagsAllowed option
      *
+     * @deprecated This method will be removed in 3.0
+     *
      * @return array<string, array<string, null>>
      */
     public function getTagsAllowed()
@@ -112,7 +116,9 @@ class StripTags extends AbstractFilter
     /**
      * Sets the tagsAllowed option
      *
-     * @param  array|string $tagsAllowed
+     * @deprecated This method will be removed in 3.0. Only the constructor can be used to set options.
+     *
+     * @param array|string $tagsAllowed
      * @return self Provides a fluent interface
      */
     public function setTagsAllowed($tagsAllowed)
@@ -154,6 +160,8 @@ class StripTags extends AbstractFilter
     /**
      * Returns the attributesAllowed option
      *
+     * @deprecated This method will be removed in 3.0
+     *
      * @return array<string, null>
      */
     public function getAttributesAllowed()
@@ -163,6 +171,8 @@ class StripTags extends AbstractFilter
 
     /**
      * Sets the attributesAllowed option
+     *
+     * @deprecated This method will be removed in 3.0. Only the constructor can be used to set options.
      *
      * @param  list<string>|string $attributesAllowed
      * @return self Provides a fluent interface
@@ -245,7 +255,9 @@ class StripTags extends AbstractFilter
     /**
      * Filters a single tag against the current option settings
      *
-     * @param  string $tag
+     * @deprecated This method will be inaccessible in 3.0 once this class is marked final
+     *
+     * @param string $tag
      * @return string
      */
     protected function _filterTag($tag) // phpcs:ignore
@@ -288,7 +300,7 @@ class StripTags extends AbstractFilter
             // Iterate over each matched attribute
             foreach ($matches[1] as $index => $attributeName) {
                 $attributeName      = strtolower($attributeName);
-                $attributeDelimiter = empty($matches[2][$index]) ? $matches[4][$index] : $matches[2][$index];
+                $attributeDelimiter = $matches[2][$index] === '' ? $matches[4][$index] : $matches[2][$index];
                 $attributeValue     = $matches[3][$index] === '' ? $matches[5][$index] : $matches[3][$index];
 
                 // If the attribute is not allowed, then remove it entirely

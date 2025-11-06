@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Gateway\Data\Order;
 
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -91,7 +92,7 @@ class OrderAdapter implements OrderAdapterInterface
      */
     public function getCustomerId(): ?int
     {
-        return $this->order->getCustomerId();
+        return $this->order->getCustomerId() !== null ? (int)$this->order->getCustomerId() : null;
     }
 
     /**
@@ -117,7 +118,7 @@ class OrderAdapter implements OrderAdapterInterface
      */
     public function getStoreId(): int
     {
-        return $this->order->getStoreId();
+        return (int) $this->order->getStoreId();
     }
 
     /**
@@ -143,7 +144,7 @@ class OrderAdapter implements OrderAdapterInterface
      */
     public function getId(): int
     {
-        return $this->order->getEntityId();
+        return (int) $this->order->getEntityId();
     }
 
     /**
@@ -209,10 +210,40 @@ class OrderAdapter implements OrderAdapterInterface
     /**
      * Return quote_id
      *
-     * @return int|null
+     * @return string|float|int|null
      */
-    public function getQuoteId(): ?int
+    public function getQuoteId(): string|float|int|null
     {
         return $this->order->getQuoteId();
+    }
+
+    /**
+     * Return base shipping amount including tax
+     *
+     * @return float
+     */
+    public function getBaseShippingInclTax(): float
+    {
+        return (float) $this->order->getBaseShippingInclTax();
+    }
+
+    /**
+     * Return base shipping amount
+     *
+     * @return float
+     */
+    public function getBaseShippingAmount(): float
+    {
+        return (float) $this->order->getBaseShippingAmount();
+    }
+
+    /**
+     * Return base_discount_tax_compensation_amount
+     *
+     * @return float
+     */
+    public function getBaseDiscountTaxCompensationAmount(): float
+    {
+        return (float) $this->order->getBaseDiscountTaxCompensationAmount();
     }
 }

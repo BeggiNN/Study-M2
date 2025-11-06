@@ -1,14 +1,16 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request\PayPal;
 
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Gateway\Request\PayPal\DeviceDataBuilder;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Payment\Model\InfoInterface;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
 class DeviceDataBuilderTest extends \PHPUnit\Framework\TestCase
@@ -16,34 +18,37 @@ class DeviceDataBuilderTest extends \PHPUnit\Framework\TestCase
     /**
      * @var SubjectReader|MockObject
      */
-    private $subjectReader;
+    private SubjectReader|MockObject $subjectReader;
 
     /**
      * @var PaymentDataObjectInterface|MockObject
      */
-    private $paymentDataObject;
+    private PaymentDataObjectInterface|MockObject $paymentDataObject;
 
     /**
      * @var InfoInterface|MockObject
      */
-    private $paymentInfo;
+    private InfoInterface|MockObject $paymentInfo;
 
     /**
      * @var DeviceDataBuilder
      */
-    private $builder;
+    private DeviceDataBuilder $builder;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->subjectReader = $this->getMockBuilder(SubjectReader::class)
             ->disableOriginalConstructor()
-            ->setMethods(['readPayment'])
+            ->onlyMethods(['readPayment'])
             ->getMock();
 
         $this->paymentDataObject = $this->createMock(PaymentDataObjectInterface::class);
 
         $this->paymentInfo = $this->createMock(InfoInterface::class);
-        
+
         $this->builder = new DeviceDataBuilder($this->subjectReader);
     }
 
@@ -78,9 +83,10 @@ class DeviceDataBuilderTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get variations for build method testing
+     *
      * @return array
      */
-    public function buildDataProvider()
+    public static function buildDataProvider(): array
     {
         return [
             [

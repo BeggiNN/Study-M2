@@ -1,13 +1,15 @@
 <?php
 
 declare (strict_types=1);
-namespace Rector\Core\NodeAnalyzer;
+namespace Rector\NodeAnalyzer;
 
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Expr\ArrayItem;
 use PhpParser\Node\Expr\ClassConstFetch;
 use PhpParser\Node\Expr\ConstFetch;
+use PhpParser\Node\Expr\UnaryMinus;
+use PhpParser\Node\Expr\UnaryPlus;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
@@ -17,8 +19,9 @@ use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Type\MixedType;
+use PHPStan\Type\ObjectWithoutClassType;
 use PHPStan\Type\UnionType;
-use Rector\Core\Enum\ObjectReference;
+use Rector\Enum\ObjectReference;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 final class ExprAnalyzer
 {
@@ -37,6 +40,9 @@ final class ExprAnalyzer
             return \true;
         }
         $type = $scope->getType($expr);
+        if ($nativeType instanceof ObjectWithoutClassType && !$type instanceof ObjectWithoutClassType) {
+            return \true;
+        }
         if ($nativeType instanceof UnionType) {
             return !$nativeType->equals($type);
         }
@@ -44,14 +50,18 @@ final class ExprAnalyzer
     }
     public function isDynamicExpr(Expr $expr) : bool
     {
-        if (!$expr instanceof Array_) {
-            if ($expr instanceof Scalar) {
-                // string interpolation is true, otherwise false
-                return $expr instanceof Encapsed;
-            }
-            return !$this->isAllowedConstFetchOrClassConstFetch($expr);
+        // Unwrap UnaryPlus and UnaryMinus
+        if ($expr instanceof UnaryPlus || $expr instanceof UnaryMinus) {
+            $expr = $expr->expr;
         }
-        return $this->isDynamicArray($expr);
+        if ($expr instanceof Array_) {
+            return $this->isDynamicArray($expr);
+        }
+        if ($expr instanceof Scalar) {
+            // string interpolation is true, otherwise false
+            return $expr instanceof Encapsed;
+        }
+        return !$this->isAllowedConstFetchOrClassConstFetch($expr);
     }
     public function isDynamicArray(Array_ $array) : bool
     {

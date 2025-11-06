@@ -3,7 +3,6 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/app/code" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/app/code/Magento" isTestSource="false" packagePrefix="Magento\" />
       <sourceFolder url="file://$MODULE_DIR$/dev/build/publication/sanity/Magento/Tools/Sanity" isTestSource="true" packagePrefix="Magento\Tools\Sanity\" />
       <sourceFolder url="file://$MODULE_DIR$/dev/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/dev/tests/integration/testsuite/Magento/Framework/Composer/_files/testFromClone/dev/build/publication/sanity/Magento/Tools/Sanity" isTestSource="true" packagePrefix="Magento\Tools\Sanity\" />
@@ -31,7 +30,6 @@
       <sourceFolder url="file://$MODULE_DIR$/dev/tests/static/framework/Magento/TestFramework/Utility" isTestSource="true" packagePrefix="Magento\TestFramework\Utility\" />
       <sourceFolder url="file://$MODULE_DIR$/dev/tools/Magento/Tools" isTestSource="true" packagePrefix="Magento\Tools\" />
       <sourceFolder url="file://$MODULE_DIR$/generated/code" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/lib/internal/Magento/Framework" isTestSource="false" packagePrefix="Magento\Framework\" />
       <sourceFolder url="file://$MODULE_DIR$/setup/src/Magento/Setup" isTestSource="false" packagePrefix="Magento\Setup\" />
       <sourceFolder url="file://$MODULE_DIR$/setup/src/Magento/Setup/Test" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/vendor/magento/framework/Acl/Test" isTestSource="true" />
@@ -106,12 +104,10 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/2tvenom/cborencode" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/allure-framework/allure-codeception" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/allure-framework/allure-php-commons" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/allure-framework/allure-phpunit" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/astock/stock-api-libphp" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/aws/aws-crt-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/aws/aws-sdk-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/bacon/bacon-qr-code" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/beberlei/assert" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/behat/gherkin" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/braintree/braintree_php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/brick/math" />
@@ -121,7 +117,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/lib-asserts" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/lib-web" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/module-asserts" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/module-sequence" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/module-webdriver" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/codeception/stub" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/colinmollenhour/cache-backend-file" />
@@ -134,8 +129,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/dealerdirect/phpcodesniffer-composer-installer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/dg/bypass-finals" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/annotations" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/deprecations" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/instantiator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/doctrine/lexer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/elasticsearch/elasticsearch" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/endroid/qr-code" />
@@ -143,7 +136,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/ezimuel/ringphp" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/ezyang/htmlpurifier" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/friendsofphp/php-cs-fixer" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/google/recaptcha" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/guzzlehttp/guzzle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/guzzlehttp/promises" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/guzzlehttp/psr7" />
@@ -151,25 +143,18 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-captcha" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-code" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-config" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-crypt" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-db" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-di" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-diactoros" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-escaper" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-eventmanager" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-feed" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-file" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-filter" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-http" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-i18n" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-json" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-loader" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-mail" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-math" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-mime" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-modulemanager" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-mvc" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-oauth" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-permissions-acl" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-recaptcha" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-router" />
@@ -185,7 +170,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/flysystem" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/flysystem-aws-s3-v3" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/league/mime-type-detection" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/lusitanian/oauth" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/composer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/composer-dependency-version-audit-plugin" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/composer-root-update-plugin" />
@@ -193,7 +177,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/framework-amqp" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/framework-bulk" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/framework-message-queue" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/google-shopping-ads" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/inventory-composer-installer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/language-de_de" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/language-en_us" />
@@ -287,7 +270,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-eav" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-eav-graph-ql" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-elasticsearch" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-elasticsearch-7" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-email" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-encryption-key" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-fedex" />
@@ -599,9 +581,7 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/lines-of-code" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/object-enumerator" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/object-reflector" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/phpcpd" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/recursion-context" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/resource-operations" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/type" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/version" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/seld/jsonlint" />
@@ -634,7 +614,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-intl-idn" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-intl-normalizer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-mbstring" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php72" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php73" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php80" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php81" />
@@ -646,13 +625,10 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/var-exporter" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/yaml" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/tedivm/jshrink" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/temando/module-shipping-remover" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/thecodingmachine/safe" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/theseer/tokenizer" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/tubalmartin/cssmin" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/web-token/jwt-framework" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webimpress/safe-writer" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/webmozart/assert" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/webonyx/graphql-php" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/weew/helpers-array" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/wikimedia/less.php" />
@@ -676,6 +652,75 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-widget-sample-data" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-wishlist-sample-data" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/magento/sample-data-media" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/carlos-mg89/oauth" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/clue/ndjson-react" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/duosecurity/duo_api_php" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/duosecurity/duo_universal_php" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/egulias/email-validator" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/elastic/transport" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/evenement/evenement" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/fidry/cpu-core-counter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/firebase/php-jwt" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/laminas/laminas-translator" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/league/flysystem-local" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/magento-allure-phpunit" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/magento-zf-db" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-admin-graph-ql-server" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-application-performance-monitor" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-application-performance-monitor-new-relic" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-async-config" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-contact-graph-ql" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-data-exporter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-elasticsearch-8" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-graph-ql-new-relic" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-graph-ql-resolver-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-graph-ql-server" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-integration-graph-ql" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-inventory-catalog-rule" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-order-cancellation" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-order-cancellation-graph-ql" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-order-cancellation-ui" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-page-builder-image-attribute" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-payment-services-base" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-payment-services-dashboard" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-payment-services-paypal" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-payment-services-paypal-graph-ql" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-payment-services-saas-export" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-query-xml" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-re-captcha-resend-confirmation-email" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-re-captcha-wishlist" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-saas-common" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-sales-data-exporter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-sales-rule-graph-ql" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-service-proxy" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-services-id" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-services-id-graph-ql-server" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-services-id-layout" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/module-store-data-exporter" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/magento/services-connector" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/marc-mabe/php-enum" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/open-telemetry/api" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/open-telemetry/context" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/module-braintree-customer-balance" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/module-braintree-gift-card" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/module-braintree-gift-card-account" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/module-braintree-gift-wrapping" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/paypal/module-braintree-reward" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/discovery" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/httplug" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/php-http/promise" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpfui/recaptcha" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/phpgt/propfunc" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/cache" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/child-process" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/dns" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/event-loop" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/socket" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/react/stream" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/mailer" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php82" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php83" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/polyfill-php84" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

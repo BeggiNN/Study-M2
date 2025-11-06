@@ -40,7 +40,9 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Sets a new separator to search for
      *
-     * @param  string $separator Separator to search for
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
+     * @param string $separator Separator to search for
      * @return self
      */
     public function setSearchSeparator($separator)
@@ -52,6 +54,8 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Returns the actual set separator to search for
      *
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
      * @return string
      */
     public function getSearchSeparator()
@@ -62,7 +66,9 @@ class SeparatorToSeparator extends AbstractFilter
     /**
      * Sets a new separator which replaces the searched one
      *
-     * @param  string $separator Separator which replaces the searched one
+     * @deprecated This method will be removed in 3.0.0 without replacement
+     *
+     * @param string $separator Separator which replaces the searched one
      * @return self
      */
     public function setReplacementSeparator($separator)
@@ -73,6 +79,8 @@ class SeparatorToSeparator extends AbstractFilter
 
     /**
      * Returns the actual set separator which replaces the searched one
+     *
+     * @deprecated This method will be removed in 3.0.0 without replacement
      *
      * @return string
      */

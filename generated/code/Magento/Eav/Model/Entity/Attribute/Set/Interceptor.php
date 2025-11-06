@@ -733,4 +733,13 @@ class Interceptor extends \Magento\Eav\Model\Entity\Attribute\Set implements \Ma
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'offsetGet');
         return $pluginInfo ? $this->___callPlugins('offsetGet', func_get_args(), $pluginInfo) : parent::offsetGet($offset);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, '__debugInfo');
+        return $pluginInfo ? $this->___callPlugins('__debugInfo', func_get_args(), $pluginInfo) : parent::__debugInfo();
+    }
 }

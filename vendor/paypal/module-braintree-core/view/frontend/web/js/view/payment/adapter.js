@@ -3,7 +3,6 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 define([
     'jquery',
     'braintree',
@@ -23,6 +22,7 @@ define([
         clientInstance: null,
         hostedFieldsInstance: null,
         paypalInstance: null,
+        googlePaymentInstance: null,
         code: 'braintree',
 
         /**
@@ -57,9 +57,9 @@ define([
         getCode: function () {
             if (window.checkoutConfig.payment[this.code]) {
                 return this.code;
-            } else {
-                return 'braintree_paypal';
             }
+            return 'braintree_paypal';
+
         },
 
         /**
@@ -79,6 +79,7 @@ define([
 
         getCurrentCode: function (paypalType = null) {
             var code = 'braintree_paypal';
+
             if (paypalType !== 'paypal') {
                 code = code + '_' + paypalType;
             }
@@ -102,15 +103,40 @@ define([
         /**
          * @returns {String}
          */
-        getSize: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.size;
+        getLabel: function (paypalType = null) {
+            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.label;
         },
 
         /**
-         * @returns {String}
+         * Get Message
+         *
+         * @param paypalType
+         * @param amount
+         * @param pageType
+         * @returns {{amount, color: (string|*), align: *}|null}
          */
-        getLabel: function (paypalType = null) {
-            return window.checkoutConfig.payment[this.getCurrentCode(paypalType)].style.label;
+        getMessage: function (paypalType = null, amount, pageType) {
+            if (pageType === 'checkout') {
+                if (!window.checkoutConfig?.payment?.[this.getCurrentCode(paypalType)]) {
+                    return null;
+                }
+
+                const messageActive = window.checkoutConfig.payment[this.getCurrentCode(paypalType)].isMessageActive,
+                    messageStyles = window.checkoutConfig.payment[this.getCurrentCode(paypalType)].messageStyles;
+
+                if (!messageActive || !messageStyles) {
+                    return null;
+                }
+
+                return {
+                    align: messageStyles.text_align,
+                    amount,
+                    // Button doesn't support monochrome or greyscale so in either of these cases return black.
+                    color: messageStyles.text_color !== 'black' && messageStyles.text_color !== 'white' ? 'black' : messageStyles.text_color
+                };
+            } else {
+                return null;
+            }
         },
 
         /**
@@ -167,7 +193,7 @@ define([
         /**
          * Has PayPal been init'd already
          */
-        getPayPalInstance: function() {
+        getPayPalInstance: function () {
             if (typeof this.config.paypalInstance !== 'undefined' && this.config.paypalInstance) {
                 return this.config.paypalInstance;
             }
@@ -175,14 +201,31 @@ define([
             return null;
         },
 
-        setPayPalInstance: function(val) {
+        setPayPalInstance: function (val) {
             this.config.paypalInstance = val;
         },
 
         /**
-         * Setup Braintree SDK
+         * Has Google Pay been init'd already
          */
-        setup: function (callback) {
+        getGooglePayInstance: function () {
+            if (typeof this.googlePaymentInstance !== 'undefined' && this.googlePaymentInstance) {
+                return this.googlePaymentInstance;
+            }
+
+            return null;
+        },
+
+        setGooglePayInstance: function (val) {
+            this.googlePaymentInstance = val;
+        },
+
+        /**
+         * Setup Braintree SDK
+         *
+         * @param {Function|null} callback
+         */
+        setup: function (callback = null) {
             if (!this.getClientToken()) {
                 this.showError($t('Sorry, but something went wrong.'));
                 return;
@@ -190,10 +233,11 @@ define([
 
             if (this.clientInstance) {
                 if (typeof this.config.onReady === 'function') {
+                    this.config.onDeviceDataReceived(this.deviceData);
                     this.config.onReady(this);
                 }
 
-                if (typeof callback === "function") {
+                if (typeof callback === 'function') {
                     callback(this.clientInstance);
                 }
                 return;
@@ -204,15 +248,23 @@ define([
             }, function (clientErr, clientInstance) {
                 if (clientErr) {
                     console.error('Braintree Setup Error', clientErr);
-                    return this.showError("Sorry, but something went wrong. Please contact the store owner.");
+                    return this.showError('Sorry, but something went wrong. Please contact the store owner.');
                 }
 
-                var options = {
+                let options = {
                     client: clientInstance
                 };
 
-                if (typeof this.config.dataCollector === 'object' && typeof this.config.dataCollector.paypal === 'boolean') {
+                if (typeof this.config.dataCollector === 'object'
+                    && typeof this.config.dataCollector.paypal === 'boolean'
+                ) {
                     options.paypal = true;
+                }
+
+                this.clientInstance = clientInstance;
+
+                if (typeof this.config.onReady === 'function') {
+                    this.config.onReady(this);
                 }
 
                 dataCollector.create(options, function (err, dataCollectorInstance) {
@@ -222,17 +274,11 @@ define([
 
                     this.deviceData = dataCollectorInstance.deviceData;
                     this.config.onDeviceDataReceived(this.deviceData);
+
+                    if (typeof callback === 'function') {
+                        callback(this.clientInstance);
+                    }
                 }.bind(this));
-
-                this.clientInstance = clientInstance;
-
-                if (typeof this.config.onReady === 'function') {
-                    this.config.onReady(this);
-                }
-
-                if (typeof callback === "function") {
-                    callback(this.clientInstance);
-                }
             }.bind(this));
         },
 
@@ -253,24 +299,12 @@ define([
             hostedFields.create({
                 client: this.clientInstance,
                 fields: this.config.hostedFields,
-                styles: {
-                    "input": {
-                        "font-size": "14pt",
-                        "color": "#3A3A3A"
-                    },
-                    ":focus": {
-                        "color": "black"
-                    },
-                    ".valid": {
-                        "color": "green"
-                    },
-                    ".invalid": {
-                        "color": "red"
-                    }
-                }
+                styles: this.config.styles
             }, function (createErr, hostedFieldsInstance) {
                 if (createErr) {
-                    self.showError($t("Braintree hosted fields could not be initialized. Please contact the store owner."));
+                    let error = 'Braintree hosted fields could not be initialized. Please contact the store owner.';
+
+                    self.showError($t(error));
                     console.error('Braintree hosted fields error', createErr);
                     return;
                 }
@@ -284,43 +318,46 @@ define([
             this.hostedFieldsInstance.tokenize({}, function (tokenizeErr, payload) {
                 if (tokenizeErr) {
                     switch (tokenizeErr.code) {
-                        case 'HOSTED_FIELDS_FIELDS_EMPTY':
-                            // occurs when none of the fields are filled in
-                            console.error('All fields are empty! Please fill out the form.');
-                            break;
-                        case 'HOSTED_FIELDS_FIELDS_INVALID':
-                            // occurs when certain fields do not pass client side validation
-                            console.error('Some fields are invalid:', tokenizeErr.details.invalidFieldKeys);
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_FAIL_ON_DUPLICATE':
-                            // occurs when:
-                            //   * the client token used for client authorization was generated
-                            //     with a customer ID and the fail on duplicate payment method
-                            //     option is set to true
-                            //   * the card being tokenized has previously been vaulted (with any customer)
+                    case 'HOSTED_FIELDS_FIELDS_EMPTY':
+                        // occurs when none of the fields are filled in
+                        console.error('All fields are empty! Please fill out the form.');
+                        break;
+                    case 'HOSTED_FIELDS_FIELDS_INVALID':
+                        // occurs when certain fields do not pass client side validation
+                        console.error('Some fields are invalid:', tokenizeErr.details.invalidFieldKeys);
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_FAIL_ON_DUPLICATE':
+                        // occurs when:
+                        //   * the client token used for client authorization was generated
+                        //     with a customer ID and the fail on duplicate payment method
+                        //     option is set to true
+                        //   * the card being tokenized has previously been vaulted (with any customer)
+                        // eslint-disable-next-line
                             // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.fail_on_duplicate_payment_method
-                            console.error('This payment method already exists in your vault.');
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_CVV_VERIFICATION_FAILED':
-                            // occurs when:
-                            //   * the client token used for client authorization was generated
-                            //     with a customer ID and the verify card option is set to true
-                            //     and you have credit card verification turned on in the Braintree
-                            //     control panel
-                            //   * the cvv does not pass verfication (https://developers.braintreepayments.com/reference/general/testing/#avs-and-cvv/cid-responses)
-                            // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.verify_card
-                            console.error('CVV did not pass verification');
-                            break;
-                        case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
-                            // occurs for any other tokenization error on the server
-                            console.error('Tokenization failed server side. Is the card valid?');
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
-                            // occurs when the Braintree gateway cannot be contacted
-                            console.error('Network error occurred when tokenizing.');
-                            break;
-                        default:
-                            console.error('Something bad happened!', tokenizeErr);
+                        console.error('This payment method already exists in your vault.');
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_CVV_VERIFICATION_FAILED':
+                        // occurs when:
+                        //   * the client token used for client authorization was generated
+                        //     with a customer ID and the verify card option is set to true
+                        //     and you have credit card verification turned on in the Braintree
+                        //     control panel
+                        //   * the cvv does not pass verfication
+                        //   (developers.braintreepayments.com/reference/general/testing/#avs-and-cvv/cid-responses)
+                        // eslint-disable-next-line
+                            // See: developers.braintreepayments.com/reference/request/client-token/generate/#options.verify_card
+                        console.error('CVV did not pass verification');
+                        break;
+                    case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
+                        // occurs for any other tokenization error on the server
+                        console.error('Tokenization failed server side. Is the card valid?');
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
+                        // occurs when the Braintree gateway cannot be contacted
+                        console.error('Network error occurred when tokenizing.');
+                        break;
+                    default:
+                        console.error('Something bad happened!', tokenizeErr);
                     }
                 } else {
                     this.config.onPaymentMethodReceived(payload);

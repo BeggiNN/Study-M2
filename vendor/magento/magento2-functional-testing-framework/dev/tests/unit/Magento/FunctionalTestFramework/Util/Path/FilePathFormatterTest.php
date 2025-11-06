@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2019 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Util\Path;
@@ -70,7 +71,7 @@ class FilePathFormatterTest extends MagentoTestCase
      *
      * @return array
      */
-    public function formatDataProvider(): array
+    public static function formatDataProvider(): array
     {
         $path1 = rtrim(TESTS_BP, '/');
         $path2 = $path1 . DIRECTORY_SEPARATOR;
@@ -92,7 +93,7 @@ class FilePathFormatterTest extends MagentoTestCase
      *
      * @return array
      */
-    public function formatExceptionDataProvider(): array
+    public static function formatExceptionDataProvider(): array
     {
         return [
             ['abc', null],

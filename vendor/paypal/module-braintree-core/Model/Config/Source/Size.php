@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Config\Source;
 
@@ -40,6 +41,7 @@ class Size implements ArrayInterface
 
     /**
      * Values in the format needed for the PayPal JS SDK
+     *
      * @return array
      */
     public function toRawValues(): array

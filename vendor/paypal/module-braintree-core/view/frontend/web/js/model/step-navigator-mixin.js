@@ -1,12 +1,12 @@
 define([
-    'mage/utils/wrapper',
-    'jquery'
-], function (wrapper, $) {
+    'mage/utils/wrapper'
+], function (wrapper) {
     'use strict';
 
     let mixin = {
         handleHash: function (originalFn) {
             var hashString = window.location.hash.replace('#', '');
+
             if (hashString.indexOf('venmo') > -1) {
                 return false;
             }

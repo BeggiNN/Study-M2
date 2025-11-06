@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\ObjectManager;
@@ -31,8 +31,8 @@ class Factory extends \Magento\FunctionalTestingFramework\ObjectManager\Factory\
      */
     public function __construct(
         ConfigInterface $config,
-        \Magento\FunctionalTestingFramework\ObjectManagerInterface $objectManager = null,
-        DefinitionInterface $definitions = null,
+        ?\Magento\FunctionalTestingFramework\ObjectManagerInterface $objectManager = null,
+        ?DefinitionInterface $definitions = null,
         $globalArguments = []
     ) {
         parent::__construct($config, $objectManager, $definitions, $globalArguments);

@@ -16,7 +16,11 @@ use function is_array;
 use function iterator_to_array;
 use function sprintf;
 
-/** @final */
+/**
+ * @deprecated This factory will be removed in 3.0.0 without replacement
+ *
+ * @final
+ */
 class SeparatorToSeparatorFactory implements FactoryInterface
 {
     /**

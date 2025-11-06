@@ -21,12 +21,13 @@
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
     },
+    "abandoned": true,
     "require": {
-        "php": "~8.1.0 || ~8.2.0 || ~8.3.0"
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0"
     },
     "require-dev": {
         "laminas/laminas-coding-standard": "~2.4.0",
-        "laminas/laminas-stdlib": "^2.7.7 || ^3.8",
+        "laminas/laminas-stdlib": "^2.7.7 || ^3.19",
         "phpunit/phpunit": "^9.5.25"
     },
     "suggest": {

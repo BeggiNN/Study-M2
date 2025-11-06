@@ -22,6 +22,9 @@ use function is_array;
 use function is_subclass_of;
 use function sprintf;
 
+/**
+ * @final
+ */
 class SessionManagerFactory implements FactoryInterface
 {
     /**
@@ -60,7 +63,6 @@ class SessionManagerFactory implements FactoryInterface
      * - validators: ...
      *
      * @param string $requestedName
-     * @param array $options
      * @return SessionManager
      */
     public function __invoke(ContainerInterface $container, $requestedName, ?array $options = null)
@@ -151,6 +153,7 @@ class SessionManagerFactory implements FactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Create a SessionManager instance (v2 usage)
      *
      * @param null|string $canonicalName

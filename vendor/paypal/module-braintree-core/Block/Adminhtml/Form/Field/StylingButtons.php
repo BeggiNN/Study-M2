@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
-
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
@@ -32,15 +31,15 @@ class StylingButtons extends Field
         $applyAllTitle = __('Apply to All Buttons');
         $resetTitle = __('Reset to Recommended Defaults');
         $applyNote = __(
-            ' - This button is responsible to store selected styling field of 
+            ' - This button is responsible to store selected styling field of
             buttons and pay later messaging for the current location and current button type'
         );
         $applyAllNote = __(
-            ' - This button is responsible to store selected styling field of 
+            ' - This button is responsible to store selected styling field of
             buttons and pay later messaging values for all the Buttons types and locations.'
         );
         $resetDefaults = __(
-            ' - This button is responsible to set recommended default values to all the 
+            ' - This button is responsible to set recommended default values to all the
             buttons and pay later messaging for all the Buttons types and locations.'
         );
 

@@ -1,20 +1,42 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Block\Customer;
 
+use Magento\Framework\View\Element\Template\Context;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
-use Magento\Vault\Block\AbstractCardRenderer;
+use Magento\Vault\Block\AbstractTokenRenderer;
+use Magento\Vault\Block\CardRendererInterface;
 use PayPal\Braintree\Model\Ui\ConfigProvider;
 
 /**
  * @api
  * @since 100.0.2
  */
-class CardRenderer extends AbstractCardRenderer
+class CardRenderer extends AbstractTokenRenderer implements CardRendererInterface
 {
+    /**
+     * @var ConfigProvider
+     */
+    private ConfigProvider $configProvider;
+
+    /**
+     * @param Context $context
+     * @param ConfigProvider $configProvider
+     * @param array $data
+     */
+    public function __construct(
+        Context $context,
+        ConfigProvider $configProvider,
+        array $data = []
+    ) {
+        parent::__construct($context, $data);
+
+        $this->configProvider = $configProvider;
+    }
     /**
      * Can render specified token
      *
@@ -59,9 +81,9 @@ class CardRenderer extends AbstractCardRenderer
     /**
      * Get Icon Height
      *
-     * @return int
+     * @return int|null
      */
-    public function getIconHeight(): int
+    public function getIconHeight(): ?int
     {
         return $this->getIconForType($this->getTokenDetails()['type'])['height'];
     }
@@ -69,10 +91,26 @@ class CardRenderer extends AbstractCardRenderer
     /**
      * Get Icon Width
      *
-     * @return int
+     * @return int|null
      */
-    public function getIconWidth(): int
+    public function getIconWidth(): ?int
     {
         return $this->getIconForType($this->getTokenDetails()['type'])['width'];
+    }
+
+    /**
+     * Get icon type
+     *
+     * @param string $type
+     * @return array
+     * @since 100.1.0
+     */
+    private function getIconForType(string $type): array
+    {
+        return $this->configProvider->getIcons()[strtoupper($type)] ?? [
+            'url' => '',
+            'width' => 0,
+            'height' => 0
+        ];
     }
 }

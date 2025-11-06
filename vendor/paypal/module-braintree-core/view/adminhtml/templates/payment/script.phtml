@@ -5,12 +5,14 @@
  */
 
 use PayPal\Braintree\Block\Payment;
+use Magento\Framework\View\Helper\SecureHtmlRenderer;
 
 /** @var Payment $block */
+/** @var SecureHtmlRenderer $secureRenderer */
 
 $code = $block->escapeHtml($block->getCode());
-?>
-<script>
+
+$scriptString = <<<SCRIPT
     //<![CDATA[
     require(
         [
@@ -18,12 +20,13 @@ $code = $block->escapeHtml($block->getCode());
             'jquery',
             'domReady!'
         ], function(Braintree, $) {
-            let config = <?= /* @noEscape */ $block->getPaymentConfig() ?>,
+            let config = {$block->getPaymentConfig()},
                 payment,
-                form = $('#payment_form_<?= /* @noEscape */ $code ?>');
+                form = $('#payment_form_{$code}');
 
             config.active = form.length > 0 && !form.is(':hidden');
             payment = new Braintree(config);
         });
     //]]>
-</script>
+SCRIPT;
+echo $secureRenderer->renderTag('script', [], $scriptString, false);

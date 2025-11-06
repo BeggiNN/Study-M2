@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
 
 use Magento\Framework\DataObject;
@@ -63,7 +64,7 @@ class CountryCreditCard extends AbstractFieldArray
      * @return void
      * @throws LocalizedException
      */
-    protected function _prepareToRender()
+    protected function _prepareToRender(): void
     {
         $this->addColumn(
             'country_id',
@@ -90,7 +91,7 @@ class CountryCreditCard extends AbstractFieldArray
      * @return void
      * @throws LocalizedException
      */
-    protected function _prepareArrayRow(DataObject $row)
+    protected function _prepareArrayRow(DataObject $row): void
     {
         $country = $row->getCountryId();
         $options = [];

@@ -13,6 +13,7 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ReturnTagValueNode;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
 use PHPStan\Type\Type;
@@ -20,16 +21,16 @@ use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\UnionType;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
-use Rector\Core\Php\PhpVersionProvider;
-use Rector\Core\Reflection\ReflectionResolver;
-use Rector\Core\ValueObject\PhpVersionFeature;
 use Rector\NodeNameResolver\NodeNameResolver;
+use Rector\Php\PhpVersionProvider;
 use Rector\Php80\NodeAnalyzer\PhpAttributeAnalyzer;
 use Rector\PhpAttribute\NodeFactory\PhpAttributeGroupFactory;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
+use Rector\Reflection\ReflectionResolver;
 use Rector\StaticTypeMapper\StaticTypeMapper;
 use Rector\StaticTypeMapper\ValueObject\Type\SelfStaticType;
 use Rector\ValueObject\ClassMethodWillChangeReturnType;
+use Rector\ValueObject\PhpVersionFeature;
 /**
  * @see https://wiki.php.net/rfc/internal_method_return_types#proposal
  */
@@ -62,7 +63,7 @@ final class PhpDocFromTypeDeclarationDecorator
     private $phpAttributeGroupFactory;
     /**
      * @readonly
-     * @var \Rector\Core\Reflection\ReflectionResolver
+     * @var \Rector\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
     /**
@@ -72,7 +73,7 @@ final class PhpDocFromTypeDeclarationDecorator
     private $phpAttributeAnalyzer;
     /**
      * @readonly
-     * @var \Rector\Core\Php\PhpVersionProvider
+     * @var \Rector\Php\PhpVersionProvider
      */
     private $phpVersionProvider;
     /**
@@ -223,10 +224,14 @@ final class PhpDocFromTypeDeclarationDecorator
      */
     private function moveParamTypeToParamDoc($functionLike, Param $param, Type $type) : void
     {
+        $param->type = null;
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($functionLike);
         $paramName = $this->nodeNameResolver->getName($param);
+        $phpDocParamType = $phpDocInfo->getParamType($paramName);
+        if (!$type instanceof MixedType && \get_class($type) === \get_class($phpDocParamType)) {
+            return;
+        }
         $this->phpDocTypeChanger->changeParamType($functionLike, $phpDocInfo, $type, $param, $paramName);
-        $param->type = null;
     }
     /**
      * @param array<class-string<Type>> $requiredTypes

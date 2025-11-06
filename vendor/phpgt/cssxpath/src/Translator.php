@@ -12,6 +12,7 @@ class Translator {
 		. '|(#(?P<id>[\w-]*))'
 		. '|(\.(?P<class>[\w-]*))'
 		. '|(?P<sibling>\s*\+\s*)'
+		. '|(?P<subsequentsibling>\s*~\s*)'
 		. "|(\[(?P<attribute>[\w-]*)((?P<attribute_equals>[=~$|^*]+)(?P<attribute_value>(.+\[\]'?)|[^\]]+))*\])+"
 		. '|(?P<descendant>\s+)'
 		. '/';
@@ -24,8 +25,8 @@ class Translator {
 	const EQUALS_STARTS_WITH = "^=";
 
 	public function __construct(
-			protected string $cssSelector, 
-			protected string $prefix = ".//", 
+			protected string $cssSelector,
+			protected string $prefix = ".//",
 			protected bool $htmlMode = true
 		) {
 	}
@@ -67,7 +68,11 @@ class Translator {
 			switch ($currentThreadItem["type"]) {
 			case "star":
 			case "element":
-				$xpath []= $currentThreadItem['content'];
+				if($this->htmlMode) {
+					$xpath []= strtolower($currentThreadItem['content']);
+				} else {
+					$xpath []= $currentThreadItem['content'];
+				}
 				$hasElement = true;
 				break;
 
@@ -132,6 +137,30 @@ class Translator {
 						);
 					}
 					break;
+
+				case "last-child":
+					$prev = count($xpath) - 1;
+					$xpath[$prev] = '*[last()]/self::' . $xpath[$prev];
+					break;
+
+				case 'first-of-type':
+					$prev = count($xpath) - 1;
+					$previous = $xpath[$prev];
+
+					if(substr($previous, -1, 1) === "]") {
+						array_push(
+							$xpath,
+							"[1]"
+						);
+					}
+					else {
+						array_push(
+							$xpath,
+							"[1]"
+						);
+					}
+					break;
+
 				case "nth-of-type":
 					if (empty($specifier)) {
 						continue 3;
@@ -153,6 +182,25 @@ class Translator {
 						);
 					}
 					break;
+
+				case "last-of-type":
+					$prev = count($xpath) - 1;
+					$previous = $xpath[$prev];
+
+					if(substr($previous, -1, 1) === "]") {
+						array_push(
+							$xpath,
+							"[last()]"
+						);
+					}
+					else {
+						array_push(
+							$xpath,
+							"[last()]"
+						);
+					}
+					break;
+
 				}
 				break;
 
@@ -184,6 +232,14 @@ class Translator {
 				array_push(
 					$xpath,
 					"/following-sibling::*[1]/self::"
+				);
+				$hasElement = false;
+				break;
+
+			case "subsequentsibling":
+				array_push(
+					$xpath,
+					"/following-sibling::"
 				);
 				$hasElement = false;
 				break;
@@ -293,7 +349,7 @@ class Translator {
 	protected function preg_match_collated(
 		string $regex,
 		string $string,
-		callable $transform = null
+		?callable $transform = null
 	):array {
 		preg_match_all(
 			$regex,

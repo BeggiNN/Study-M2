@@ -1,8 +1,14 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Venmo\Ui;
 
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\View\Asset\Source;
 use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
@@ -15,34 +21,47 @@ use Magento\Store\Model\ScopeInterface;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const METHOD_CODE = 'braintree_venmo';
+    public const METHOD_CODE = 'braintree_venmo';
+    public const METHOD_VAULT_CODE = 'braintree_venmo_vault';
 
-    const MERCHANT_COUNTRY_CONFIG_VALUE = 'paypal/general/merchant_country';
-
-    const ALLOWED_MERCHANT_COUNTRIES = ['US'];
-
-    const METHOD_KEY_ACTIVE = 'payment/braintree_venmo/active';
+    private const MERCHANT_COUNTRY_CONFIG_VALUE = 'paypal/general/merchant_country';
+    private const ALLOWED_MERCHANT_COUNTRIES = ['US'];
+    private const METHOD_KEY_ACTIVE = 'payment/braintree_venmo/active';
 
     /**
      * @var BraintreeAdapter $adapter
      */
-    private $adapter;
+    private BraintreeAdapter $adapter;
+
     /**
      * @var Repository $assetRepo
      */
-    private $assetRepo;
+    private Repository $assetRepo;
+
     /**
      * @var BraintreeConfig $braintreeConfig
      */
-    private $braintreeConfig;
+    private BraintreeConfig $braintreeConfig;
+
     /**
      * @var ScopeConfigInterface $scopeConfig
      */
-    private $scopeConfig;
+    private ScopeConfigInterface $scopeConfig;
+
+    /**
+     * @var Source
+     */
+    private Source $assetSource;
+
     /**
      * @var string $clientToken
      */
-    private $clientToken = '';
+    private string $clientToken = '';
+
+    /**
+     * @var array
+     */
+    private array $icons = [];
 
     /**
      * ConfigProvider constructor.
@@ -51,17 +70,20 @@ class ConfigProvider implements ConfigProviderInterface
      * @param Repository $assetRepo
      * @param BraintreeConfig $braintreeConfig
      * @param ScopeConfigInterface $scopeConfig
+     * @param Source $assetSource
      */
     public function __construct(
         BraintreeAdapter $adapter,
         Repository $assetRepo,
         BraintreeConfig $braintreeConfig,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Source $assetSource
     ) {
         $this->adapter = $adapter;
         $this->assetRepo = $assetRepo;
         $this->braintreeConfig = $braintreeConfig;
         $this->scopeConfig = $scopeConfig;
+        $this->assetSource = $assetSource;
     }
 
     /**
@@ -82,7 +104,8 @@ class ConfigProvider implements ConfigProviderInterface
                 self::METHOD_CODE => [
                     'isAllowed' => $this->isAllowed(),
                     'clientToken' => $this->getClientToken(),
-                    'paymentMarkSrc' => $this->getPaymentMarkSrc()
+                    'paymentMarkSrc' => $this->getPaymentMarkSrc(),
+                    'vaultCode' => self::METHOD_VAULT_CODE,
                 ]
             ]
         ];
@@ -103,6 +126,7 @@ class ConfigProvider implements ConfigProviderInterface
 
     /**
      * Venmo is (currently) for the US only.
+     *
      * Logic based on Merchant Country Location config option.
      *
      * @return bool
@@ -118,6 +142,8 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get client token
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -139,10 +165,53 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get payment mark src
+     *
      * @return string
      */
     public function getPaymentMarkSrc(): string
     {
         return $this->assetRepo->getUrl('PayPal_Braintree::images/venmo_logo_blue.png');
+    }
+
+    /**
+     * Get icons for available payment methods
+     *
+     * @return array
+     * @throws LocalizedException
+     */
+    public function getIcons(): array
+    {
+        if (!empty($this->icons)) {
+            return $this->icons;
+        }
+
+        $availableIcons = [
+            'venmo' => 'Venmo',
+        ];
+
+        foreach ($availableIcons as $code => $label) {
+            if (array_key_exists($code, $this->icons)) {
+                continue;
+            }
+
+            $asset = $this->assetRepo->createAsset(
+                'PayPal_Braintree::images/venmo/venmo_logo_blue.png',
+                ['_secure' => true]
+            );
+            $placeholder = $this->assetSource->findSource($asset);
+
+            if (!$placeholder) {
+                continue;
+            }
+
+            $this->icons[$code] = [
+                'url' => $asset->getUrl(),
+                'title' => __($label),
+                'width' => 54,
+                'height' => 20
+            ];
+        }
+        return $this->icons;
     }
 }

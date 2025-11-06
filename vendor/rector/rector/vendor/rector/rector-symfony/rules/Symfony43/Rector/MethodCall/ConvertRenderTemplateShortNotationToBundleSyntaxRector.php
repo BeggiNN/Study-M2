@@ -3,14 +3,15 @@
 declare (strict_types=1);
 namespace Rector\Symfony\Symfony43\Rector\MethodCall;
 
-use RectorPrefix202308\Nette\Utils\Strings;
+use RectorPrefix202411\Nette\Utils\Strings;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
-use Rector\Core\Rector\AbstractRector;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -22,6 +23,15 @@ use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
  */
 final class ConvertRenderTemplateShortNotationToBundleSyntaxRector extends AbstractRector
 {
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(ValueResolver $valueResolver)
+    {
+        $this->valueResolver = $valueResolver;
+    }
     public function getRuleDefinition() : RuleDefinition
     {
         return new RuleDefinition('Change Twig template short name to bundle syntax in render calls from controllers', [new CodeSample(<<<'CODE_SAMPLE'
@@ -70,6 +80,9 @@ CODE_SAMPLE
             return null;
         }
         $tplName = $this->valueResolver->getValue($args[0]->value);
+        if ($tplName === null) {
+            return null;
+        }
         $matches = Strings::match($tplName, '/:/', \PREG_OFFSET_CAPTURE);
         if ($matches === null) {
             return null;

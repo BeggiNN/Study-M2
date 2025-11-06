@@ -8,10 +8,10 @@ class Interceptor extends \Magento\CatalogRule\Model\Indexer\Rule\RuleProductInd
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\CatalogRule\Model\Indexer\IndexBuilder $indexBuilder, \Magento\Framework\Event\ManagerInterface $eventManager)
+    public function __construct(\Magento\CatalogRule\Model\Indexer\IndexBuilder $indexBuilder, \Magento\Framework\Event\ManagerInterface $eventManager, ?\Magento\CatalogRule\Model\Indexer\Product\ProductRuleProcessor $productRuleProcessor = null, ?\Magento\CatalogRule\Model\Indexer\Rule\GetAffectedProductIds $getAffectedProductIds = null)
     {
         $this->___init();
-        parent::__construct($indexBuilder, $eventManager);
+        parent::__construct($indexBuilder, $eventManager, $productRuleProcessor, $getAffectedProductIds);
     }
 
     /**

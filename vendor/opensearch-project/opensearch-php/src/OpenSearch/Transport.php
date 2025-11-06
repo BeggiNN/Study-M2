@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,13 +21,18 @@ declare(strict_types=1);
 
 namespace OpenSearch;
 
+use GuzzleHttp\Ring\Future\FutureArrayInterface;
 use OpenSearch\Common\Exceptions;
 use OpenSearch\ConnectionPool\AbstractConnectionPool;
-use OpenSearch\Connections\Connection;
 use OpenSearch\Connections\ConnectionInterface;
-use GuzzleHttp\Ring\Future\FutureArrayInterface;
 use Psr\Log\LoggerInterface;
 
+// @phpstan-ignore classConstant.deprecatedClass
+@trigger_error(Transport::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0.', E_USER_DEPRECATED);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ */
 class Transport
 {
     /**
@@ -46,7 +51,7 @@ class Transport
     public $retryAttempts = 0;
 
     /**
-     * @var Connection
+     * @var ConnectionInterface
      */
     public $lastConnection;
 
@@ -88,11 +93,11 @@ class Transport
     /**
      * Perform a request to the Cluster
      *
-     * @param string $method  HTTP method to use
-     * @param string $uri     HTTP URI to send request to
-     * @param array  $params  Optional query parameters
-     * @param null   $body    Optional query body
-     * @param array  $options
+     * @param string     $method  HTTP method to use
+     * @param string     $uri     HTTP URI to send request to
+     * @param array<string, mixed> $params  Optional query parameters
+     * @param mixed|null $body    Optional query body
+     * @param array      $options
      *
      * @throws Common\Exceptions\NoNodesAvailableException|\Exception
      */
@@ -122,7 +127,7 @@ class Transport
             //onSuccess
             function ($response) {
                 $this->retryAttempts = 0;
-            // Note, this could be a 4xx or 5xx error
+                // Note, this could be a 4xx or 5xx error
             },
             //onFailure
             function ($response) {

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\ResourceModel;
 
@@ -8,9 +13,10 @@ class TransactionDetail extends AbstractDb
 {
     /**
      * Model Initialization
+     *
      * @return void
      */
-    protected function _construct() // @codingStandardsIgnoreLine
+    protected function _construct(): void // @codingStandardsIgnoreLine
     {
         $this->_init('braintree_transaction_details', 'entity_id');
     }

@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Util;
@@ -158,7 +158,7 @@ class TestGenerator
      * @param boolean $debug
      * @return TestGenerator
      */
-    public static function getInstance($dir = null, $tests = [], $debug = false)
+    public static function getInstance(?string $dir = null, $tests = [], $debug = false)
     {
         return new TestGenerator($dir, $tests, $debug);
     }
@@ -230,7 +230,7 @@ class TestGenerator
      * @throws FastFailException
      * @throws TestReferenceException
      */
-    public function createAllTestFiles($testManifest = null, $testsToIgnore = null)
+    public function createAllTestFiles(?BaseTestManifest $testManifest = null, ?array $testsToIgnore = null)
     {
         if ($this->tests === null) {
             // no-op if the test configuration is null
@@ -563,7 +563,7 @@ class TestGenerator
      * @param string|null $annotationName
      * @return null|string
      */
-    private function generateMethodAnnotations($annotationType = null, $annotationName = null)
+    private function generateMethodAnnotations(?string $annotationType = null, mixed $annotationName = null)
     {
         $annotationToAppend = null;
         $indent = "\t";
@@ -842,7 +842,7 @@ class TestGenerator
             }
 
             if (in_array($actionObject->getType(), ActionObject::COMMAND_ACTION_ATTRIBUTES)) {
-                $time = $time ?? ActionObject::DEFAULT_COMMAND_WAIT_TIMEOUT;
+                $time = $time ?? ActionObject::getDefaultMagentoCLIWaitTimeout();
             } else {
                 $time = $time ?? ActionObject::getDefaultWaitTimeout();
             }
@@ -1413,6 +1413,7 @@ class TestGenerator
                 case "loadSessionSnapshot":
                 case "seeInField":
                 case "seeOptionIsSelected":
+                case "seeInSecretField":
                     $testSteps .= $this->wrapFunctionCall($actor, $actionObject, $selector, $input);
                     break;
                 case "seeInPageSource":
@@ -2342,7 +2343,7 @@ class TestGenerator
      * @return string|null
      * @throws TestReferenceException
      */
-    private function resolveValueByType($value = null, $type = null)
+    private function resolveValueByType(?string $value = null, ?string  $type = null)
     {
         if (null === $value) {
             return null;

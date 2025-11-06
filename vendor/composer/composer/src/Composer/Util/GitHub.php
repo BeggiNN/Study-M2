@@ -23,6 +23,8 @@ use Composer\Pcre\Preg;
  */
 class GitHub
 {
+    public const GITHUB_TOKEN_REGEX = '{^([a-f0-9]{12,}|gh[a-z]_[a-zA-Z0-9_]+|github_pat_[a-zA-Z0-9_]+)$}';
+
     /** @var IOInterface */
     protected $io;
     /** @var Config */
@@ -61,7 +63,7 @@ class GitHub
         }
 
         // if available use token from git config
-        if (0 === $this->process->execute('git config github.accesstoken', $output)) {
+        if (0 === $this->process->execute(['git', 'config', 'github.accesstoken'], $output)) {
             $this->io->setAuthentication($originUrl, trim($output), 'x-oauth-basic');
 
             return true;
@@ -86,7 +88,7 @@ class GitHub
         }
 
         $note = 'Composer';
-        if ($this->config->get('github-expose-hostname') === true && 0 === $this->process->execute('hostname', $output)) {
+        if ($this->config->get('github-expose-hostname') === true && 0 === $this->process->execute(['hostname'], $output)) {
             $note .= ' on ' . trim($output);
         }
         $note .= ' ' . date('Y-m-d Hi');

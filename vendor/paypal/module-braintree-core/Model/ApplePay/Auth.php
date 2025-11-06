@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\ApplePay;
 
@@ -11,32 +16,35 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
+/**
+ * @SuppressWarnings(PHPMD.CookieAndSessionMisuse)
+ */
 class Auth implements AuthInterface
 {
     /**
      * @var AuthDataInterfaceFactory $authData
      */
-    private $authData;
+    private AuthDataInterfaceFactory $authData;
 
     /**
      * @var Ui\ConfigProvider $configProvider
      */
-    private $configProvider;
+    private Ui\ConfigProvider $configProvider;
 
     /**
      * @var UrlInterface $url
      */
-    private $url;
+    private UrlInterface $url;
 
     /**
      * @var CustomerSession $customerSession
      */
-    private $customerSession;
+    private CustomerSession $customerSession;
 
     /**
      * @var StoreManagerInterface $storeManager
      */
-    private $storeManager;
+    private StoreManagerInterface $storeManager;
 
     /**
      * Auth constructor
@@ -80,24 +88,30 @@ class Auth implements AuthInterface
     }
 
     /**
+     * Get client token
+     *
      * @return string|null
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    protected function getClientToken()
+    protected function getClientToken(): ?string
     {
         return $this->configProvider->getClientToken();
     }
 
     /**
+     * Get display name
+     *
      * @return string|null
      */
-    protected function getDisplayName()
+    protected function getDisplayName(): ?string
     {
         return $this->configProvider->getMerchantName();
     }
 
     /**
+     * Get action success url
+     *
      * @return string
      */
     protected function getActionSuccess(): string
@@ -106,6 +120,8 @@ class Auth implements AuthInterface
     }
 
     /**
+     * Check if logged in
+     *
      * @return bool
      */
     protected function isLoggedIn(): bool
@@ -114,6 +130,8 @@ class Auth implements AuthInterface
     }
 
     /**
+     * Get store code
+     *
      * @return string
      * @throws NoSuchEntityException
      */

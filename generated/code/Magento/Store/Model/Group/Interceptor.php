@@ -224,6 +224,15 @@ class Interceptor extends \Magento\Store\Model\Group implements \Magento\Framewo
     /**
      * {@inheritdoc}
      */
+    public function getCacheTags()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getCacheTags');
+        return $pluginInfo ? $this->___callPlugins('getCacheTags', func_get_args(), $pluginInfo) : parent::getCacheTags();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function getName()
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getName');
@@ -566,15 +575,6 @@ class Interceptor extends \Magento\Store\Model\Group implements \Magento\Framewo
     /**
      * {@inheritdoc}
      */
-    public function getCacheTags()
-    {
-        $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getCacheTags');
-        return $pluginInfo ? $this->___callPlugins('getCacheTags', func_get_args(), $pluginInfo) : parent::getCacheTags();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function cleanModelCache()
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'cleanModelCache');
@@ -840,5 +840,14 @@ class Interceptor extends \Magento\Store\Model\Group implements \Magento\Framewo
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'offsetGet');
         return $pluginInfo ? $this->___callPlugins('offsetGet', func_get_args(), $pluginInfo) : parent::offsetGet($offset);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, '__debugInfo');
+        return $pluginInfo ? $this->___callPlugins('__debugInfo', func_get_args(), $pluginInfo) : parent::__debugInfo();
     }
 }

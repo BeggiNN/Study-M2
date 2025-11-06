@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Api\Data;
 
@@ -7,40 +12,52 @@ namespace PayPal\Braintree\Api\Data;
  **/
 interface TransactionDetailDataInterface
 {
-    const ENTITY_ID = 'entity_id';
-    const ORDER_ID = 'order_id';
-    const TRANSACTION_SOURCE = 'transaction_source';
+    public const ENTITY_ID = 'entity_id';
+    public const ORDER_ID = 'order_id';
+    public const TRANSACTION_SOURCE = 'transaction_source';
 
     /**
-     * @return int|null
+     * Get transaction id
+     *
+     * @return int|string|null
      */
-    public function getId();
+    public function getId(): int|string|null;
 
     /**
+     * Get order id
+     *
      * @return int
      */
     public function getOrderId(): int;
 
     /**
+     * Get transaction source
+     *
      * @return string
      */
     public function getTransactionSource(): string;
 
     /**
-     * @param $id
+     * Set transaction id
+     *
+     * @param mixed $id
      * @return self
      */
-    public function setId($id);
+    public function setId($id): TransactionDetailDataInterface;
 
     /**
+     * Set order id
+     *
      * @param int $orderId
      * @return self
      */
-    public function setOrderId($orderId);
+    public function setOrderId(int $orderId): TransactionDetailDataInterface;
 
     /**
+     * Set transaction source
+     *
      * @param string $transactionSource
      * @return self
      */
-    public function setTransactionSource($transactionSource);
+    public function setTransactionSource(string $transactionSource): TransactionDetailDataInterface;
 }

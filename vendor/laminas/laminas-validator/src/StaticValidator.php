@@ -7,6 +7,12 @@ use Laminas\ServiceManager\ServiceManager;
 use function array_values;
 use function method_exists;
 
+/**
+ * @deprecated Since 2.61.0 This validator will be removed in v3.0 without replacement. Most validators can be
+ *             constructed as desired and used in any context.
+ *
+ * @final
+ */
 class StaticValidator
 {
     /** @var ValidatorPluginManager|null */

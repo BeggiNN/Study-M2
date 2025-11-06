@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Block\Adminhtml\Form\Field;
 
 use PayPal\Braintree\Helper\Country;
@@ -16,7 +17,7 @@ class Countries extends Select
     /**
      * @var Country
      */
-    private $countryHelper;
+    private Country $countryHelper;
 
     /**
      * Constructor
@@ -25,8 +26,11 @@ class Countries extends Select
      * @param Country $countryHelper
      * @param array $data
      */
-    public function __construct(Context $context, Country $countryHelper, array $data = [])
-    {
+    public function __construct(
+        Context $context,
+        Country $countryHelper,
+        array $data = []
+    ) {
         parent::__construct($context, $data);
         $this->countryHelper = $countryHelper;
     }
@@ -46,9 +50,9 @@ class Countries extends Select
      * Sets name for input element
      *
      * @param string $value
-     * @return $this
+     * @return self
      */
-    public function setInputName($value)
+    public function setInputName(string $value): Countries
     {
         return $this->setName($value);
     }

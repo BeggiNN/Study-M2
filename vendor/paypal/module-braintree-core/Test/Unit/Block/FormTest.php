@@ -1,11 +1,14 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Block;
 
 use Magento\Backend\Model\Session\Quote;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use PayPal\Braintree\Block\Form;
 use PayPal\Braintree\Gateway\Config\Config as GatewayConfig;
 use PayPal\Braintree\Model\Adminhtml\Source\CcType;
@@ -16,11 +19,18 @@ use Magento\Payment\Model\Config;
 use Magento\Store\Api\Data\StoreInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Vault\Model\VaultPaymentInterface;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 class FormTest extends \PHPUnit\Framework\TestCase
 {
-    public static $baseCardTypes = [
+    /**
+     * @var array
+     */
+    public static array $baseCardTypes = [
         'AE' => 'American Express',
         'VI' => 'Visa',
         'MC' => 'MasterCard',
@@ -29,50 +39,56 @@ class FormTest extends \PHPUnit\Framework\TestCase
         'MI' => 'Maestro',
     ];
 
-    public static $configCardTypes = [
+    /**
+     * @var array
+     */
+    public static array $configCardTypes = [
         'AE', 'VI', 'MC', 'DI', 'JBC'
     ];
 
     /**
-     * @var Form
+     * @var Form|MockObject
      */
-    private $block;
+    private Form|MockObject $block;
 
     /**
      * @var Quote|MockObject
      */
-    private $sessionQuote;
+    private Quote|MockObject $sessionQuote;
 
     /**
      * @var Config|MockObject
      */
-    private $gatewayConfig;
+    private MockObject|Config $gatewayConfig;
 
     /**
      * @var CcType|MockObject
      */
-    private $ccType;
+    private MockObject|CcType $ccType;
 
     /**
      * @var StoreManagerInterface|MockObject
      */
-    private $storeManager;
+    private StoreManagerInterface|MockObject $storeManager;
 
     /**
      * @var Data|MockObject
      */
-    private $paymentDataHelper;
+    private Data|MockObject $paymentDataHelper;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->initCcTypeMock();
         $this->initSessionQuoteMock();
         $this->initGatewayConfigMock();
-        
+
         $this->storeManager = $this->getMockForAbstractClass(StoreManagerInterface::class);
         $this->paymentDataHelper = $this->getMockBuilder(Data::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getMethodInstance'])
+            ->onlyMethods(['getMethodInstance'])
             ->getMock();
 
         $managerHelper = new ObjectManager($this);
@@ -88,14 +104,16 @@ class FormTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @covers \PayPal\Braintree\Block\Form::getCcAvailableTypes
      * @param string $countryId
      * @param array $availableTypes
      * @param array $expected
      * @dataProvider countryCardTypesDataProvider
      */
-    public function testGetCcAvailableTypes($countryId, array $availableTypes, array $expected)
-    {
+    public function testGetCcAvailableTypes(
+        string $countryId,
+        array $availableTypes,
+        array $expected
+    ) {
         $this->sessionQuote->expects(static::once())
             ->method('getCountryId')
             ->willReturn($countryId);
@@ -115,9 +133,10 @@ class FormTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get country card types testing data
+     *
      * @return array
      */
-    public function countryCardTypesDataProvider()
+    public static function countryCardTypesDataProvider(): array
     {
         return [
             ['US', ['AE', 'VI'], ['American Express', 'Visa']],
@@ -128,11 +147,14 @@ class FormTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @covers \PayPal\Braintree\Block\Form::isVaultEnabled
+     * Test is vault enabled
+     *
+     * @throws Exception
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function testIsVaultEnabled()
     {
-        //$this->markTestSkipped('Skip this test');
         $storeId = 1;
         $store = $this->getMockForAbstractClass(StoreInterface::class);
 
@@ -142,7 +164,7 @@ class FormTest extends \PHPUnit\Framework\TestCase
         $this->storeManager->expects(static::once())
             ->method('getStore')
             ->willReturn($store);
-        
+
         $store->expects(static::once())
             ->method('getId')
             ->willReturn($storeId);
@@ -164,26 +186,27 @@ class FormTest extends \PHPUnit\Framework\TestCase
     /**
      * Create mock for credit card type
      */
-    private function initCcTypeMock()
+    private function initCcTypeMock(): void
     {
         $this->ccType = $this->getMockBuilder(CcType::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCcTypeLabelMap'])
+            ->onlyMethods(['getAllowedTypes'])
             ->getMock();
 
         $this->ccType->expects(static::any())
-            ->method('getCcTypeLabelMap')
+            ->method('getAllowedTypes')
             ->willReturn(self::$baseCardTypes);
     }
 
     /**
      * Create mock for session quote
      */
-    private function initSessionQuoteMock()
+    private function initSessionQuoteMock(): void
     {
         $this->sessionQuote = $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getStoreId', 'getQuote', 'getBillingAddress', 'getCountryId', '__wakeup'])
+            ->onlyMethods(['getQuote'])
+            ->addMethods(['getStoreId', 'getBillingAddress', 'getCountryId', '__wakeup'])
             ->getMock();
 
         $this->sessionQuote->expects(static::any())
@@ -197,11 +220,11 @@ class FormTest extends \PHPUnit\Framework\TestCase
     /**
      * Create mock for gateway config
      */
-    private function initGatewayConfigMock()
+    private function initGatewayConfigMock(): void
     {
         $this->gatewayConfig = $this->getMockBuilder(GatewayConfig::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCountryAvailableCardTypes', 'getAvailableCardTypes'])
+            ->onlyMethods(['getCountryAvailableCardTypes', 'getAvailableCardTypes'])
             ->getMock();
     }
 }

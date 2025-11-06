@@ -26,8 +26,7 @@ define(
                 displayName: null,
                 actionSuccess: null,
                 grandTotalAmount: 0,
-                isLoggedIn: false,
-                storeCode: "default"
+                storeCode: 'default'
             },
 
             /**
@@ -39,14 +38,15 @@ define(
                     this.displayName = $t('Store');
                 }
 
-                var api = new buttonApi();
+                let api = new buttonApi();
+
                 api.setGrandTotalAmount(parseFloat(this.grandTotalAmount).toFixed(2));
                 api.setClientToken(this.clientToken);
                 api.setDisplayName(this.displayName);
                 api.setQuoteId(this.quoteId);
                 api.setActionSuccess(this.actionSuccess);
-                api.setIsLoggedIn(this.isLoggedIn);
                 api.setStoreCode(this.storeCode);
+                api.setPriceIncludesTax(this.priceIncludesTax);
 
                 // Attach the button
                 button.init(

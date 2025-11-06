@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\ObjectManager\Config;
 
 use Magento\FunctionalTestingFramework\ObjectManager\DefinitionInterface;
@@ -76,7 +77,7 @@ class Config implements \Magento\FunctionalTestingFramework\ObjectManager\Config
      * @param RelationsInterface|null  $relations
      * @param DefinitionInterface|null $definitions
      */
-    public function __construct(RelationsInterface $relations = null, DefinitionInterface $definitions = null)
+    public function __construct(?RelationsInterface $relations = null, ?DefinitionInterface $definitions = null)
     {
         $this->relations = $relations ? : new RelationsRuntime();
         $this->definitions = $definitions ? : new DefinitionRuntime();

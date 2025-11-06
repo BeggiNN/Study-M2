@@ -5,9 +5,9 @@
  * Copyright (c) 2004 David Grudl (https://davidgrudl.com)
  */
 declare (strict_types=1);
-namespace RectorPrefix202308\Nette\Utils;
+namespace RectorPrefix202411\Nette\Utils;
 
-use RectorPrefix202308\Nette;
+use RectorPrefix202411\Nette;
 /**
  * Paginating math.
  *
@@ -29,13 +29,17 @@ use RectorPrefix202308\Nette;
 class Paginator
 {
     use Nette\SmartObject;
-    /** @var int */
+    /**
+     * @var int
+     */
     private $base = 1;
-    /** @var int */
+    /** @var positive-int */
     private $itemsPerPage = 1;
-    /** @var int */
+    /**
+     * @var int
+     */
     private $page = 1;
-    /** @var int|null */
+    /** @var int<0, max>|null */
     private $itemCount;
     /**
      * Sets current page number.

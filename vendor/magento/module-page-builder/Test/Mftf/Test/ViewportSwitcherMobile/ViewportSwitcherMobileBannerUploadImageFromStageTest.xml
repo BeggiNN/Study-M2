@@ -37,7 +37,6 @@
                 <argument name="viewportButton" value="mobile"/>
                 <argument name="viewportStage" value="mobile"/>
             </actionGroup>
-            <comment userInput="BIC workaround" stepKey="enabledOldMediaGallery"/>
         </before>
         <after>
             <resizeWindow width="1920" height="1080" stepKey="resizeWindowToDesktop"/>
@@ -52,7 +51,6 @@
             <actionGroup ref="CliMediaGalleryEnhancedEnableActionGroup" stepKey="disableOldMediaGallery">
                 <argument name="enabled" value="1"/>
             </actionGroup>
-            <comment userInput="BIC workaround" stepKey="enabledOldMediaGallery"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
         <!-- Add Banner -->
@@ -66,7 +64,7 @@
         <actionGroup ref="verifyUploadImageButtons" stepKey="verifyUploadImageButtons">
             <argument name="contentType" value="PageBuilderBannerContentType"/>
         </actionGroup>
-        <attachFile selector="{{PageBuilderStage.uploadImageInput('1')}}" userInput="{{PageBuilderImageProperty_JPG.value}}" stepKey="attachImageFromLocalToStage"/>
+        <attachFile selector="{{PageBuilderStage.uploadImageInputWithUploaderId('1')}}" userInput="{{PageBuilderImageProperty_JPG.value}}" stepKey="attachImageFromLocalToStage"/>
         <waitForPageLoad stepKey="waitForPageLoad"/>
         <!-- Validate Stage Mobile Viewport -->
         <actionGroup ref="ValidateBackgroundImageConfigurationActionGroup" stepKey="validateBackgroundImageStage">

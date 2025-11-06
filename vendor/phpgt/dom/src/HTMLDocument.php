@@ -1,115 +1,141 @@
 <?php
 namespace Gt\Dom;
 
-use DOMDocument;
+use Gt\PropFunc\MagicProp;
 
 /**
- * Provides access to special properties and methods not present by default
- * on a regular document.
- * @property-read HTMLCollection $anchors List of all of the anchors
- *  in the document. Anchors are <a> Elements with the `name` attribute.
- * @property-read Element $body The <body> element. Returns new Element if there
- *  was no body in the source HTML.
- * @property-read HTMLCollection $forms List of all <form> elements.
- * @property-read Element $head The <head> element. Returns new Element if there
- *  was no head in the source HTML.
- * @property-read HTMLCollection $images List of all <img> elements.
- * @property-read HTMLCollection $links List of all links in the document.
- *  Links are <a> Elements with the `href` attribute.
- * @property-read HTMLCollection $scripts List of all <script> elements.
- * @property string $title The title of the document, defined using <title>.
+ * @property-read ?Element $body The Document.body property represents the <body> or <frameset> node of the current document, or null if no such element exists.
+ * @property-read ?Element $head Returns the <head> element of the current document.
+ * @property-read HTMLCollection $embeds Returns a list of the embedded <embed> elements within the current document.
+ * @property-read HTMLCollection $forms Returns a list of the <form> elements within the current document.
+ * @property-read HTMLCollection $images Returns a list of the images in the current document.
+ * @property-read HTMLCollection $links Returns a list of all the hyperlinks in the document.
+ * @property-read HTMLCollection $scripts Returns all the script elements on the document.
+ * @property string $title Sets or gets the title of the current document.
+ *
+// * @method getElementsByTagName(string $tagName)
  */
 class HTMLDocument extends Document {
-	use LiveProperty, ParentNode;
+	use MagicProp;
 
-	public function __construct($document = "") {
-		parent::__construct($document);
+	public function __construct(
+		string $html = "<!doctype html>",
+		string $characterSet = "UTF-8"
+	) {
+		parent::__construct(
+			$characterSet,
+			"text/html",
+		);
 
-		if(!($document instanceof DOMDocument)) {
-			if(empty($document)) {
-				$this->fillEmptyDocumentElement();
+// Workaround for handling UTF-8 encoding correctly.
+// @link https://stackoverflow.com/questions/8218230/php-domdocument-loadhtml-not-encoding-utf-8-correctly
+		$html = '<?xml encoding="'
+			. strtolower($this->encoding)
+			. '" ?>'
+			. $html;
+		$this->loadHTML($html, LIBXML_SCHEMA_CREATE | LIBXML_COMPACT);
+		foreach($this->childNodes as $child) {
+			if($child instanceof ProcessingInstruction) {
+				$this->removeChild($child);
 			}
-			else {
-// loadHTML expects an ISO-8859-1 encoded string.
-// http://stackoverflow.com/questions/11309194/php-domdocument-failing-to-handle-utf-8-characters
-                $convmap = [0x80, 0x10FFFF, 0, 0x1FFFFF];
-                $document = mb_encode_numericentity(
-                    $document,
-                    $convmap,
-                    'UTF-8'
-                );
-				$this->loadHTML($document);
+		}
+
+		/** @var array<Node> $nonElementChildNodes */
+		$nonElementChildNodes = [];
+		foreach($this->childNodes as $child) {
+			if($child instanceof DocumentType
+			|| $child instanceof Element) {
+				continue;
 			}
+			array_push($nonElementChildNodes, $child);
+		}
+
+		if(is_null($this->documentElement)) {
+			$this->appendChild($this->createElement("html"));
+		}
+		if(is_null($this->head)) {
+			$this->documentElement->prepend($this->createElement("head"));
+		}
+		if(is_null($this->body)) {
+			$this->documentElement->append($this->createElement("body"));
+		}
+
+		if($nonElementChildNodes) {
+			call_user_func(
+				$this->documentElement->prepend(...),
+				...$nonElementChildNodes,
+			);
 		}
 	}
 
-	public function getElementsByClassName(string $names):HTMLCollection {
-		return $this->documentElement->getElementsByClassName($names);
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/body */
+	public function __prop_get_body():null|Element {
+		return $this->getElementsByTagName("body")->item(0);
 	}
 
-	protected function prop_get_head():Element {
-		return $this->getOrCreateElement("head");
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/head */
+	public function __prop_get_head():null|Element {
+		return $this->getElementsByTagName("head")->item(0);
 	}
 
-	protected function prop_get_body():Element {
-		return $this->getOrCreateElement("body");
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/embeds */
+	public function __prop_get_embeds():HTMLCollection {
+		return $this->getElementsByTagName("embed");
 	}
 
-	protected function prop_get_forms() {
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/forms */
+	public function __prop_get_forms():HTMLCollection {
 		return $this->getElementsByTagName("form");
 	}
 
-	protected function prop_get_anchors() {
-		return $this->querySelectorAll("a[name]");
-	}
-
-	protected function prop_get_images() {
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/images */
+	public function __prop_get_images():HTMLCollection {
 		return $this->getElementsByTagName("img");
 	}
 
-	protected function prop_get_links() {
-		return $this->querySelectorAll("a[href]");
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/links */
+	public function __prop_get_links():HTMLCollection {
+		return HTMLCollectionFactory::create(function() {
+			$elementList = [];
+
+			$areaList = $this->getElementsByTagName("area");
+			for($i = 0, $len = $areaList->length; $i < $len; $i++) {
+				array_push($elementList, $areaList->item($i));
+			}
+			$aList = $this->getElementsByTagName("a");
+			for($i = 0, $len = $aList->length; $i < $len; $i++) {
+				$domNode = $aList->item($i);
+				$hrefAttr = $domNode->attributes->getNamedItem(
+					"href"
+				);
+				if(!$hrefAttr) {
+					continue;
+				}
+				array_push($elementList, $domNode);
+			}
+
+			return NodeListFactory::create(...$elementList);
+		});
 	}
 
-	protected function prop_get_title() {
-		$title = $this->head->getElementsByTagName("title")->item(0);
-
-		if(is_null($title)) {
-			return "";
-		}
-		else {
-			return $title->textContent;
-		}
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/scripts */
+	public function __prop_get_scripts():HTMLCollection {
+		return $this->getElementsByTagName("script");
 	}
 
-	protected function prop_set_title($value):void {
-		$title = $this->head->getElementsByTagName("title")->item(0);
-
-		if(is_null($title)) {
-			$title = $this->createElement("title");
-			$this->head->appendChild($title);
-		}
-
-		$title->textContent = $value;
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/title */
+	protected function __prop_get_title():string {
+		$titleElement = $this->head?->getElementsByTagName("title")?->item(0);
+		return $titleElement?->text ?? "";
 	}
 
-	private function getOrCreateElement(string $tagName):Element {
-		$element = $this->querySelector($tagName);
-		if(is_null($element)) {
-			$element = $this->createElement($tagName);
-			$this->documentElement->appendChild($element);
+	/** @link https://developer.mozilla.org/en-US/docs/Web/API/Document/title */
+	protected function __prop_set_title(string $value):void {
+		if(!$titleElement = $this->head?->getElementsByTagName("title")?->item(0)) {
+			$titleElement = $this->createElement("title");
+			$this->head->appendChild($titleElement);
 		}
 
-		return $element;
-	}
-
-	private function fillEmptyDocumentElement():void {
-		$this->loadHTML("<!doctype html><html></html>");
-		$tagsToCreate = ["head", "body"];
-
-		foreach($tagsToCreate as $tag) {
-			$node = $this->createElement($tag);
-			$this->documentElement->appendChild($node);
-		}
+		$titleElement->text = $value;
 	}
 }

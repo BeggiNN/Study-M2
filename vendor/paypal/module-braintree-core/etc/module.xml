@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="PayPal_Braintree" setup_version="4.4.0">
+    <module name="PayPal_Braintree" setup_version="4.6.1">
         <sequence>
             <module name="Magento_Customer"/>
             <module name="Magento_Config"/>
@@ -22,7 +22,9 @@
             <module name="Magento_Ui"/>
             <module name="Magento_InstantPurchase"/>
             <module name="Magento_Multishipping"/>
-            <module name="Magento_ReCaptchaUi" />
+            <module name="Magento_ReCaptchaUi"/>
+            <module name="Magento_ReCaptchaWebapiApi"/>
+            <module name="Magento_ReCaptchaCheckout"/>
         </sequence>
     </module>
 </config>

@@ -24,6 +24,7 @@ use function str_starts_with;
 use function strlen;
 use function strtoupper;
 
+/** @final */
 class CreditCard extends AbstractValidator
 {
     /**
@@ -278,6 +279,8 @@ class CreditCard extends AbstractValidator
     /**
      * Returns a list of accepted CCIs
      *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
+     *
      * @return array
      */
     public function getType()
@@ -288,7 +291,9 @@ class CreditCard extends AbstractValidator
     /**
      * Sets CCIs which are accepted by validation
      *
-     * @param  string|array $type Type to allow for validation
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
+     *
+     * @param string|array $type Type to allow for validation
      * @return CreditCard Provides a fluid interface
      */
     public function setType($type)
@@ -299,6 +304,8 @@ class CreditCard extends AbstractValidator
 
     /**
      * Adds a CCI to be accepted by validation
+     *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
      *
      * @param  string|array $type Type to allow for validation
      * @return $this Provides a fluid interface
@@ -332,6 +339,8 @@ class CreditCard extends AbstractValidator
     /**
      * Returns the actual set service
      *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
+     *
      * @return callable
      */
     public function getService()
@@ -342,7 +351,9 @@ class CreditCard extends AbstractValidator
     /**
      * Sets a new callback for service validation
      *
-     * @param  callable $service
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
+     *
+     * @param callable $service
      * @return $this
      * @throws InvalidArgumentException On invalid service callback.
      */

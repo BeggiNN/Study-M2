@@ -13,6 +13,10 @@ use function method_exists;
 /**
  * Abstract compression adapter
  *
+ * @deprecated Since 2.40.0 Compression adapters will be split into multiple interfaces to clearly separate the
+ *             capability of the underlying compression or archive format. For example, tar cannot compress strings and
+ *             GZ cannot be used to create multi-file archives.
+ *
  * @template TOptions of array
  */
 abstract class AbstractCompressionAlgorithm implements CompressionAlgorithmInterface

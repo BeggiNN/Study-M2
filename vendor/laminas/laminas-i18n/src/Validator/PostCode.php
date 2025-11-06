@@ -16,6 +16,7 @@ use function is_string;
 use function preg_match;
 use function strlen;
 
+/** @final */
 class PostCode extends AbstractValidator
 {
     public const INVALID        = 'postcodeInvalid';
@@ -26,7 +27,7 @@ class PostCode extends AbstractValidator
     /**
      * Validation failure message template definitions
      *
-     * @var string[]
+     * @var array<string, string>
      */
     protected $messageTemplates = [
         self::INVALID        => 'Invalid type given. String or integer expected',
@@ -257,6 +258,8 @@ class PostCode extends AbstractValidator
     /**
      * Returns the set locale
      *
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0
+     *
      * @return string|null The set locale
      */
     public function getLocale()
@@ -267,7 +270,9 @@ class PostCode extends AbstractValidator
     /**
      * Sets the locale to use
      *
-     * @param  string|null $locale
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0. Provide options to the constructor instead.
+     *
+     * @param string|null $locale
      * @return $this
      */
     public function setLocale($locale)
@@ -279,6 +284,8 @@ class PostCode extends AbstractValidator
     /**
      * Returns the set postal code format
      *
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0
+     *
      * @return string|null
      */
     public function getFormat()
@@ -289,7 +296,9 @@ class PostCode extends AbstractValidator
     /**
      * Sets a self defined postal format as regex
      *
-     * @param  string|null $format
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0. Provide options to the constructor instead.
+     *
+     * @param string|null $format
      * @return $this
      */
     public function setFormat($format)
@@ -345,7 +354,7 @@ class PostCode extends AbstractValidator
         $service = $this->getService();
         $locale  = $this->getLocale();
         $format  = $this->getFormat();
-        if ((null === $format || '' === $format) && ! empty($locale)) {
+        if (($format === null || $format === '') && $locale !== null) {
             $region = Locale::getRegion($locale);
             if ('' === $region) {
                 throw new Exception\InvalidArgumentException('Locale must contain a region');
@@ -365,7 +374,7 @@ class PostCode extends AbstractValidator
             $format .= '$/';
         }
 
-        if (! empty($service)) {
+        if ($service !== null) {
             if (! is_callable($service)) {
                 throw new Exception\InvalidArgumentException('Invalid callback given');
             }
@@ -380,7 +389,7 @@ class PostCode extends AbstractValidator
                     $this->error(self::SERVICE, $value);
                     return false;
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 $this->error(self::SERVICEFAILURE, $value);
                 return false;
             }

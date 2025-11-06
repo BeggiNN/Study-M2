@@ -8,14 +8,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202308\Symfony\Component\Console\Helper;
+namespace RectorPrefix202411\Symfony\Component\Console\Helper;
 
-use RectorPrefix202308\Symfony\Component\Console\Cursor;
-use RectorPrefix202308\Symfony\Component\Console\Exception\LogicException;
-use RectorPrefix202308\Symfony\Component\Console\Output\ConsoleOutputInterface;
-use RectorPrefix202308\Symfony\Component\Console\Output\ConsoleSectionOutput;
-use RectorPrefix202308\Symfony\Component\Console\Output\OutputInterface;
-use RectorPrefix202308\Symfony\Component\Console\Terminal;
+use RectorPrefix202411\Symfony\Component\Console\Cursor;
+use RectorPrefix202411\Symfony\Component\Console\Exception\LogicException;
+use RectorPrefix202411\Symfony\Component\Console\Output\ConsoleOutputInterface;
+use RectorPrefix202411\Symfony\Component\Console\Output\ConsoleSectionOutput;
+use RectorPrefix202411\Symfony\Component\Console\Output\OutputInterface;
+use RectorPrefix202411\Symfony\Component\Console\Terminal;
 /**
  * The ProgressBar provides helpers to display progress output.
  *
@@ -238,9 +238,9 @@ final class ProgressBar
     {
         $this->messages[$name] = $message;
     }
-    public function getMessage(string $name = 'message') : string
+    public function getMessage(string $name = 'message') : ?string
     {
-        return $this->messages[$name];
+        return $this->messages[$name] ?? null;
     }
     public function getStartTime() : int
     {
@@ -337,9 +337,15 @@ final class ProgressBar
     /**
      * Returns an iterator that will automatically update the progress bar when iterated.
      *
-     * @param int|null $max Number of steps to complete the bar (0 if indeterminate), if null it will be inferred from $iterable
+     * @template TKey
+     * @template TValue
+     *
+     * @param iterable<TKey, TValue> $iterable
+     * @param int|null               $max      Number of steps to complete the bar (0 if indeterminate), if null it will be inferred from $iterable
+     *
+     * @return iterable<TKey, TValue>
      */
-    public function iterate(iterable $iterable, int $max = null) : iterable
+    public function iterate(iterable $iterable, ?int $max = null) : iterable
     {
         $this->start($max ?? (\is_array($iterable) || $iterable instanceof \Countable ? \count($iterable) : 0));
         foreach ($iterable as $key => $value) {
@@ -354,7 +360,7 @@ final class ProgressBar
      * @param int|null $max     Number of steps to complete the bar (0 if indeterminate), null to leave unchanged
      * @param int      $startAt The starting point of the bar (useful e.g. when resuming a previously started bar)
      */
-    public function start(int $max = null, int $startAt = 0) : void
+    public function start(?int $max = null, int $startAt = 0) : void
     {
         $this->startTime = \time();
         $this->step = $startAt;
@@ -533,17 +539,17 @@ final class ProgressBar
             }
             return $display;
         }, 'elapsed' => function (self $bar) {
-            return Helper::formatTime(\time() - $bar->getStartTime());
+            return Helper::formatTime(\time() - $bar->getStartTime(), 2);
         }, 'remaining' => function (self $bar) {
             if (!$bar->getMaxSteps()) {
                 throw new LogicException('Unable to display the remaining time if the maximum number of steps is not set.');
             }
-            return Helper::formatTime($bar->getRemaining());
+            return Helper::formatTime($bar->getRemaining(), 2);
         }, 'estimated' => function (self $bar) {
             if (!$bar->getMaxSteps()) {
                 throw new LogicException('Unable to display the estimated time if the maximum number of steps is not set.');
             }
-            return Helper::formatTime($bar->getEstimated());
+            return Helper::formatTime($bar->getEstimated(), 2);
         }, 'memory' => function (self $bar) {
             return Helper::formatMemory(\memory_get_usage(\true));
         }, 'current' => function (self $bar) {

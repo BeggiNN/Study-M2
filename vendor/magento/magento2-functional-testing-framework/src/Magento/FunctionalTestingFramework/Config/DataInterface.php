@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\Config;
 
 /**
@@ -26,7 +27,7 @@ interface DataInterface
      * @param mixed|null $default
      * @return mixed|null
      */
-    public function get($key = null, $default = null);
+    public function get(mixed $key = null, mixed $default = null);
     // @codingStandardsIgnoreEnd
 
     /**
@@ -35,7 +36,7 @@ interface DataInterface
      * @param string|null $scope
      * @return void
      */
-    public function load($scope = null);
+    public function load(?string $scope = null);
 
     /**
      * Set name of the config file

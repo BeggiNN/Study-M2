@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Credit\Calculator\Listing;
 
@@ -18,20 +23,21 @@ class Product extends Template
     /**
      * @var CreditPriceRepositoryInterface
      */
-    protected $creditPriceRepository;
+    protected CreditPriceRepositoryInterface $creditPriceRepository;
 
     /**
      * @var ProductInterface
      */
-    protected $product;
+    protected ProductInterface $product;
 
     /**
      * @var PayPalCreditConfig
      */
-    protected $config;
+    protected PayPalCreditConfig $config;
 
     /**
      * Product constructor.
+     *
      * @param Template\Context $context
      * @param PayPalCreditConfig $config
      * @param CreditPriceRepositoryInterface $creditPriceRepository
@@ -61,14 +67,18 @@ class Product extends Template
     }
 
     /**
-     * @param $product
+     * Set product
+     *
+     * @param ProductInterface $product
      */
-    public function setProduct(ProductInterface $product)
+    public function setProduct(ProductInterface $product): void
     {
         $this->product = $product;
     }
 
     /**
+     * Get Product
+     *
      * @return ProductInterface
      */
     public function getProduct(): ProductInterface
@@ -77,11 +87,13 @@ class Product extends Template
     }
 
     /**
+     * Get price data
+     *
      * @return CreditPriceDataInterface|bool
      */
-    public function getPriceData()
+    public function getPriceData(): bool|CreditPriceDataInterface
     {
-        $data = $this->creditPriceRepository->getCheapestByProductId($this->getProduct()->getId());
+        $data = $this->creditPriceRepository->getCheapestByProductId((int)$this->getProduct()->getId());
         if ($data->getId()) {
             return $data;
         }
@@ -90,6 +102,8 @@ class Product extends Template
     }
 
     /**
+     * Get merchant name
+     *
      * @return string
      */
     public function getMerchantName(): string

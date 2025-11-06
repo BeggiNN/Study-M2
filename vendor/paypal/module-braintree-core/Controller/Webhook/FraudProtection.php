@@ -1,18 +1,21 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
  */
-
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Controller\Webhook;
 
 use Braintree\TransactionReview;
 use Braintree\WebhookNotification;
+use Exception;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\CsrfAwareActionInterface;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\App\Request\InvalidRequestException;
@@ -31,10 +34,26 @@ use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
 use PayPal\Braintree\Model\Webhook\Config;
 use Psr\Log\LoggerInterface;
 
-class FraudProtection extends Action implements CsrfAwareActionInterface
+/**
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class FraudProtection extends Action implements
+    ActionInterface,
+    CsrfAwareActionInterface,
+    HttpPostActionInterface,
+    HttpGetActionInterface
 {
     private const TRANSACTION_DECISION_APPROVED = 'Approve';
     private const TRANSACTION_SETTLED = 'Settled';
+    private const DISPUTE_STATUS_KEY_LABEL = [
+        WebhookNotification::DISPUTE_ACCEPTED => 'Accepted',
+        WebhookNotification::DISPUTE_AUTO_ACCEPTED => 'Auto Accepted',
+        WebhookNotification::DISPUTE_DISPUTED => 'Disputed',
+        WebhookNotification::DISPUTE_EXPIRED => 'Expired',
+        WebhookNotification::DISPUTE_LOST => 'Lost',
+        WebhookNotification::DISPUTE_OPENED => 'Opened',
+        WebhookNotification::DISPUTE_WON => 'Won'
+    ];
 
     /**
      * @var LoggerInterface
@@ -94,6 +113,7 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      * @param OrderRepositoryInterface $orderRepository
      * @param OrderPaymentRepositoryInterface $orderPaymentRepository
      * @param OrderManagementInterface $orderManagement
+     * @SuppressWarnings(PHPMD.ExcessiveParameterList)
      */
     public function __construct(
         Context $context,
@@ -123,13 +143,17 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      * Process braintree webhook response
      *
      * @return ResultInterface|null
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      */
     public function execute(): ?ResultInterface
     {
         if ($this->webhookConfig->isEnabled()) {
             if (!empty($webhookBody = $this->httpRequest->getPost())) {
                 try {
-                    $webhookResponse = WebhookNotification::parse($webhookBody['bt_signature'], $webhookBody['bt_payload']);
+                    $webhookResponse = WebhookNotification::parse(
+                        $webhookBody['bt_signature'],
+                        $webhookBody['bt_payload']
+                    );
 
                     if (!empty($webhookResponse)) {
                         // Process FPA webhook
@@ -161,8 +185,13 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
                         )) {
                             $this->processLocalPaymentExpiredAndReversed($webhookResponse);
                         }
+
+                        // Process Disputes
+                        if (array_key_exists($webhookResponse->kind, self::DISPUTE_STATUS_KEY_LABEL)) {
+                            $this->processDisputes($webhookResponse);
+                        }
                     }
-                } catch (\Exception $exception) {
+                } catch (Exception $exception) {
                     $this->logger->info("Braintree Webhook ERROR:", [
                         $exception->getMessage()
                     ]);
@@ -179,7 +208,7 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      *
      * @param WebhookNotification $webhookResponse
      */
-    private function processTransactionReviewed(WebhookNotification $webhookResponse)
+    private function processTransactionReviewed(WebhookNotification $webhookResponse): void
     {
         $transactionReview = $webhookResponse->transactionReview;
         $transactionData = $this->getOrderByTransaction($transactionReview->transactionId);
@@ -200,7 +229,7 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      *
      * @param WebhookNotification $webhookResponse
      */
-    private function processSettlement(WebhookNotification $webhookResponse)
+    private function processSettlement(WebhookNotification $webhookResponse): void
     {
         $transactionReview = $webhookResponse->transaction;
         $transactionData = $this->getOrderByTransaction($transactionReview->id);
@@ -236,12 +265,16 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      * @param OrderInterface $order
      * @param TransactionReview $transactionReview
      */
-    private function approveOrder(OrderInterface $order, TransactionReview $transactionReview)
+    private function approveOrder(OrderInterface $order, TransactionReview $transactionReview): void
     {
         $approvedStatus = $this->webhookConfig->getFraudApproveOrderStatus();
         $order->setState($approvedStatus)
             ->setStatus($approvedStatus)
-            ->addCommentToStatusHistory(__('Payment approved for Transaction ID: "%1". %2.', $transactionReview->transactionId, $transactionReview->reviewerNote));
+            ->addCommentToStatusHistory(__(
+                'Payment approved for Transaction ID: "%1". %2.',
+                $transactionReview->transactionId,
+                $transactionReview->reviewerNote
+            ));
         $this->orderRepository->save($order);
     }
 
@@ -251,12 +284,16 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      * @param OrderInterface $order
      * @param TransactionReview $transactionReview
      */
-    private function rejectOrder(OrderInterface $order, TransactionReview $transactionReview)
+    private function rejectOrder(OrderInterface $order, TransactionReview $transactionReview): void
     {
         $rejectedStatus = $this->webhookConfig->getFraudRejectOrderStatus();
         $order->setState($rejectedStatus)
             ->setStatus($rejectedStatus)
-            ->addCommentToStatusHistory(__('Payment declined for Transaction ID: "%1". %2.', $transactionReview->transactionId, $transactionReview->reviewerNote));
+            ->addCommentToStatusHistory(__(
+                'Payment declined for Transaction ID: "%1". %2.',
+                $transactionReview->transactionId,
+                $transactionReview->reviewerNote
+            ));
         $this->orderRepository->save($order);
     }
 
@@ -265,7 +302,7 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      *
      * @param WebhookNotification $webhookResponse
      */
-    private function processLocalPaymentCompleted(WebhookNotification $webhookResponse)
+    private function processLocalPaymentCompleted(WebhookNotification $webhookResponse): void
     {
         $paymentId = $webhookResponse->localPaymentCompleted->paymentId;
 
@@ -277,7 +314,10 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
                 if ($order->getStatus() !== Order::STATE_PROCESSING) {
                     $order->setState(Order::STATE_PROCESSING)
                         ->setStatus(Order::STATE_PROCESSING)
-                        ->addCommentToStatusHistory(__('Local Payment approved for Transaction ID: "%1"', $transaction->getLastTransId()));
+                        ->addCommentToStatusHistory(__(
+                            'Local Payment approved for Transaction ID: "%1"',
+                            $transaction->getLastTransId()
+                        ));
                     $this->orderRepository->save($order);
                 }
             }
@@ -285,12 +325,11 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
     }
 
     /**
-     * Process the 'local_payment_expired'
-     * And 'local_payment_reversed' webhook kind
+     * Process the 'local_payment_expired' And 'local_payment_reversed' webhook kind
      *
      * @param WebhookNotification $webhookResponse
      */
-    private function processLocalPaymentExpiredAndReversed(WebhookNotification $webhookResponse)
+    private function processLocalPaymentExpiredAndReversed(WebhookNotification $webhookResponse): void
     {
         if ($webhookResponse->kind === WebhookNotification::LOCAL_PAYMENT_EXPIRED) {
             $payPalPaymentId = $webhookResponse->localPaymentExpired->paymentId;
@@ -307,7 +346,10 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
                 if ($order->getStatus() !== Order::STATE_CANCELED) {
                     $this->orderManagement->cancel($order->getId());
                 }
-                $order->addCommentToStatusHistory(__($statusComment . ' "%1"', $transaction->getLastTransId()));
+                $order->addCommentToStatusHistory(__(
+                    $statusComment . ' "%1"',
+                    $transaction->getLastTransId()
+                ));
                 $this->orderRepository->save($order);
             }
         }
@@ -321,10 +363,39 @@ class FraudProtection extends Action implements CsrfAwareActionInterface
      */
     private function getOrderByPaymentId(string $paymentId): OrderPaymentSearchResultInterface
     {
-        $this->searchCriteriaBuilder->addFilter('additional_information', "%$paymentId%", 'like');
+        $this->searchCriteriaBuilder->addFilter(
+            'additional_information',
+            "%$paymentId%",
+            'like'
+        );
         return $this->orderPaymentRepository->getList(
             $this->searchCriteriaBuilder->create()
         );
+    }
+
+    /**
+     * Process Dispute webhook notifications for all the statuses
+     *
+     * @param WebhookNotification $webhookResponse
+     * @return void
+     */
+    private function processDisputes(WebhookNotification $webhookResponse): void
+    {
+        $dispute = $webhookResponse->dispute;
+
+        $transactionList = $this->getOrderByTransaction($dispute->transaction->id);
+        if ($transactionList->getTotalCount() > 0) {
+            foreach ($transactionList->getItems() as $transaction) {
+                $order = $this->orderRepository->get($transaction->getOrderId());
+                $order->setDisputeStatus(self::DISPUTE_STATUS_KEY_LABEL[$webhookResponse->kind]);
+                $order->addCommentToStatusHistory(__(
+                    'Dispute ID: %1. Status: %2',
+                    $dispute->id,
+                    strtoupper(self::DISPUTE_STATUS_KEY_LABEL[$webhookResponse->kind])
+                ));
+                $this->orderRepository->save($order);
+            }
+        }
     }
 
     /**

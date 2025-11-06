@@ -5,19 +5,20 @@ namespace Rector\Renaming\Rector\Name;
 
 use PhpParser\Node;
 use PhpParser\Node\FunctionLike;
-use PhpParser\Node\Name;
+use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Expression;
+use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Namespace_;
 use PhpParser\Node\Stmt\Property;
-use Rector\Core\Configuration\RenamedClassesDataCollector;
-use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Configuration\RenamedClassesDataCollector;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Rector\AbstractRector;
 use Rector\Renaming\NodeManipulator\ClassRenamer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202308\Webmozart\Assert\Assert;
+use RectorPrefix202411\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\Name\RenameClassRector\RenameClassRectorTest
  */
@@ -25,7 +26,7 @@ final class RenameClassRector extends AbstractRector implements ConfigurableRect
 {
     /**
      * @readonly
-     * @var \Rector\Core\Configuration\RenamedClassesDataCollector
+     * @var \Rector\Configuration\RenamedClassesDataCollector
      */
     private $renamedClassesDataCollector;
     /**
@@ -71,10 +72,10 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Name::class, Property::class, FunctionLike::class, Expression::class, ClassLike::class, Namespace_::class];
+        return [FullyQualified::class, Property::class, FunctionLike::class, Expression::class, ClassLike::class, If_::class];
     }
     /**
-     * @param FunctionLike|Name|ClassLike|Expression|Namespace_|Property $node
+     * @param FunctionLike|FullyQualified|ClassLike|Expression|Namespace_|Property|If_ $node
      */
     public function refactor(Node $node) : ?Node
     {

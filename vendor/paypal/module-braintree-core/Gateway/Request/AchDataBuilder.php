@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Request;
@@ -15,17 +19,17 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 
 class AchDataBuilder implements BuilderInterface
 {
-    const OPTIONS = 'options';
-    const VERIFICATION_METHOD = 'usBankAccountVerificationMethod';
+    public const OPTIONS = 'options';
+
     /**
      * @var SubjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
     /**
      * @var BraintreeConfig $braintreeConfig
      */
-    private $braintreeConfig;
+    private BraintreeConfig $braintreeConfig;
 
     /**
      * AchDataBuilder constructor.
@@ -52,15 +56,13 @@ class AchDataBuilder implements BuilderInterface
     {
         $paymentDO = $this->subjectReader->readPayment($buildSubject);
         $payment = $paymentDO->getPayment();
-        $nonce = $payment->getAdditionalInformation(
-            DataAssignObserver::PAYMENT_METHOD_NONCE
-        );
+        $nonce = $payment->getAdditionalInformation(DataAssignObserver::PAYMENT_METHOD_NONCE);
 
         // Get customer details from the billing address
         $order = $paymentDO->getOrder();
         $billingAddress = $order->getBillingAddress();
 
-        // lets search for an existing customer
+        // Let's search for an existing customer
         $customers = Customer::search([
             CustomerSearch::email()->is($billingAddress->getEmail()),
             CustomerSearch::firstName()->is($billingAddress->getFirstname()),
@@ -78,20 +80,43 @@ class AchDataBuilder implements BuilderInterface
         } else {
             $customerId = $customers->getIds()[0];
         }
+
         $createRequest = [
             'customerId' => $customerId,
             'paymentMethodNonce' => $nonce,
             'options' => [
-                'usBankAccountVerificationMethod' => 'network_check'
+                'usBankAccountVerificationMethod' => UsBankAccountVerification::NETWORK_CHECK
             ]
         ];
+
         $merchantAccountId = $this->braintreeConfig->getMerchantAccountId($order->getStoreId());
+
         if (!empty($merchantAccountId)) {
             $createRequest['options']['verificationMerchantAccountId'] = $merchantAccountId;
         }
+
         $result = PaymentMethod::create($createRequest);
 
         if ($result->success) {
+            /*
+             * Set payment's bank account verified status in the additional information.
+             * We do not vault before the transaction as per Braintree's documentation,
+             * but after transaction is successful.
+             * `network_check` verification method returns an instant & accurate result (confirmed with the team).
+             *
+             * @see https://developer.paypal.com/braintree/docs/guides/ach/client-side/javascript/v3/
+             * @see https://developer.paypal.com/braintree/docs/guides/ach/server-side/php
+             */
+            $payment->setAdditionalInformation(
+                'usBankAccountVerificationMethod',
+                UsBankAccountVerification::NETWORK_CHECK
+            );
+
+            $payment->setAdditionalInformation(
+                UsBankAccountVerification::VERIFIED,
+                $result->paymentMethod->verified ?? false
+            );
+
             return [
                 'paymentMethodNonce' => null,
                 'paymentMethodToken' => $result->paymentMethod->token

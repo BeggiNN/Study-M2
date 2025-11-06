@@ -8,35 +8,42 @@ use DG\BypassFinals;
 
 
 /**
- * Wrapper that mutates PHP source codes.
+ * A stream wrapper class that mutates PHP source code by modifying 'final' and 'readonly' keywords.
  * @internal
  */
 final class MutatingWrapper
 {
-	/** @var string */
+	/** @var string  Specifies the class of the underlying normal wrapper */
 	public static $underlyingWrapperClass;
 
-	/** @var resource|null */
+	/** @var resource|null  Stream context, which may be set by stream functions */
 	public $context;
 
-	/** @var object|null */
+	/** @var object|null  Instance of the actual underlying wrapper used for file operations */
 	private $wrapper;
 
 
+	/**
+	 * Opens a stream resource and creates $wrapper property. It can modify PHP source files if allowed by the path rules.
+	 */
 	public function stream_open(string $path, string $mode, int $options, ?string &$openedPath): bool
 	{
+		if (is_dir($path)) {
+			return false;
+		}
+
 		$this->wrapper = $this->createUnderlyingWrapper();
 		if (!$this->wrapper->stream_open($path, $mode, $options, $openedPath)) {
 			return false;
 		}
 
-		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathInWhiteList($path)) {
+		if ($mode === 'rb' && pathinfo($path, PATHINFO_EXTENSION) === 'php' && BypassFinals::isPathAllowed($path)) {
 			$content = '';
 			while (!$this->wrapper->stream_eof()) {
 				$content .= $this->wrapper->stream_read(8192);
 			}
 
-			$modified = BypassFinals::modifyCode($content);
+			$modified = BypassFinals::modifyCode($content, $path);
 			if ($modified === $content) {
 				$this->wrapper->stream_seek(0);
 			} else {
@@ -52,6 +59,9 @@ final class MutatingWrapper
 	}
 
 
+	/**
+	 * Delegates the handling of directory opening to the underlying wrapper and creates $wrapper property.
+	 */
 	public function dir_opendir(string $path, int $options): bool
 	{
 		$this->wrapper = $this->createUnderlyingWrapper();
@@ -59,7 +69,9 @@ final class MutatingWrapper
 	}
 
 
-	/** @return object */
+	/**
+	 * Instantiates the underlying wrapper.
+	 */
 	private function createUnderlyingWrapper()
 	{
 		$wrapper = new self::$underlyingWrapperClass;
@@ -68,7 +80,9 @@ final class MutatingWrapper
 	}
 
 
-	/** @return mixed */
+	/**
+	 * Delegates the handling of file/directory operations to the underlying wrapper.
+	 */
 	public function __call(string $method, array $args)
 	{
 		$wrapper = $this->wrapper ?? $this->createUnderlyingWrapper();

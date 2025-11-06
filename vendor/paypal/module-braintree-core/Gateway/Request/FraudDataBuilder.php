@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Request;
@@ -18,21 +22,21 @@ class FraudDataBuilder implements BuilderInterface
 {
     use Formatter;
 
-    const SKIP_ADVANCED_FRAUD_CHECKING = 'skipAdvancedFraudChecking';
+    public const SKIP_ADVANCED_FRAUD_CHECKING = 'skipAdvancedFraudChecking';
 
     /**
      * @var Config $config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var SubjectReader $subjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
     /**
      * @var State
      */
-    private $state;
+    private State $state;
 
     /**
      * FraudDataBuilder constructor.
@@ -53,6 +57,7 @@ class FraudDataBuilder implements BuilderInterface
 
     /**
      * @inheritdoc
+     *
      * @throws LocalizedException
      */
     public function build(array $buildSubject): array

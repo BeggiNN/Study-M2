@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Ui\Vault;
@@ -10,11 +14,11 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const CODE = 'braintree_cc_vault';
+    public const CODE = 'braintree_cc_vault';
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * ConfigProvider constructor.

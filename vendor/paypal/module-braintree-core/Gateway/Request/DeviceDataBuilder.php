@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Request;
@@ -9,15 +13,17 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 
 class DeviceDataBuilder implements BuilderInterface
 {
+    public const DEVICE_DATA = 'deviceData';
+
     /**
      * @var string $deviceDataKey
      */
-    private static $deviceDataKey = 'deviceData';
+    private static string $deviceDataKey = 'deviceData';
 
     /**
      * @var SubjectReader $subjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
     /**
      * DeviceDataBuilder constructor

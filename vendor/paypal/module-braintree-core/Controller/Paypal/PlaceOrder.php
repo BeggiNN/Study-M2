@@ -1,20 +1,22 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Controller\Paypal;
 
 use Exception;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper;
 
-class PlaceOrder extends AbstractAction implements HttpPostActionInterface
+class PlaceOrder extends AbstractAction implements ActionInterface, HttpPostActionInterface
 {
     /**
      * @var Helper\OrderPlace

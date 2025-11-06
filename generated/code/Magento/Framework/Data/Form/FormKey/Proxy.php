@@ -69,7 +69,17 @@ class Proxy extends \Magento\Framework\Data\Form\FormKey implements \Magento\Fra
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**

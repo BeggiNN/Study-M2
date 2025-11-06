@@ -18,7 +18,7 @@
             <group value="catalogRule"/>
             <group value="mtf_migrated"/>
             <group value="catalog"/>
-            <group value="guest_checkout"/>
+            <group value="cloud"/>
         </annotations>
         <before>
             <createData entity="_defaultCategory" stepKey="createCategory"/>

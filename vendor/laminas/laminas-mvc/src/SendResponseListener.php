@@ -35,7 +35,7 @@ class SendResponseListener extends AbstractListenerAggregate implements
     {
         $eventManager->setIdentifiers([
             self::class,
-            $this::class,
+            static::class,
         ]);
         $this->eventManager = $eventManager;
         $this->attachDefaultListeners();

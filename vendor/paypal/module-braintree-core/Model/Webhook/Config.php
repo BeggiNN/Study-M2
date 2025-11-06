@@ -1,9 +1,8 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
  */
-
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Webhook;
@@ -49,7 +48,7 @@ class Config
      * @param int|null $storeId
      * @return bool
      */
-    public function isEnabled(int $storeId = null): bool
+    public function isEnabled(?int $storeId = null): bool
     {
         return (bool) $this->scopeConfig->getValue(
             self::WEBHOOK_ENABLED,
@@ -64,7 +63,7 @@ class Config
      * @param int|null $storeId
      * @return string
      */
-    public function getFraudProtectionUrl(int $storeId = null): string
+    public function getFraudProtectionUrl(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::WEBHOOK_FRAUD_PROTECTION_URL,
@@ -79,7 +78,7 @@ class Config
      * @param int|null $storeId
      * @return string
      */
-    public function getFraudApproveOrderStatus(int $storeId = null): string
+    public function getFraudApproveOrderStatus(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::WEBHOOK_APPROVE_ORDER_STATUS,
@@ -94,7 +93,7 @@ class Config
      * @param int|null $storeId
      * @return string
      */
-    public function getFraudRejectOrderStatus(int $storeId = null): string
+    public function getFraudRejectOrderStatus(?int $storeId = null): string
     {
         return (string) $this->scopeConfig->getValue(
             self::WEBHOOK_REJECT_ORDER_STATUS,

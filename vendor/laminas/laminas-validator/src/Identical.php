@@ -15,6 +15,7 @@ use function key;
 use function sprintf;
 use function var_export;
 
+/** @final */
 class Identical extends AbstractValidator
 {
     /**
@@ -87,6 +88,8 @@ class Identical extends AbstractValidator
     /**
      * Retrieve token
      *
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
+     *
      * @return mixed
      */
     public function getToken()
@@ -96,6 +99,8 @@ class Identical extends AbstractValidator
 
     /**
      * Set token against which to compare
+     *
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
      *
      * @return $this
      */
@@ -109,6 +114,8 @@ class Identical extends AbstractValidator
     /**
      * Returns the strict parameter
      *
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
+     *
      * @return bool
      */
     public function getStrict()
@@ -119,7 +126,9 @@ class Identical extends AbstractValidator
     /**
      * Sets the strict parameter
      *
-     * @param  bool $strict
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
+     *
+     * @param bool $strict
      * @return $this
      */
     public function setStrict($strict)
@@ -131,6 +140,8 @@ class Identical extends AbstractValidator
     /**
      * Returns the literal parameter
      *
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
+     *
      * @return bool
      */
     public function getLiteral()
@@ -141,7 +152,9 @@ class Identical extends AbstractValidator
     /**
      * Sets the literal parameter
      *
-     * @param  bool $literal
+     * @deprecated Since 2.61.0 - All option setters and getters will be removed in 3.0
+     *
+     * @param bool $literal
      * @return $this
      */
     public function setLiteral($literal)

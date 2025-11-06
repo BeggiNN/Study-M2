@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Credit\Calculator\Product;
 
@@ -17,17 +22,17 @@ class View extends Template
     /**
      * @var CreditPriceRepositoryInterface
      */
-    protected $creditPriceRepository;
+    protected CreditPriceRepositoryInterface $creditPriceRepository;
 
     /**
      * @var Registry
      */
-    protected $coreRegistry;
+    protected Registry $coreRegistry;
 
     /**
      * @var PayPalCreditConfig
      */
-    protected $config;
+    protected PayPalCreditConfig $config;
 
     /**
      * View constructor.
@@ -73,12 +78,14 @@ class View extends Template
     }
 
     /**
+     * Get price data
+     *
      * @return string|bool
      */
-    public function getPriceData()
+    public function getPriceData(): bool|string
     {
         if ($this->getProduct()) {
-            $results = $this->creditPriceRepository->getByProductId($this->getProduct()->getId());
+            $results = $this->creditPriceRepository->getByProductId((int) $this->getProduct()->getId());
             if (null !== $results) {
                 $options = [];
                 foreach ($results as $option) {
@@ -99,9 +106,11 @@ class View extends Template
     }
 
     /**
+     * Get merchant name
+     *
      * @return string|null
      */
-    public function getMerchantName()
+    public function getMerchantName(): ?string
     {
         return $this->config->getMerchantName();
     }

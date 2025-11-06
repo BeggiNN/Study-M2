@@ -69,11 +69,19 @@ class Hash extends AbstractValidator
             $options['algorithm'] = func_get_arg(1);
         }
 
+        // The combination of parent and local logic requires us to have the "algorithm" key before the "hash" key
+        // in the array, or else the default algorithm will be used instead of the passed one.
+        if (isset($options['algorithm'])) {
+            $options = ['algorithm' => $options['algorithm']] + $options;
+        }
+
         parent::__construct($options);
     }
 
     /**
      * Returns the set hash values as array, the hash as key and the algorithm the value
+     *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
      *
      * @return array
      */
@@ -84,6 +92,8 @@ class Hash extends AbstractValidator
 
     /**
      * Sets the hash for one or multiple files
+     *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
      *
      * @param  string|array $options
      * @return $this Provides a fluent interface
@@ -99,9 +109,11 @@ class Hash extends AbstractValidator
     /**
      * Adds the hash for one or multiple files
      *
+     * @deprecated Since 2.61.0 - All getters and setters will be removed in 3.0
+     *
      * @param  string|array $options
-     * @throws Exception\InvalidArgumentException
      * @return $this Provides a fluent interface
+     * @throws Exception\InvalidArgumentException
      */
     public function addHash($options)
     {

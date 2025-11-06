@@ -12,24 +12,31 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\Variable;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\PhpVersionFeature;
+use Rector\Rector\AbstractRector;
+use Rector\ValueObject\PhpVersionFeature;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://wiki.php.net/rfc/enumerations
- * @changelog https://github.com/myclabs/php-enum
- *
  * @see \Rector\Tests\Php81\Rector\MethodCall\MyCLabsMethodCallToEnumConstRector\MyCLabsMethodCallToEnumConstRectorTest
  */
 final class MyCLabsMethodCallToEnumConstRector extends AbstractRector implements MinPhpVersionInterface
 {
     /**
+     * @readonly
+     * @var \PHPStan\Reflection\ReflectionProvider
+     */
+    private $reflectionProvider;
+    /**
      * @var string[]
      */
     private const ENUM_METHODS = ['from', 'values', 'keys', 'isValid', 'search', 'toArray', 'assertValidValue'];
+    public function __construct(ReflectionProvider $reflectionProvider)
+    {
+        $this->reflectionProvider = $reflectionProvider;
+    }
     public function getRuleDefinition() : RuleDefinition
     {
         return new RuleDefinition('Refactor MyCLabs enum fetch to Enum const', [new CodeSample(<<<'CODE_SAMPLE'
@@ -72,11 +79,19 @@ CODE_SAMPLE
         if (!\is_string($className)) {
             return null;
         }
+        if (!$this->isEnumConstant($className, $enumCaseName)) {
+            return null;
+        }
         return $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
     }
     public function provideMinPhpVersion() : int
     {
         return PhpVersionFeature::ENUM;
+    }
+    private function isEnumConstant(string $className, string $constant) : bool
+    {
+        $classReflection = $this->reflectionProvider->getClass($className);
+        return $classReflection->hasConstant($constant);
     }
     private function refactorGetKeyMethodCall(MethodCall $methodCall) : ?ClassConstFetch
     {
@@ -114,24 +129,70 @@ CODE_SAMPLE
         if ($this->shouldOmitEnumCase($enumCaseName)) {
             return null;
         }
-        $enumConstFetch = $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
-        return new PropertyFetch($enumConstFetch, 'value');
+        $classConstFetch = $this->nodeFactory->createClassConstFetch($className, $enumCaseName);
+        return new PropertyFetch($classConstFetch, 'value');
     }
     private function refactorEqualsMethodCall(MethodCall $methodCall) : ?Identical
     {
-        $expr = $this->getValidEnumExpr($methodCall->var);
+        $expr = $this->getNonEnumReturnTypeExpr($methodCall->var);
         if (!$expr instanceof Expr) {
-            return null;
+            $expr = $this->getValidEnumExpr($methodCall->var);
+            if (!$expr instanceof Expr) {
+                return null;
+            }
         }
         $arg = $methodCall->getArgs()[0] ?? null;
         if (!$arg instanceof Arg) {
             return null;
         }
-        $right = $this->getValidEnumExpr($arg->value);
+        $right = $this->getNonEnumReturnTypeExpr($arg->value);
         if (!$right instanceof Expr) {
-            return null;
+            $right = $this->getValidEnumExpr($arg->value);
+            if (!$right instanceof Expr) {
+                return null;
+            }
         }
         return new Identical($expr, $right);
+    }
+    /**
+     * @param \PhpParser\Node\Expr\StaticCall|\PhpParser\Node\Expr\MethodCall $node
+     */
+    private function isCallerClassEnum($node) : bool
+    {
+        if ($node instanceof StaticCall) {
+            return $this->isObjectType($node->class, new ObjectType('MyCLabs\\Enum\\Enum'));
+        }
+        return $this->isObjectType($node->var, new ObjectType('MyCLabs\\Enum\\Enum'));
+    }
+    /**
+     * @return null|\PhpParser\Node\Expr\ClassConstFetch|\PhpParser\Node\Expr
+     */
+    private function getNonEnumReturnTypeExpr(Node $node)
+    {
+        if (!$node instanceof StaticCall && !$node instanceof MethodCall) {
+            return null;
+        }
+        if ($this->isCallerClassEnum($node)) {
+            $methodName = $this->getName($node->name);
+            if ($methodName === null) {
+                return null;
+            }
+            if ($node instanceof StaticCall) {
+                $className = $this->getName($node->class);
+            }
+            if ($node instanceof MethodCall) {
+                $className = $this->getName($node->var);
+            }
+            if ($className === null) {
+                return null;
+            }
+            $classReflection = $this->reflectionProvider->getClass($className);
+            // method self::getValidEnumExpr process enum static methods from constants
+            if ($classReflection->hasConstant($methodName)) {
+                return null;
+            }
+        }
+        return $node;
     }
     /**
      * @return null|\PhpParser\Node\Expr\ClassConstFetch|\PhpParser\Node\Expr

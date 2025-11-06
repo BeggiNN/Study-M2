@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\ObjectManager\Config\Mapper;
 
 use Magento\FunctionalTestingFramework\Data\Argument\InterpreterInterface;
@@ -33,8 +34,8 @@ class Dom implements \Magento\FunctionalTestingFramework\Config\ConverterInterfa
      */
     public function __construct(
         InterpreterInterface $argumentInterpreter,
-        BooleanUtils $booleanUtils = null,
-        ArgumentParser $argumentParser = null
+        ?BooleanUtils $booleanUtils = null,
+        ?ArgumentParser $argumentParser = null
     ) {
         $this->argumentInterpreter = $argumentInterpreter;
         $this->booleanUtils = $booleanUtils ?: new BooleanUtils();

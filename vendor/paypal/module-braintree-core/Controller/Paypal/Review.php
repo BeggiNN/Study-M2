@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Controller\Paypal;
 
 use Exception;
@@ -10,6 +11,7 @@ use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Serialize\Serializer\Json;
@@ -18,17 +20,17 @@ use PayPal\Braintree\Model\Paypal\Helper\QuoteUpdater;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Result\Page;
 
-class Review extends AbstractAction implements HttpGetActionInterface, HttpPostActionInterface
+class Review extends AbstractAction implements ActionInterface, HttpGetActionInterface, HttpPostActionInterface
 {
     /**
      * @var QuoteUpdater
      */
-    private $quoteUpdater;
+    private QuoteUpdater $quoteUpdater;
 
     /**
      * @var string
      */
-    private static $paymentMethodNonce = 'payment_method_nonce';
+    private static string $paymentMethodNonce = 'payment_method_nonce';
 
     /**
      * @var Json
@@ -74,6 +76,9 @@ class Review extends AbstractAction implements HttpGetActionInterface, HttpPostA
             }
             $this->validateQuote($quote);
 
+            // Allow editing shipping method by default.
+            $quote->setData('may_edit_shipping_method', true);
+
             if ($this->validateRequestData($requestData)) {
                 $this->quoteUpdater->execute(
                     $requestData['nonce'],
@@ -91,7 +96,12 @@ class Review extends AbstractAction implements HttpGetActionInterface, HttpPostA
             $reviewBlock = $resultPage->getLayout()->getBlock('braintree.paypal.review');
 
             $reviewBlock->setQuote($quote);
-            $reviewBlock->getChildBlock('shipping_method')->setData('quote', $quote);
+
+            $shippingMethodBlock = $reviewBlock->getChildBlock('shipping_method');
+
+            if ($shippingMethodBlock) {
+                $shippingMethodBlock->setData('quote', $quote);
+            }
 
             return $resultPage;
         } catch (Exception $e) {

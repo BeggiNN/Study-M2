@@ -10,4 +10,11 @@
     <type name="Magento\Checkout\Model\ShippingInformationManagement">
         <plugin name="ps_add_vat_number_to_quote_guest" type="Perspective\CheckoutField\Plugin\Checkout\Model\GuestShippingInformationManagementPlugin" sortOrder="10"/>
     </type>
+    <type name="Magento\Framework\Console\CommandListInterface">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="perspective_vat_test_soap" xsi:type="object">Perspective\CheckoutField\Console\Command\TestSoapVat</item>
+            </argument>
+        </arguments>
+    </type>
 </config>

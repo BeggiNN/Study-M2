@@ -10,7 +10,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Return_;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -68,8 +68,12 @@ CODE_SAMPLE
     {
         $class = $node;
         $hasChanged = \false;
-        $this->traverseNodesWithCallable($node, function (Node $node) use($class, &$hasChanged) : ?PropertyFetch {
+        $isFinal = $class->isFinal();
+        $this->traverseNodesWithCallable($node, function (Node $node) use($class, &$hasChanged, $isFinal) : ?PropertyFetch {
             if (!$node instanceof MethodCall) {
+                return null;
+            }
+            if ($node->isFirstClassCallable()) {
                 return null;
             }
             if (!$node->var instanceof Variable) {
@@ -86,6 +90,9 @@ CODE_SAMPLE
             if (!$classMethod instanceof ClassMethod) {
                 return null;
             }
+            if (!$classMethod->isPrivate() && !$isFinal) {
+                return null;
+            }
             $propertyFetch = $this->matchLocalPropertyFetchInGetterMethod($classMethod);
             if (!$propertyFetch instanceof PropertyFetch) {
                 return null;
@@ -100,6 +107,9 @@ CODE_SAMPLE
     }
     private function matchLocalPropertyFetchInGetterMethod(ClassMethod $classMethod) : ?PropertyFetch
     {
+        if ($classMethod->params !== []) {
+            return null;
+        }
         $stmts = (array) $classMethod->stmts;
         if (\count($stmts) !== 1) {
             return null;

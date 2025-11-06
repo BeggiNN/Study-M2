@@ -1,0 +1,100 @@
+name: Deploy Magento 2 to AWS EC2
+
+on:
+  push:
+    branches:
+      - STD-roadmap
+
+jobs:
+  deploy:
+    name: Deploy to AWS EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all --strict
+
+      - name: Deploy to AWS EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AWS_EC2_HOST }}
+          username: ${{ secrets.AWS_EC2_USERNAME }}
+          key: ${{ secrets.AWS_EC2_SSH_KEY }}
+          port: ${{ secrets.AWS_EC2_PORT || 22 }}
+          script_stop: true
+          script: |
+            echo "======================================"
+            echo "Starting deployment process..."
+            echo "======================================"
+
+            # Navigate to project directory
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            echo "Current directory: $(pwd)"
+
+            # Enable maintenance mode
+            echo "Enabling maintenance mode..."
+            php bin/magento maintenance:enable || true
+
+            # Pull latest changes from git
+            echo "Pulling latest code from GitHub..."
+            git fetch origin STD-roadmap
+            git reset --hard origin/STD-roadmap
+
+            # Install/update composer dependencies
+            echo "Installing Composer dependencies..."
+            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+
+            # Run Magento upgrade commands
+            echo "Running Magento setup upgrade..."
+            php bin/magento setup:upgrade --keep-generated
+
+            # Compile dependency injection
+            echo "Compiling dependency injection..."
+            php bin/magento setup:di:compile
+
+            # Deploy static content
+            echo "Deploying static content..."
+            php bin/magento setup:static-content:deploy -f
+
+            # Set correct permissions
+            echo "Setting permissions..."
+            find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
+            find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
+            chmod u+x bin/magento
+
+            # Clear cache
+            echo "Clearing cache..."
+            php bin/magento cache:clean
+            php bin/magento cache:flush
+
+            # Reindex (optional, can be commented out if takes too long)
+            echo "Reindexing..."
+            php bin/magento indexer:reindex || echo "Reindex failed, continuing..."
+
+            # Disable maintenance mode
+            echo "Disabling maintenance mode..."
+            php bin/magento maintenance:disable
+
+            echo "======================================"
+            echo "Deployment completed successfully!"
+            echo "======================================"
+
+      - name: Deployment notification
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ Deployment successful!"
+          else
+            echo "❌ Deployment failed!"
+          fi

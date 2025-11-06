@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Test\Util;
@@ -402,17 +403,17 @@ class ObjectExtensionUtilTest extends TestCase
      * @return void
      * @throws Exception
      */
-    private function setMockTestOutput(array $testData = null, array $actionGroupData = null): void
+    private function setMockTestOutput(?array $testData = null, ?array $actionGroupData = null): void
     {
         // clear test object handler value to inject parsed content
         $property = new ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         // clear test object handler value to inject parsed content
         $property = new ReflectionProperty(ActionGroupObjectHandler::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $mockDataParser = $this->createMock(TestDataParser::class);
         $mockDataParser
@@ -445,6 +446,6 @@ class ObjectExtensionUtilTest extends TestCase
         // clear object manager value to inject expected instance
         $property = new ReflectionProperty(ObjectManager::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($instance);
+        $property->setValue(null, $instance);
     }
 }

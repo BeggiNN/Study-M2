@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Observer;
 
@@ -51,7 +56,7 @@ class SalesOrderSaveObserver implements ObserverInterface
                 // $order-isObjectNew is always false. Workaround: ensure no entries are added if one exists already
                 $transactionDetail->getResource()->load($transactionDetail, $order->getId(), 'order_id');
                 if (!$transactionDetail->getId()) {
-                    $transactionDetail->setOrderId($order->getId());
+                    $transactionDetail->setOrderId((int) $order->getId());
                     $transactionDetail->setTransactionSource(
                         $additionalInformation[PaymentDetailsHandler::TRANSACTION_SOURCE]
                     );

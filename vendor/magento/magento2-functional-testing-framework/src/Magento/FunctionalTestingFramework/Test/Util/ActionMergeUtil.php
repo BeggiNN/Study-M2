@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Test\Util;
@@ -26,8 +26,9 @@ class ActionMergeUtil
     const DEFAULT_SKIP_ON_ORDER = 'before';
     const DEFAULT_SKIP_OFF_ORDER = 'after';
     const DEFAULT_WAIT_ORDER = 'after';
-    const APPROVED_ACTIONS = ['fillField', 'magentoCLI', 'field'];
-    const SECRET_MAPPING = ['fillField' => 'fillSecretField', 'magentoCLI' => 'magentoCLISecret'];
+    const APPROVED_ACTIONS = ['fillField', 'magentoCLI', 'field', 'seeInField'];
+    const SECRET_MAPPING = ['fillField' => 'fillSecretField', 'magentoCLI' => 'magentoCLISecret',
+         'seeInField' => 'seeInSecretField'];
     const CREDS_REGEX = "/{{_CREDS\.([\w|\/]+)}}/";
 
     /**
@@ -110,7 +111,7 @@ class ActionMergeUtil
 
             if ($actionHasSecretRef && !(in_array($actionType, self::APPROVED_ACTIONS))) {
                 throw new TestReferenceException("You cannot reference secret data outside " .
-                    "of the fillField, magentoCLI and createData actions");
+                    "of the fillField, magentoCLI, seeInField and createData actions");
             }
 
             // Do NOT remap actions that don't need it.

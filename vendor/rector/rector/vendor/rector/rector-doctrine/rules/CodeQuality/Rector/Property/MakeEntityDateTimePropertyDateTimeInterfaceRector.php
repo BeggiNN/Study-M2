@@ -4,13 +4,19 @@ declare (strict_types=1);
 namespace Rector\Doctrine\CodeQuality\Rector\Property;
 
 use PhpParser\Node;
+use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\Property;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\UnionType;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Doctrine\NodeManipulator\PropertyTypeManipulator;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
+use Rector\Comments\NodeDocBlock\DocBlockUpdater;
+use Rector\Doctrine\NodeAnalyzer\DoctrineEntityDetector;
+use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer;
+use Rector\NodeTypeResolver\ValueObject\OldToNewType;
+use Rector\Rector\AbstractRector;
+use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -22,12 +28,30 @@ final class MakeEntityDateTimePropertyDateTimeInterfaceRector extends AbstractRe
 {
     /**
      * @readonly
-     * @var \Rector\Doctrine\NodeManipulator\PropertyTypeManipulator
+     * @var \Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer
      */
-    private $propertyTypeManipulator;
-    public function __construct(PropertyTypeManipulator $propertyTypeManipulator)
+    private $docBlockClassRenamer;
+    /**
+     * @readonly
+     * @var \Rector\Comments\NodeDocBlock\DocBlockUpdater
+     */
+    private $docBlockUpdater;
+    /**
+     * @readonly
+     * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
+     */
+    private $phpDocInfoFactory;
+    /**
+     * @readonly
+     * @var \Rector\Doctrine\NodeAnalyzer\DoctrineEntityDetector
+     */
+    private $doctrineEntityDetector;
+    public function __construct(DocBlockClassRenamer $docBlockClassRenamer, DocBlockUpdater $docBlockUpdater, PhpDocInfoFactory $phpDocInfoFactory, DoctrineEntityDetector $doctrineEntityDetector)
     {
-        $this->propertyTypeManipulator = $propertyTypeManipulator;
+        $this->docBlockClassRenamer = $docBlockClassRenamer;
+        $this->docBlockUpdater = $docBlockUpdater;
+        $this->phpDocInfoFactory = $phpDocInfoFactory;
+        $this->doctrineEntityDetector = $doctrineEntityDetector;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -76,25 +100,45 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [Property::class];
+        return [Class_::class];
     }
     /**
-     * @param Property $node
+     * @param Class_ $node
      */
     public function refactor(Node $node) : ?Node
     {
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNode($node);
-        if ($phpDocInfo instanceof PhpDocInfo) {
+        if (!$this->doctrineEntityDetector->detect($node)) {
+            return null;
+        }
+        $hasChanged = \false;
+        foreach ($node->getProperties() as $property) {
+            $phpDocInfo = $this->phpDocInfoFactory->createFromNode($property);
+            if (!$phpDocInfo instanceof PhpDocInfo) {
+                continue;
+            }
             $varType = $phpDocInfo->getVarType();
             if ($varType instanceof UnionType) {
                 $varType = TypeCombinator::removeNull($varType);
             }
             if (!$varType->equals(new ObjectType('DateTime'))) {
-                return null;
+                continue;
             }
-            $this->propertyTypeManipulator->changePropertyType($node, 'DateTime', 'DateTimeInterface');
+            $this->changePropertyType($property, 'DateTime', 'DateTimeInterface');
+            $hasChanged = \true;
+        }
+        if ($hasChanged) {
             return $node;
         }
         return null;
+    }
+    private function changePropertyType(Property $property, string $oldClass, string $newClass) : void
+    {
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($property);
+        $oldToNewTypes = [new OldToNewType(new FullyQualifiedObjectType($oldClass), new FullyQualifiedObjectType($newClass))];
+        $hasChanged = $this->docBlockClassRenamer->renamePhpDocType($phpDocInfo, $oldToNewTypes, $property);
+        if (!$hasChanged) {
+            return;
+        }
+        $this->docBlockUpdater->updateRefactoredNodeWithPhpDocInfo($property);
     }
 }

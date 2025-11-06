@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Adminhtml\Virtual;
 
@@ -13,7 +18,7 @@ class Form extends Container
     /**
      * @inheritDoc
      */
-    protected function _construct()
+    protected function _construct(): void
     {
         $this->_blockGroup = 'PayPal_Braintree';
         $this->_controller = 'adminhtml_virtual';

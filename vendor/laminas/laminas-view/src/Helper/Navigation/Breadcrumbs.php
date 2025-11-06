@@ -18,6 +18,8 @@ use function strlen;
 
 /**
  * Helper for printing breadcrumbs.
+ *
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
  */
 class Breadcrumbs extends AbstractHelper
 {
@@ -259,7 +261,6 @@ class Breadcrumbs extends AbstractHelper
     /**
      * Render a partial with the given "model".
      *
-     * @param array                  $params
      * @param null|AbstractContainer $container
      * @param null|string|array      $partial
      * @return View\Helper\Partial|string

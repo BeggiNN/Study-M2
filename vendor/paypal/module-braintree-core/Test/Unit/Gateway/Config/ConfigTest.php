@@ -1,65 +1,84 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Test\Unit\Gateway\Config;
 
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Payment\Gateway\Config\Config as PaymentConfig;
 use PayPal\Braintree\Gateway\Config\Config;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
 use Magento\Store\Model\ScopeInterface;
+use PayPal\Braintree\Model\StoreConfigResolver;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
-class ConfigTest extends \PHPUnit\Framework\TestCase
+class ConfigTest extends TestCase
 {
     private const METHOD_CODE = 'braintree';
 
     /**
      * @var Config
      */
-    private $model;
+    private Config $model;
 
     /**
-     * @var ScopeConfigInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var ScopeConfigInterface|MockObject
      */
-    private $scopeConfigMock;
+    private ScopeConfigInterface|MockObject $scopeConfigMock;
 
     /**
-     * @var Json|\PHPUnit\Framework\MockObject\MockObject
+     * @var Json|MockObject
      */
-    private $serializerMock;
+    private Json|MockObject $serializerMock;
 
+    /**
+     * @return void
+     */
     protected function setUp(): void
     {
         $this->scopeConfigMock = $this->createMock(ScopeConfigInterface::class);
+        $storeConfigResolverMock = $this->createMock(StoreConfigResolver::class);
         $this->serializerMock = $this->createMock(Json::class);
 
-        $objectManager = new ObjectManager($this);
-        $this->model = $objectManager->getObject(
-            Config::class,
-            [
-                'scopeConfig' => $this->scopeConfigMock,
-                'methodCode' => self::METHOD_CODE,
-                'serializer' => $this->serializerMock
-            ]
+        $this->model = new Config(
+            $this->scopeConfigMock,
+            $storeConfigResolverMock,
+            self::METHOD_CODE,
+            PaymentConfig::DEFAULT_PATH_PATTERN,
+            $this->serializerMock
         );
     }
 
     /**
+     * Test get country specific card type config
+     *
      * @param string $encodedValue
-     * @param string|array $value
+     * @param array|string $value
      * @param array $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @return void
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @dataProvider getCountrySpecificCardTypeConfigDataProvider
      */
-    public function testGetCountrySpecificCardTypeConfig($encodedValue, $value, array $expected)
-    {
+    public function testGetCountrySpecificCardTypeConfig(
+        string $encodedValue,
+        array|string $value,
+        array $expected
+    ) {
         $this->scopeConfigMock->expects(static::once())
             ->method('getValue')
-            ->with($this->getPath(Config::KEY_COUNTRY_CREDIT_CARD), ScopeInterface::SCOPE_STORE, null)
+            ->with(
+                $this->getPath(Config::KEY_COUNTRY_CREDIT_CARD),
+                ScopeInterface::SCOPE_STORE,
+                null
+            )
             ->willReturn($encodedValue);
 
         $this->serializerMock->expects($this->once())
@@ -74,9 +93,11 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * get country specific card type data provider
+     *
      * @return array
      */
-    public function getCountrySpecificCardTypeConfigDataProvider()
+    public static function getCountrySpecificCardTypeConfigDataProvider(): array
     {
         return [
             'valid data' => [
@@ -93,13 +114,15 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Test get available card types
+     *
      * @param string $value
      * @param array $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @dataProvider getAvailableCardTypesDataProvider
      */
-    public function testGetAvailableCardTypes($value, $expected)
+    public function testGetAvailableCardTypes(string $value, array $expected)
     {
         $this->scopeConfigMock->expects(static::once())
             ->method('getValue')
@@ -113,9 +136,11 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Get available card types data provider
+     *
      * @return array
      */
-    public function getAvailableCardTypesDataProvider()
+    public static function getAvailableCardTypesDataProvider(): array
     {
         return [
             [
@@ -130,17 +155,23 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Test get cc types mapper
+     *
      * @param string $value
      * @param array $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @dataProvider getCcTypesMapperDataProvider
      */
-    public function testGetCcTypesMapper($value, $expected)
+    public function testGetCcTypesMapper(string $value, array $expected)
     {
         $this->scopeConfigMock->expects(static::once())
             ->method('getValue')
-            ->with($this->getPath(Config::KEY_CC_TYPES_BRAINTREE_MAPPER), ScopeInterface::SCOPE_STORE, null)
+            ->with(
+                $this->getPath(Config::KEY_CC_TYPES_BRAINTREE_MAPPER),
+                ScopeInterface::SCOPE_STORE,
+                null
+            )
             ->willReturn($value);
 
         static::assertEquals(
@@ -150,9 +181,11 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Get cc types mapper data provider
+     *
      * @return array
      */
-    public function getCcTypesMapperDataProvider()
+    public static function getCcTypesMapperDataProvider(): array
     {
         return [
             [
@@ -171,16 +204,21 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Test country available card types
+     *
      * @param string $encodedData
-     * @param string|array $data
+     * @param array|string $data
      * @param array $countryData
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::getCountryAvailableCardTypes
      * @dataProvider getCountrySpecificCardTypeConfigDataProvider
      */
-    public function testCountryAvailableCardTypes($encodedData, $data, array $countryData)
-    {
+    public function testCountryAvailableCardTypes(
+        string $encodedData,
+        array|string $data,
+        array $countryData
+    ) {
         $this->scopeConfigMock->expects(static::any())
             ->method('getValue')
             ->with($this->getPath(Config::KEY_COUNTRY_CREDIT_CARD), ScopeInterface::SCOPE_STORE, null)
@@ -197,12 +235,17 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
         }
 
         if (empty($countryData)) {
-            static::assertEquals($data, "");
+            static::assertEquals("", $data);
         }
     }
 
     /**
+     * Test use cvv
+     *
      * @covers \PayPal\Braintree\Gateway\Config\Config::isCvvEnabled
+     * @return void
+     * @throws InputException
+     * @throws NoSuchEntityException
      */
     public function testUseCvv()
     {
@@ -215,14 +258,16 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param mixed $data
+     * Test 3D secure enabled
+     *
+     * @param bool|int|string $data
      * @param boolean $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::isVerify3DSecure
      * @dataProvider verify3DSecureDataProvider
      */
-    public function testIsVerify3DSecure($data, $expected)
+    public function testIsVerify3DSecure(bool|int|string $data, bool $expected)
     {
         $this->scopeConfigMock->expects(static::any())
             ->method('getValue')
@@ -236,7 +281,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function verify3DSecureDataProvider()
+    public static function verify3DSecureDataProvider(): array
     {
         return [
             ['data' => 1, 'expected' => true],
@@ -253,8 +298,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      *
      * @param $data
      * @param $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::getThresholdAmount
      * @dataProvider thresholdAmountDataProvider
      */
@@ -262,7 +307,11 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     {
         $this->scopeConfigMock->expects(static::any())
             ->method('getValue')
-            ->with($this->getPath(Config::KEY_THRESHOLD_AMOUNT), ScopeInterface::SCOPE_STORE, null)
+            ->with(
+                $this->getPath(Config::KEY_THRESHOLD_AMOUNT),
+                ScopeInterface::SCOPE_STORE,
+                null
+            )
             ->willReturn($data);
         static::assertEquals($expected, $this->model->getThresholdAmount());
     }
@@ -272,7 +321,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function thresholdAmountDataProvider()
+    public static function thresholdAmountDataProvider(): array
     {
         return [
             ['data' => '23.01', 'expected' => 23.01],
@@ -289,19 +338,22 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
     /**
      * @param $value
      * @param array $expected
-     * @throws \Magento\Framework\Exception\InputException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws InputException
+     * @throws NoSuchEntityException
      * @covers \PayPal\Braintree\Gateway\Config\Config::get3DSecureSpecificCountries
      * @dataProvider threeDSecureSpecificCountriesDataProvider
      */
     public function testGet3DSecureSpecificCountries($value, array $expected)
     {
         $this->scopeConfigMock->method('getValue')
-            ->withConsecutive(
-                [$this->getPath(Config::KEY_VERIFY_ALLOW_SPECIFIC), ScopeInterface::SCOPE_STORE, null],
-                [$this->getPath(Config::KEY_VERIFY_SPECIFIC), ScopeInterface::SCOPE_STORE, null]
-            )
-            ->willReturnOnConsecutiveCalls($value, 'GB,US');
+            ->willReturnCallback(function ($path) use ($value) {
+                if ($path === $this->getPath(Config::KEY_VERIFY_ALLOW_SPECIFIC)) {
+                    return $value;
+                } elseif ($path === $this->getPath(Config::KEY_VERIFY_SPECIFIC)) {
+                    return 'GB,US';
+                }
+                return null; // Default case if needed
+            });
         static::assertEquals($expected, $this->model->get3DSecureSpecificCountries());
     }
 
@@ -309,7 +361,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      * Get variations to test specific countries for 3d secure
      * @return array
      */
-    public function threeDSecureSpecificCountriesDataProvider()
+    public static function threeDSecureSpecificCountriesDataProvider(): array
     {
         return [
             ['configValue' => 0, 'expected' => []],
@@ -327,13 +379,14 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      */
     public function testGetDynamicDescriptors($name, $phone, $url, array $expected)
     {
+        $map = [
+            [$this->getPath('descriptor_name'), ScopeInterface::SCOPE_STORE, null, $name],
+            [$this->getPath('descriptor_phone'), ScopeInterface::SCOPE_STORE, null, $phone],
+            [$this->getPath('descriptor_url'), ScopeInterface::SCOPE_STORE, null, $url]
+        ];
+
         $this->scopeConfigMock->method('getValue')
-            ->withConsecutive(
-                [$this->getPath('descriptor_name'), ScopeInterface::SCOPE_STORE, null],
-                [$this->getPath('descriptor_phone'), ScopeInterface::SCOPE_STORE, null],
-                [$this->getPath('descriptor_url'), ScopeInterface::SCOPE_STORE, null]
-            )
-            ->willReturnOnConsecutiveCalls($name, $phone, $url);
+            ->willReturnMap($map);
 
         $actual = $this->model->getDynamicDescriptors();
         static::assertEquals($expected, $actual);
@@ -343,7 +396,7 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      * Get variations to test dynamic descriptors
      * @return array
      */
-    public function descriptorsDataProvider()
+    public static function descriptorsDataProvider(): array
     {
         $name = 'company * product';
         $phone = '333-22-22-333';
@@ -380,8 +433,8 @@ class ConfigTest extends \PHPUnit\Framework\TestCase
      * @param string $field
      * @return string
      */
-    private function getPath($field)
+    private function getPath(string $field): string
     {
-        return sprintf(Config::DEFAULT_PATH_PATTERN, self::METHOD_CODE, $field);
+        return sprintf(PaymentConfig::DEFAULT_PATH_PATTERN, self::METHOD_CODE, $field);
     }
 }

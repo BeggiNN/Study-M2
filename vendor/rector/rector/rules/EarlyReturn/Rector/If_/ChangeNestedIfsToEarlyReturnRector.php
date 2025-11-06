@@ -8,10 +8,10 @@ use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\Core\NodeManipulator\IfManipulator;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\EarlyReturn\NodeTransformer\ConditionInverter;
+use Rector\NodeManipulator\IfManipulator;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -26,7 +26,7 @@ final class ChangeNestedIfsToEarlyReturnRector extends AbstractRector
     private $conditionInverter;
     /**
      * @readonly
-     * @var \Rector\Core\NodeManipulator\IfManipulator
+     * @var \Rector\NodeManipulator\IfManipulator
      */
     private $ifManipulator;
     public function __construct(ConditionInverter $conditionInverter, IfManipulator $ifManipulator)
@@ -129,9 +129,9 @@ CODE_SAMPLE
     /**
      * @return If_[]
      */
-    private function createStandaloneIfsWithReturn(If_ $nestedIfWithOnlyReturn, Return_ $return) : array
+    private function createStandaloneIfsWithReturn(If_ $onlyReturnIf, Return_ $return) : array
     {
-        $invertedCondExpr = $this->conditionInverter->createInvertedCondition($nestedIfWithOnlyReturn->cond);
+        $invertedCondExpr = $this->conditionInverter->createInvertedCondition($onlyReturnIf->cond);
         // special case
         if ($invertedCondExpr instanceof BooleanNot && $invertedCondExpr->expr instanceof BooleanAnd) {
             $booleanNotPartIf = new If_(new BooleanNot($invertedCondExpr->expr->left));
@@ -140,8 +140,8 @@ CODE_SAMPLE
             $secondBooleanNotPartIf->stmts = [clone $return];
             return [$booleanNotPartIf, $secondBooleanNotPartIf];
         }
-        $nestedIfWithOnlyReturn->cond = $invertedCondExpr;
-        $nestedIfWithOnlyReturn->stmts = [$return];
-        return [$nestedIfWithOnlyReturn];
+        $onlyReturnIf->cond = $invertedCondExpr;
+        $onlyReturnIf->stmts = [$return];
+        return [$onlyReturnIf];
     }
 }

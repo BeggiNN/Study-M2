@@ -1,27 +1,34 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
-
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Adminhtml\System\Config;
 
+use Braintree\Result\Error;
+use Braintree\Result\Successful;
+use Magento\Config\Block\System\Config\Form\Field;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Store\Model\ScopeInterface;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Ui\ConfigProvider;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Locale\ResolverInterface;
 use Magento\Backend\Block\Template\Context;
 use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
 use PayPal\Braintree\Gateway\Config\PayPalPayLater\Config as PayPalPayLaterConfig;
 use Magento\Framework\Data\Form\Element\AbstractElement;
 
-class Preview extends \Magento\Config\Block\System\Config\Form\Field
+/**
+ * PayPal buttons preview block
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class Preview extends Field
 {
     /**
      * @var string
@@ -29,39 +36,34 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
     protected $_template = 'PayPal_Braintree::system/config/preview.phtml';
 
     /**
-     * @var ResolverInterface $localeResolver
-     */
-    private $localeResolver;
-
-    /**
      * @var Config $config
      */
-    protected $config;
+    private Config $config;
 
     /**
      * @var BraintreeConfig $braintreeConfig
      */
-    private $braintreeConfig;
+    private BraintreeConfig $braintreeConfig;
 
     /**
      * @var ConfigProvider $configProvider
      */
-    private $configProvider;
+    private ConfigProvider $configProvider;
 
     /**
      * @var PayPalCreditConfig $payPalCreditConfig
      */
-    private $payPalCreditConfig;
+    private PayPalCreditConfig $payPalCreditConfig;
 
     /**
      * @var PayPalPayLaterConfig $payPalPayLaterConfig
      */
-    private $payPalPayLaterConfig;
+    private PayPalPayLaterConfig $payPalPayLaterConfig;
 
     /**
      * Preview constructor.
+     *
      * @param Context $context
-     * @param ResolverInterface $localeResolver
      * @param Config $config
      * @param PayPalCreditConfig $payPalCreditConfig
      * @param PayPalPayLaterConfig $payPalPayLaterConfig
@@ -71,7 +73,6 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function __construct(
         Context $context,
-        ResolverInterface $localeResolver,
         Config $config,
         PayPalCreditConfig $payPalCreditConfig,
         PayPalPayLaterConfig $payPalPayLaterConfig,
@@ -80,8 +81,6 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
         array $data = []
     ) {
         parent::__construct($context, $data);
-
-        $this->localeResolver = $localeResolver;
         $this->config = $config;
         $this->braintreeConfig = $braintreeConfig;
         $this->configProvider = $configProvider;
@@ -96,7 +95,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      * @return string
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    protected function _getElementHtml(AbstractElement $element)
+    protected function _getElementHtml(AbstractElement $element): string
     {
         if ($this->isPayPalActive()) {
             return $this->_toHtml();
@@ -127,12 +126,12 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
     /**
      * Get currency code
      *
-     * @return mixed
+     * @return string|null
      * @throws NoSuchEntityException
      */
-    public function getCurrency()
+    public function getCurrency(): ?string
     {
-        return $this->_storeManager->getStore()->getBaseCurrencyCode();
+        return $this->_storeManager->getStore($this->getStoreId())->getBaseCurrencyCode();
     }
 
     /**
@@ -140,9 +139,9 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      *
      * @return float|null
      */
-    public function getAmount()
+    public function getAmount(): ?float
     {
-        return (float) 1000.00;
+        return 200.00;
     }
 
     /**
@@ -152,7 +151,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function isPayPalActive(): bool
     {
-        return (bool) $this->config->isActive();
+        return $this->config->isActive($this->getStoreId());
     }
 
     /**
@@ -162,7 +161,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function isCreditActive(): bool
     {
-        return (bool) $this->payPalCreditConfig->isActive();
+        return $this->payPalCreditConfig->isActive($this->getStoreId());
     }
 
     /**
@@ -172,7 +171,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function isPayLaterActive(): bool
     {
-        return (bool) $this->payPalPayLaterConfig->isActive();
+        return $this->payPalPayLaterConfig->isActive($this->getStoreId());
     }
 
     /**
@@ -182,29 +181,9 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      * @param string $location
      * @return bool
      */
-    public function showPayPalButton($type, $location): bool
+    public function showPayPalButton(string $type, string $location): bool
     {
-        return (bool) $this->config->showPayPalButton($type, $location);
-    }
-
-    /**
-     * Check PayPal vault active
-     *
-     * @return bool
-     */
-    public function isPayPalVaultActive(): bool
-    {
-        return (bool) $this->payPalPayLaterConfig->isPayPalVaultActive();
-    }
-
-    /**
-     * Get merchant name
-     *
-     * @return string|null
-     */
-    public function getMerchantName()
-    {
-        return $this->config->getMerchantName();
+        return $this->config->showPayPalButton($type, $location);
     }
 
     /**
@@ -255,6 +234,8 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      * @param string $type
      * @param string $location
      * @return string
+     * @deprecated as Size field is redundant
+     * @see No Alternative
      */
     public function getButtonSize(string $type, string $location = Config::BUTTON_AREA_CART): string
     {
@@ -282,19 +263,19 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      */
     public function getEnvironment(): string
     {
-        return $this->braintreeConfig->getEnvironment();
+        return $this->braintreeConfig->getEnvironment($this->getStoreId());
     }
 
     /**
      * Get client token
      *
-     * @return string|null
+     * @return Error|Successful|string|null
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getClientToken()
+    public function getClientToken(): Error|Successful|string|null
     {
-        return $this->configProvider->getClientToken();
+        return $this->configProvider->getClientToken($this->getStoreId());
     }
 
     /**
@@ -302,57 +283,9 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      *
      * @return string|null
      */
-    public function getMerchantCountry()
+    public function getMerchantCountry(): ?string
     {
-        return $this->payPalPayLaterConfig->getMerchantCountry();
-    }
-
-    /**
-     * Get messaging layout
-     *
-     * @param string $type
-     * @param string $location
-     * @return string
-     */
-    public function getMessagingLayout(string $type, string $location = Config::BUTTON_AREA_CART): string
-    {
-        return $this->getConfigValue($location, $type, 'layout', $this->getScopeType());
-    }
-
-    /**
-     * Get messaging logo
-     *
-     * @param string $type
-     * @param string $location
-     * @return string
-     */
-    public function getMessagingLogo(string $type, string $location = Config::BUTTON_AREA_CART): string
-    {
-        return $this->getConfigValue($location, $type, 'logo', $this->getScopeType());
-    }
-
-    /**
-     * Get messaging logo position
-     *
-     * @param string $type
-     * @param string $location
-     * @return string
-     */
-    public function getMessagingLogoPosition(string $type, string $location = Config::BUTTON_AREA_CART): string
-    {
-        return $this->getConfigValue($location, $type, 'logo_position', $this->getScopeType());
-    }
-
-    /**
-     * Get messaging text color
-     *
-     * @param string $type
-     * @param string $location
-     * @return string
-     */
-    public function getMessagingTextColor(string $type, string $location = Config::BUTTON_AREA_CART): string
-    {
-        return $this->getConfigValue($location, $type, 'text_color', $this->getScopeType());
+        return $this->payPalPayLaterConfig->getMerchantCountry($this->getStoreId());
     }
 
     /**
@@ -360,7 +293,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      *
      * @return array|string
      */
-    public function getScopeType()
+    public function getScopeType(): array|string
     {
         $scopeType = ScopeConfigInterface::SCOPE_TYPE_DEFAULT;
 
@@ -374,6 +307,24 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
     }
 
     /**
+     * Get Store ID
+     *
+     * @return int|null
+     * @throws LocalizedException
+     */
+    public function getStoreId(): ?int
+    {
+        if ($websiteId = $this->getRequest()->getParam('website')) {
+            $store = $this->_storeManager->getStoreByWebsiteId($websiteId);
+            if (isset($store[0])) {
+                return (int) $this->_storeManager->getStore($store[0])->getId();
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Get configuration field value based on scope type and code
      *
      * @param string $location
@@ -382,7 +333,7 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
      * @param mixed $scopeData
      * @return mixed
      */
-    public function getConfigValue(string $location, string $type, string $style, $scopeData)
+    public function getConfigValue(string $location, string $type, string $style, mixed $scopeData): mixed
     {
         if (is_array($scopeData)) {
             $scopeType = $scopeData[0];
@@ -392,11 +343,28 @@ class Preview extends \Magento\Config\Block\System\Config\Form\Field
             $scopeCode = null;
         }
 
-        //phpcs:ignore Generic.Files.LineLength.TooLong
         return $this->_scopeConfig->getValue(
             'payment/braintree_paypal/button_location_' . $location . '_type_' . $type . '_' . $style,
             $scopeType,
             $scopeCode
         );
+    }
+
+    /**
+     * Get button config
+     *
+     * @return array
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function getButtonConfig(): array
+    {
+        return [
+            'clientToken' => $this->getClientToken(),
+            'currency' => $this->getCurrency(),
+            'environment' => $this->getEnvironment(),
+            'merchantCountry' => $this->getMerchantCountry(),
+            'isCreditActive' => $this->isCreditActive()
+        ];
     }
 }

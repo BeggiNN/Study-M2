@@ -8,10 +8,10 @@ class Interceptor extends \Magento\Sales\Model\OrderRepository implements \Magen
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\Sales\Model\ResourceModel\Metadata $metadata, \Magento\Sales\Api\Data\OrderSearchResultInterfaceFactory $searchResultFactory, ?\Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface $collectionProcessor = null, ?\Magento\Sales\Api\Data\OrderExtensionFactory $orderExtensionFactory = null, ?\Magento\Tax\Api\OrderTaxManagementInterface $orderTaxManagement = null, ?\Magento\Payment\Api\Data\PaymentAdditionalInfoInterfaceFactory $paymentAdditionalInfoFactory = null, ?\Magento\Framework\Serialize\Serializer\Json $serializer = null, ?\Magento\Framework\Api\ExtensionAttribute\JoinProcessorInterface $extensionAttributesJoinProcessor = null)
+    public function __construct(\Magento\Sales\Model\ResourceModel\Metadata $metadata, \Magento\Sales\Api\Data\OrderSearchResultInterfaceFactory $searchResultFactory, ?\Magento\Framework\Api\SearchCriteria\CollectionProcessorInterface $collectionProcessor = null, ?\Magento\Tax\Api\OrderTaxManagementInterface $orderTaxManagement = null, ?\Magento\Payment\Api\Data\PaymentAdditionalInfoInterfaceFactory $paymentAdditionalInfoFactory = null, ?\Magento\Framework\Serialize\Serializer\Json $serializer = null, ?\Magento\Framework\Api\ExtensionAttribute\JoinProcessorInterface $extensionAttributesJoinProcessor = null, ?\Magento\Sales\Model\Order\ShippingAssignmentBuilder $shippingAssignmentBuilder = null)
     {
         $this->___init();
-        parent::__construct($metadata, $searchResultFactory, $collectionProcessor, $orderExtensionFactory, $orderTaxManagement, $paymentAdditionalInfoFactory, $serializer, $extensionAttributesJoinProcessor);
+        parent::__construct($metadata, $searchResultFactory, $collectionProcessor, $orderTaxManagement, $paymentAdditionalInfoFactory, $serializer, $extensionAttributesJoinProcessor, $shippingAssignmentBuilder);
     }
 
     /**

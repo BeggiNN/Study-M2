@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- /**
-  * Copyright © Magento, Inc. All rights reserved.
-  * See COPYING.txt for license details.
-  */
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 -->
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
@@ -108,6 +108,7 @@
         <seeElementInDOM selector=".functionalTestSelector" stepKey="seeElementInDOMKey1"/>
         <seeInCurrentUrl url="/functionalUrl" stepKey="seeInCurrentUrlKey1"/>
         <seeInField selector=".functionalTestSelector" userInput="someInput" stepKey="seeInFieldKey1" />
+        <seeInField selector=".functionalTestSelector" userInput="{{_CREDS.someKey}}" stepKey="seeInFieldKey2" />
         <seeInPageSource html="Home Page" stepKey="seeInPageSourceKey1"/>
         <seeInPageSource html="&#60;h1 class&#61;&#34;page-title&#34;&#62;" stepKey="seeInPageSourceKey2"/>
         <seeInPopup userInput="someInput" stepKey="seeInPopupKey1"/>

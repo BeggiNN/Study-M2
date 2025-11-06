@@ -8,10 +8,10 @@ class Interceptor extends \Magento\Eav\Model\ResourceModel\Entity\Attribute impl
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\Framework\Model\ResourceModel\Db\Context $context, \Magento\Store\Model\StoreManagerInterface $storeManager, \Magento\Eav\Model\ResourceModel\Entity\Type $eavEntityType, $connectionName = null)
+    public function __construct(\Magento\Framework\Model\ResourceModel\Db\Context $context, \Magento\Store\Model\StoreManagerInterface $storeManager, \Magento\Eav\Model\ResourceModel\Entity\Type $eavEntityType, $connectionName = null, ?\Magento\Framework\MessageQueue\PoisonPill\PoisonPillPutInterface $pillPut = null)
     {
         $this->___init();
-        parent::__construct($context, $storeManager, $eavEntityType, $connectionName);
+        parent::__construct($context, $storeManager, $eavEntityType, $connectionName, $pillPut);
     }
 
     /**

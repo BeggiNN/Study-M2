@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Gateway\Http\Client;
 
 use PayPal\Braintree\Gateway\Request\CaptureDataBuilder;
@@ -17,7 +18,7 @@ class TransactionSubmitForSettlement extends AbstractTransaction
     {
         return  $this->adapter->submitForSettlement(
             $data[CaptureDataBuilder::TRANSACTION_ID],
-            $data[PaymentDataBuilder::AMOUNT],
+            (float) $data[PaymentDataBuilder::AMOUNT],
             [PaymentDataBuilder::ORDER_ID => $data[PaymentDataBuilder::ORDER_ID]]
         );
     }

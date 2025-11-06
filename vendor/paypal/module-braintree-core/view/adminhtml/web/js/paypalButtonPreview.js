@@ -10,7 +10,6 @@ define([
     'domReady!'
 ], function (_, $, braintree, paypalCheckout) {
     'use strict';
-    let buttonIds = [];
 
     return {
         events: {
@@ -18,133 +17,208 @@ define([
         },
 
         /**
-         * @param token
-         * @param currency
-         * @param env
-         * @param local
+         * Initialize button
+         *
+         * @param buttonConfig
          */
-        init: function (token, currency, env, local) {
-            buttonIds = [];
-            $('.action-braintree-paypal-logo').each(function () {
-                if (!$(this).hasClass("button-loaded")) {
-                    $(this).addClass('button-loaded');
-                    buttonIds.push($(this).attr('id'));
+        init: function (buttonConfig) {
+            const buttonIds = [];
+
+            buttonConfig.buttonIds.forEach(function (buttonId) {
+                if (!$(`#${buttonId}`).hasClass('button-loaded')) {
+                    $(`#${buttonId}`).addClass('button-loaded');
+                    buttonIds.push(buttonId);
                 }
             });
 
             if (buttonIds.length > 0) {
-                this.loadSDK(token, currency, env, local);
+                this.loadSDK(buttonConfig, buttonIds);
+            }
+
+            if (!buttonConfig.showPayLaterMessaging) {
+                $('.payment-location').on('change', () => {
+                    window.hidePaypalSections();
+                });
             }
         },
 
         /**
          * Load Braintree PayPal SDK
-         * @param token
-         * @param currency
-         * @param env
-         * @param local
+         * @param buttonConfig
+         * @param buttonIds
          */
-        loadSDK: function (token, currency, env, local) {
+        loadSDK: function (buttonConfig, buttonIds) {
             braintree.create({
-                authorization: token
+                authorization: buttonConfig.clientToken
             }, function (clientErr, clientInstance) {
                 if (clientErr) {
                     console.error('paypalCheckout error', clientErr);
-                    return this.showError("PayPal Checkout could not be initialized. Please contact the store owner.");
+                    return this.showError('PayPal Checkout could not be initialized. Please contact the store owner.');
                 }
                 paypalCheckout.create({
                     client: clientInstance
                 }, function (err, paypalCheckoutInstance) {
-                    if (typeof paypal !== 'undefined' ) {
-                        this.renderPayPalButtons(buttonIds);
-                        this.renderPayPalMessages();
+                    if (typeof paypal !== 'undefined') {
+                        this.renderPayPalButtons(buttonIds, buttonConfig);
                     } else {
-                        var configSDK = {
-                            components: 'buttons,messages,funding-eligibility',
-                            "enable-funding": "paylater",
-                            currency: currency
-                        };
-                        if (env === 'sandbox' && (local !== '' || local !== 'undefined')) {
-                            configSDK["buyer-country"] = local;
+                        let configSDK = {
+                                components: 'buttons,messages,funding-eligibility',
+                                'enable-funding': this.isCreditActive(buttonConfig) ? 'credit' : 'paylater',
+                                currency: buttonConfig.currency,
+                                dataAttributes: {
+                                    'page-type': 'checkout'
+                                }
+                            },
+
+                            buyerCountry = this.getMerchantCountry(buttonConfig);
+
+                        if (buttonConfig.environment === 'sandbox'
+                            && (buyerCountry !== '' || buyerCountry !== 'undefined'))
+                        {
+                            configSDK['buyer-country'] = buyerCountry;
                         }
                         paypalCheckoutInstance.loadPayPalSDK(configSDK, function () {
-                            this.renderPayPalButtons(buttonIds);
-                            this.renderPayPalMessages();
+                            this.renderPayPalButtons(buttonIds, buttonConfig);
                         }.bind(this));
                     }
+
+                    this.attachListeners(buttonIds, buttonConfig);
                 }.bind(this));
             }.bind(this));
         },
 
         /**
+         * Is Credit enabled
+         *
+         * @param buttonConfig
+         * @returns {boolean}
+         */
+        isCreditActive: function (buttonConfig) {
+            return buttonConfig.isCreditActive;
+        },
+
+        /**
+         * Get merchant country
+         *
+         * @param buttonConfig
+         * @returns {string}
+         */
+        getMerchantCountry: function (buttonConfig) {
+            return buttonConfig.merchantCountry;
+        },
+
+        /**
          * Render PayPal buttons
          * @param ids
+         * @param buttonConfig
          */
-        renderPayPalButtons: function (ids) {
+        renderPayPalButtons: function (ids, buttonConfig) {
             _.each(ids, function (id) {
-                this.payPalButton(id);
+                this.payPalButton(id, buttonConfig);
             }.bind(this));
         },
 
         /**
-         * Render PayPal messages
+         * Render PayPal button
+         *
+         * @param id
+         * @param buttonConfig
          */
-        renderPayPalMessages: function () {
-            $('.action-braintree-paypal-message').each(function () {
-                let messages = paypal.Messages({
-                    amount: $(this).data('pp-amount'),
-                    pageType: $(this).data('pp-type'),
-                    style: {
-                        layout: $(this).data('messaging-layout'),
-                        text: {
-                            color:   $(this).data('messaging-text-color')
-                        },
-                        logo: {
-                            type: $(this).data('messaging-logo'),
-                            position: $(this).data('messaging-logo-position')
-                        }
-                    }
-                });
+        payPalButton: function (id, buttonConfig) {
+            let buttonElement = $('#' + id),
+                funding = buttonElement.data('funding'),
+                paymentLocation = buttonConfig.showPayLaterMessaging ? 'checkout' : $('.payment-location').val(),
+                style = this.getStyles(paymentLocation, funding, buttonElement.data('fundingicons')),
+                button,
+                properties = {
+                    fundingSource: funding,
+                    style: style,
 
-                if ($('#' + $(this).attr('id')).length && $(this).data('messaging-show')) {
-                    messages.render('#' + $(this).attr('id'));
-                }
-            });
+                    onInit: function (data, actions) {
+                        actions.disable();
+                    }
+                };
+
+            const activeSelected = funding === 'paypal'
+                ? 'select[id$="braintree_braintree_paypal_active_braintree_paypal"]'
+                : `select[id$="braintree_braintree_paypal_braintree_paypal_${funding}_active"]`;
+
+            // Remove if config is set to not display.
+            if ($(activeSelected).val() !== '1'
+                || $(`tr[id$="button_location_${paymentLocation}_type_${funding}_show"] select`).val() !== '1') {
+                buttonElement.empty();
+                return;
+            }
+
+            if (funding === 'paylater' && buttonConfig.showPayLaterMessaging) {
+                properties.message = this.getMessageStyles();
+            }
+
+            button = window.paypal.Buttons(properties);
+
+            if (!button.isEligible()) {
+                console.log('PayPal button is not eligible');
+                buttonElement.empty();
+                return;
+            }
+            if ($('#' + buttonElement.attr('id')).length) {
+                buttonElement.empty();
+                button.render('#' + buttonElement.attr('id'));
+            }
         },
 
         /**
-         * @param id
+         * Get styles
+         *
+         * @param location
+         * @param funding
+         * @param fundingIcons
+         * @returns {{color: (*|jQuery), shape: (*|jQuery), fundingicons: string, label: (*|jQuery)}}
          */
-        payPalButton: function (id) {
-            let data = $('#' + id);
-            let style = {
-                color: data.data('color'),
-                shape: data.data('shape'),
-                size: data.data('size'),
-                label: data.data('label')
+        getStyles: function (location, funding, fundingIcons) {
+            return {
+                label: $('.' + location + '-' + funding + '-label').val(),
+                color: $('.' + location + '-' + funding + '-color').val(),
+                shape: $('.' + location + '-' + funding + '-shape').val(),
+                fundingicons: fundingIcons || ''
             };
-
-            if (data.data('fundingicons')) {
-                style.fundingicons = data.data('fundingicons');
-            }
-
-            // Render
-            var button = paypal.Buttons({
-                fundingSource: data.data('funding'),
-                style: style,
-
-                onInit: function (data, actions) {
-                    actions.disable();
-                }
-            });
-            if (!button.isEligible()) {
-                console.log('PayPal button is not elligible');
-                data.parent().remove();
-                return;
-            }
-            if ($('#' + data.attr('id')).length && data.data('show')) {
-                button.render('#' + data.attr('id'));
-            }
         },
-    }
+
+        /**
+         * Get message styles
+         *
+         * @returns {{amount: number, color: (string|*|jQuery), align: (*|jQuery)}}
+         */
+        getMessageStyles: function () {
+            /* eslint-disable max-len */
+            const align = $('select[id$="section_braintree_braintree_paylater_messaging_button_location_checkout_type_messaging_button_location_checkout_type_messaging_text_align"]').val(),
+                amount = 200,
+                color = $('select[id$="section_braintree_braintree_paylater_messaging_button_location_checkout_type_messaging_button_location_checkout_type_messaging_text_color"]').val();
+
+            return {
+                align,
+                amount,
+                // Button doesn't support monochrome or greyscale so in either of these cases return black.
+                color: color !== 'black' || color !== 'white' ? 'black' : color
+            };
+        },
+
+        /**
+         * Attache listeners
+         *
+         * @param buttonsIds
+         * @param buttonConfig
+         */
+        attachListeners: function (buttonsIds, buttonConfig) {
+            $(`
+                select[id$="braintree_braintree_paypal_active_braintree_paypal"],
+                select[id$="braintree_braintree_paypal_braintree_paypal_credit_active"],
+                select[id$="braintree_braintree_paypal_braintree_paypal_paylater_active"],
+                [id$="braintree_section_braintree_braintree_paypal_styling"] select,
+                [id$="braintree_section_braintree_braintree_paylater_messaging_button_location_checkout_type_messaging"] select
+            `).on('change', () => {
+                this.renderPayPalButtons(buttonsIds, buttonConfig);
+            });
+        }
+    };
 });

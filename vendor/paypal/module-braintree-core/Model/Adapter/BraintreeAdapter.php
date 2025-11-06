@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Adapter;
 
 use Braintree\ClientToken;
@@ -17,6 +18,9 @@ use Braintree\Result\Error;
 use Braintree\Result\Successful;
 use Braintree\Transaction;
 use Exception;
+use Magento\Framework\App\RequestInterface;
+use Magento\Framework\App\State;
+use Magento\Store\Model\StoreManagerInterface;
 use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Model\Adminhtml\Source\Environment;
 use PayPal\Braintree\Model\StoreConfigResolver;
@@ -32,24 +36,41 @@ class BraintreeAdapter
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var StoreConfigResolver
      */
-    private $storeConfigResolver;
+    private StoreConfigResolver $storeConfigResolver;
+
+    /**
+     * @var State
+     */
+    private State $state;
+
+    /**
+     * @var RequestInterface
+     */
+    private RequestInterface $request;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private StoreManagerInterface $storeManager;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * BraintreeAdapter constructor.
      *
      * @param Config $config Braintree configurator
      * @param StoreConfigResolver $storeConfigResolver StoreId resolver model
-     *
+     * @param State $state
+     * @param RequestInterface $request
+     * @param StoreManagerInterface $storeManager
      * @param LoggerInterface $logger
      * @throws InputException
      * @throws NoSuchEntityException
@@ -57,10 +78,16 @@ class BraintreeAdapter
     public function __construct(
         Config $config,
         StoreConfigResolver $storeConfigResolver,
+        State $state,
+        RequestInterface $request,
+        StoreManagerInterface $storeManager,
         LoggerInterface $logger
     ) {
         $this->config = $config;
         $this->storeConfigResolver = $storeConfigResolver;
+        $this->state = $state;
+        $this->request = $request;
+        $this->storeManager = $storeManager;
         $this->logger = $logger;
 
         $this->initCredentials();
@@ -76,7 +103,18 @@ class BraintreeAdapter
      */
     protected function initCredentials()
     {
-        $storeId = $this->storeConfigResolver->getStoreId();
+        $storeId = null;
+        if ($this->state->getAreaCode() === 'adminhtml') {
+            if ($websiteId = $this->request->getParam('website')) {
+                $store = $this->storeManager->getStoreByWebsiteId($websiteId);
+                if (isset($store[0])) {
+                    $storeId = (int) $this->storeManager->getStore($store[0])->getId();
+                }
+            }
+        }
+        if ($storeId === null) {
+            $storeId = $this->storeConfigResolver->getStoreId();
+        }
         $environmentIdentifier = $this->config->getValue(Config::KEY_ENVIRONMENT, $storeId);
 
         $this->environment(Environment::ENVIRONMENT_SANDBOX);
@@ -110,7 +148,7 @@ class BraintreeAdapter
      * @param string|null $value
      * @return mixed
      */
-    public function environment(string $value = null)
+    public function environment(?string $value = null)
     {
         return Configuration::environment($value);
     }
@@ -121,7 +159,7 @@ class BraintreeAdapter
      * @param string|null $value
      * @return mixed
      */
-    public function merchantId(string $value = null)
+    public function merchantId(?string $value = null)
     {
         return Configuration::merchantId($value);
     }
@@ -132,7 +170,7 @@ class BraintreeAdapter
      * @param string|null $value
      * @return mixed
      */
-    public function publicKey(string $value = null)
+    public function publicKey(?string $value = null)
     {
         return Configuration::publicKey($value);
     }
@@ -143,7 +181,7 @@ class BraintreeAdapter
      * @param string|null $value
      * @return mixed
      */
-    public function privateKey($value = null)
+    public function privateKey(?string $value = null)
     {
         return Configuration::privateKey($value);
     }
@@ -232,7 +270,7 @@ class BraintreeAdapter
      * @param array $attribs
      * @return Successful|Error
      */
-    public function submitForSettlement(string $transactionId, $amount = null, $attribs = [])
+    public function submitForSettlement(string $transactionId, ?float $amount = null, $attribs = [])
     {
         return Transaction::submitForSettlement($transactionId, $amount, $attribs);
     }
@@ -245,7 +283,7 @@ class BraintreeAdapter
      * @param array $attribs
      * @return Successful|Error
      */
-    public function submitForPartialSettlement(string $transactionId, $amount = null, $attribs = [])
+    public function submitForPartialSettlement(string $transactionId, ?float $amount = null, $attribs = [])
     {
         return Transaction::submitForPartialSettlement($transactionId, $amount, $attribs);
     }
@@ -268,7 +306,7 @@ class BraintreeAdapter
      * @param null|float $amount
      * @return Successful|Error
      */
-    public function refund(string $transactionId, $amount = null)
+    public function refund(string $transactionId, ?float $amount = null)
     {
         return Transaction::refund($transactionId, $amount);
     }
@@ -283,6 +321,18 @@ class BraintreeAdapter
     public function cloneTransaction(string $transactionId, array $attributes)
     {
         return Transaction::cloneTransaction($transactionId, $attributes);
+    }
+
+    /**
+     * Create Braintree Payment Method.
+     *
+     * @param array $attribs
+     * @return Error|Successful
+     * @throws Exception
+     */
+    public function createPaymentMethod(array $attribs): Error|Successful
+    {
+        return PaymentMethod::create($attribs);
     }
 
     /**
@@ -318,5 +368,27 @@ class BraintreeAdapter
     public function getCustomerById(string $id)
     {
         return Customer::find($id);
+    }
+
+    /**
+     * Create customer
+     *
+     * @param array $attrs
+     * @return Error|Successful
+     */
+    public function createCustomer(array $attrs): Error|Successful
+    {
+        return Customer::create($attrs);
+    }
+
+    /**
+     * Search customers.
+     *
+     * @param array $filters
+     * @return ResourceCollection
+     */
+    public function searchCustomers(array $filters): ResourceCollection
+    {
+        return Customer::search($filters);
     }
 }

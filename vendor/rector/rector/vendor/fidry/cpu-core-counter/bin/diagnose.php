@@ -9,10 +9,14 @@
  * file that was distributed with this source code.
  */
 declare (strict_types=1);
-namespace RectorPrefix202308;
+namespace RectorPrefix202411;
 
-use RectorPrefix202308\Fidry\CpuCoreCounter\Diagnoser;
-use RectorPrefix202308\Fidry\CpuCoreCounter\Finder\FinderRegistry;
+use RectorPrefix202411\Fidry\CpuCoreCounter\Diagnoser;
+use RectorPrefix202411\Fidry\CpuCoreCounter\Finder\FinderRegistry;
 require_once __DIR__ . '/../vendor/autoload.php';
 echo 'Running diagnosis...' . \PHP_EOL . \PHP_EOL;
 echo Diagnoser::diagnose(FinderRegistry::getAllVariants()) . \PHP_EOL;
+echo 'Logical CPU cores finders...' . \PHP_EOL . \PHP_EOL;
+echo Diagnoser::diagnose(FinderRegistry::getDefaultLogicalFinders()) . \PHP_EOL;
+echo 'Physical CPU cores finders...' . \PHP_EOL . \PHP_EOL;
+echo Diagnoser::diagnose(FinderRegistry::getDefaultPhysicalFinders()) . \PHP_EOL;

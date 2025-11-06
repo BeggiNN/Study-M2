@@ -7,13 +7,16 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\CallLike;
+use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Else_;
 use PhpParser\Node\Stmt\For_;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\If_;
-use PhpParser\NodeTraverser;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\EarlyReturn\NodeTransformer\ConditionInverter;
+use Rector\NodeManipulator\StmtsManipulator;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -26,9 +29,25 @@ final class RemoveDeadIfForeachForRector extends AbstractRector
      * @var \Rector\EarlyReturn\NodeTransformer\ConditionInverter
      */
     private $conditionInverter;
-    public function __construct(ConditionInverter $conditionInverter)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    /**
+     * @readonly
+     * @var \Rector\NodeManipulator\StmtsManipulator
+     */
+    private $stmtsManipulator;
+    /**
+     * @var bool
+     */
+    private $hasChanged = \false;
+    public function __construct(ConditionInverter $conditionInverter, BetterNodeFinder $betterNodeFinder, StmtsManipulator $stmtsManipulator)
     {
         $this->conditionInverter = $conditionInverter;
+        $this->betterNodeFinder = $betterNodeFinder;
+        $this->stmtsManipulator = $stmtsManipulator;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -63,38 +82,81 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [For_::class, If_::class, Foreach_::class];
+        return [StmtsAwareInterface::class];
     }
     /**
-     * @param For_|If_|Foreach_ $node
+     * @param StmtsAwareInterface $node
      * @return \PhpParser\Node|null|int
      */
     public function refactor(Node $node)
     {
-        if ($node instanceof If_) {
-            if ($node->stmts !== []) {
-                return null;
+        if ($node->stmts === null) {
+            return null;
+        }
+        $this->hasChanged = \false;
+        foreach ($node->stmts as $key => $stmt) {
+            if (!$stmt instanceof If_ && !$stmt instanceof For_ && !$stmt instanceof Foreach_) {
+                continue;
             }
-            if ($node->elseifs !== []) {
-                return null;
+            if ($stmt->stmts !== []) {
+                continue;
             }
-            // useless if ()
-            if (!$node->else instanceof Else_) {
-                if ($this->hasNodeSideEffect($node->cond)) {
-                    return null;
-                }
-                return NodeTraverser::REMOVE_NODE;
+            if ($stmt instanceof If_) {
+                $this->processIf($stmt, $key, $node);
+                continue;
             }
-            $node->cond = $this->conditionInverter->createInvertedCondition($node->cond);
-            $node->stmts = $node->else->stmts;
-            $node->else = null;
+            $this->processForForeach($stmt, $key, $node);
+        }
+        if ($this->hasChanged) {
             return $node;
         }
-        // nothing to "for"
-        if ($node->stmts === []) {
-            return NodeTraverser::REMOVE_NODE;
-        }
         return null;
+    }
+    private function processIf(If_ $if, int $key, StmtsAwareInterface $stmtsAware) : void
+    {
+        if ($if->elseifs !== []) {
+            return;
+        }
+        // useless if ()
+        if (!$if->else instanceof Else_) {
+            if ($this->hasNodeSideEffect($if->cond)) {
+                return;
+            }
+            unset($stmtsAware->stmts[$key]);
+            $this->hasChanged = \true;
+            return;
+        }
+        $if->cond = $this->conditionInverter->createInvertedCondition($if->cond);
+        $if->stmts = $if->else->stmts;
+        $if->else = null;
+        $this->hasChanged = \true;
+    }
+    /**
+     * @param \PhpParser\Node\Stmt\For_|\PhpParser\Node\Stmt\Foreach_ $for
+     */
+    private function processForForeach($for, int $key, StmtsAwareInterface $stmtsAware) : void
+    {
+        $stmts = (array) $stmtsAware->stmts;
+        if ($for instanceof For_) {
+            $variables = $this->betterNodeFinder->findInstanceOf(\array_merge($for->init, $for->cond, $for->loop), Variable::class);
+            foreach ($variables as $variable) {
+                if ($this->stmtsManipulator->isVariableUsedInNextStmt($stmts, $key + 1, (string) $this->getName($variable))) {
+                    return;
+                }
+            }
+            unset($stmtsAware->stmts[$key]);
+            $this->hasChanged = \true;
+            return;
+        }
+        $exprs = \array_filter([$for->expr, $for->valueVar, $for->valueVar]);
+        $variables = $this->betterNodeFinder->findInstanceOf($exprs, Variable::class);
+        foreach ($variables as $variable) {
+            if ($this->stmtsManipulator->isVariableUsedInNextStmt($stmts, $key + 1, (string) $this->getName($variable))) {
+                return;
+            }
+        }
+        unset($stmtsAware->stmts[$key]);
+        $this->hasChanged = \true;
     }
     private function hasNodeSideEffect(Expr $expr) : bool
     {

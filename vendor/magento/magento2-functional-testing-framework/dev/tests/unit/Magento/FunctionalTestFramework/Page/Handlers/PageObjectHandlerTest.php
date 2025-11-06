@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Page\Handlers;
@@ -134,7 +135,7 @@ class PageObjectHandlerTest extends MagentoTestCase
     {
         $pageObjectHandlerProperty = new ReflectionProperty(PageObjectHandler::class, 'INSTANCE');
         $pageObjectHandlerProperty->setAccessible(true);
-        $pageObjectHandlerProperty->setValue(null);
+        $pageObjectHandlerProperty->setValue(null, null);
 
         $mockSectionParser =  $this->createMock(PageParser::class);
         $mockSectionParser
@@ -165,7 +166,7 @@ class PageObjectHandlerTest extends MagentoTestCase
 
         $property = new ReflectionProperty(ObjectManager::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($mockObjectManagerInstance);
+        $property->setValue(null, $mockObjectManagerInstance);
     }
 
     /**
@@ -177,11 +178,11 @@ class PageObjectHandlerTest extends MagentoTestCase
 
         $pageObjectHandlerProperty = new ReflectionProperty(PageObjectHandler::class, 'INSTANCE');
         $pageObjectHandlerProperty->setAccessible(true);
-        $pageObjectHandlerProperty->setValue(null);
+        $pageObjectHandlerProperty->setValue(null, null);
 
         $objectManagerProperty = new ReflectionProperty(ObjectManager::class, 'instance');
         $objectManagerProperty->setAccessible(true);
-        $objectManagerProperty->setValue(null);
+        $objectManagerProperty->setValue(null, null);
 
         TestLoggingUtil::getInstance()->clearMockLoggingUtil();
     }

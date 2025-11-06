@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Credis_Client (a fork of Redisent)
  *
@@ -44,11 +45,12 @@ class CredisException extends Exception
  * Server/Connection:
  * @method Credis_Client               pipeline()
  * @method Credis_Client               multi()
- * @method Credis_Client               watch(string ...$keys)
- * @method Credis_Client               unwatch()
+ * @method Credis_Client|bool          watch(string ...$keys)
+ * @method Credis_Client|bool          unwatch()
  * @method array                       exec()
- * @method string|Credis_Client        flushAll()
- * @method string|Credis_Client        flushDb()
+ * @method bool                        discard()
+ * @method Credis_Client|bool          flushAll()
+ * @method Credis_Client|bool          flushDb()
  * @method array|Credis_Client         info(string $section = null)
  * @method bool|array|Credis_Client    config(string $setGet, string $key, string $value = null)
  * @method array|Credis_Client         role()
@@ -162,8 +164,8 @@ class CredisException extends Exception
  *
  * Scripting:
  * @method string|int|Credis_Client    script(string $command, string $arg1 = null)
- * @method string|int|array|bool|Credis_Client eval(string $script, array $keys = null, array $args = null)
- * @method string|int|array|bool|Credis_Client evalSha(string $script, array $keys = null, array $args = null)
+ * @method string|int|array|bool|Credis_Client eval(string $script, array|string $keys = null, array|string $args = null)
+ * @method string|int|array|bool|Credis_Client evalSha(string $script, array|string $keys = null, array|string $args = null)
  */
 class Credis_Client
 {
@@ -345,7 +347,7 @@ class Credis_Client
      * @param array|null $tlsOptions The TLS/SSL context options. See https://www.php.net/manual/en/context.ssl.php for details
      * @throws CredisException
      */
-    public function __construct($host = '127.0.0.1', $port = 6379, $timeout = null, $persistent = '', $db = 0, $password = null, $username = null, array $tlsOptions = null)
+    public function __construct($host = '127.0.0.1', $port = 6379, $timeout = null, $persistent = '', $db = 0, $password = null, $username = null, $tlsOptions = null)
     {
         $this->host = (string)$host;
         if ($port !== null) {
@@ -359,7 +361,7 @@ class Credis_Client
         $this->authUsername = $username;
         $this->selectedDb = (int)$db;
         $this->convertHost();
-        if ($tlsOptions) {
+        if (is_array($tlsOptions) && count($tlsOptions) !== 0) {
             $this->setTlsOptions($tlsOptions);
         }
         // PHP Redis extension support TLS/ACL AUTH since 5.3.0
@@ -1151,9 +1153,11 @@ class Credis_Client
 
                         if ($this->isMulti) {
                             $execResponse = array_pop($response);
-                            foreach ($queuedResponses as $key => $command) {
-                                list($name, $arguments) = $command;
-                                $response[] = $this->decode_reply($name, $execResponse[$key], $arguments);
+                            if (!empty($execResponse)) {
+                                foreach ($queuedResponses as $key => $command) {
+                                    list($name, $arguments) = $command;
+                                    $response[] = $this->decode_reply($name, $execResponse[$key], $arguments);
+                                }
                             }
                         }
                     } catch (CredisException $e) {

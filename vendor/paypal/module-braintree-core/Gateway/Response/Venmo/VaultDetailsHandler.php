@@ -1,29 +1,22 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Gateway\Response\Venmo;
 
 use Braintree\Transaction;
 use DateInterval;
-use DateTime;
 use DateTimeZone;
 use Exception;
-use PayPal\Braintree\Gateway\Config\Config;
-use PayPal\Braintree\Gateway\Helper\SubjectReader;
+use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use PayPal\Braintree\Gateway\Response\Handler;
-use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
-use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Gateway\Response\HandlerInterface;
-use Magento\Payment\Model\InfoInterface;
-use Magento\Sales\Api\Data\OrderPaymentExtensionInterface;
-use Magento\Sales\Api\Data\OrderPaymentExtensionInterfaceFactory;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
-use Magento\Vault\Api\Data\PaymentTokenInterfaceFactory;
-use RuntimeException;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
@@ -33,8 +26,10 @@ class VaultDetailsHandler extends Handler implements HandlerInterface
     /**
      * @inheritdoc
      */
-    public function handle(array $handlingSubject, array $response)
-    {
+    public function handle(
+        array $handlingSubject,
+        array $response
+    ): void {
         $paymentDO = $this->subjectReader->readPayment($handlingSubject);
         $transaction = $this->subjectReader->readTransaction($response);
         $payment = $paymentDO->getPayment();
@@ -56,20 +51,20 @@ class VaultDetailsHandler extends Handler implements HandlerInterface
      * @throws NoSuchEntityException
      * @throws Exception
      */
-    protected function getVaultPaymentToken(Transaction $transaction)
+    protected function getVaultPaymentToken(Transaction $transaction): ?PaymentTokenInterface
     {
         // Check token existing in gateway response
-        if (!isset($transaction->venmoAccount->token)) {
+        if (empty($transaction->venmoAccountDetails->token)) {
             return null;
         }
 
-        /** @var PaymentTokenInterface $paymentToken */
-        $paymentToken = $this->paymentTokenFactory->create();
-        $paymentToken->setGatewayToken($transaction->venmoAccount->token);
+        $paymentToken = $this->paymentTokenFactory->create(PaymentTokenFactoryInterface::TOKEN_TYPE_ACCOUNT);
+        $paymentToken->setGatewayToken($transaction->venmoAccountDetails->token);
         $paymentToken->setExpiresAt($this->getExpirationDate());
 
         $paymentToken->setTokenDetails($this->convertDetailsToJSON([
-            'username' => $transaction->venmoAccount->username,
+            'customerId' => $transaction->customerDetails->id,
+            'username' => $transaction->venmoAccountDetails->username
         ]));
 
         return $paymentToken;
@@ -83,8 +78,12 @@ class VaultDetailsHandler extends Handler implements HandlerInterface
      */
     private function getExpirationDate(): string
     {
-        $expDate = new DateTime('now', new DateTimeZone('UTC'));
-        $expDate->add(new DateInterval('P30D'));
+        /**
+         * Vaulted Venmo tokens don't expire and need to have an expiration date in the future to show in the checkout
+         * lets just say it will expire after 10 years from when it gets stored
+         */
+        $expDate = $this->dateTimeFactory->create('now', new DateTimeZone('UTC'));
+        $expDate->add(new DateInterval('P10Y'));
         return $expDate->format('Y-m-d 00:00:00');
     }
 }

@@ -1,16 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 namespace tests\util;
 
 use Magento\FunctionalTestingFramework\ObjectManager;
 use Magento\FunctionalTestingFramework\Suite\Handlers\SuiteObjectHandler;
 use Magento\FunctionalTestingFramework\Suite\SuiteGenerator;
 use Magento\FunctionalTestingFramework\Test\Handlers\TestObjectHandler;
+use Magento\FunctionalTestingFramework\Util\Logger\LoggingUtil;
 use Magento\FunctionalTestingFramework\Util\TestGenerator;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 abstract class MftfTestCase extends TestCase
 {
@@ -112,23 +115,19 @@ abstract class MftfTestCase extends TestCase
     private function clearHandler()
     {
         // clear test object handler to force recollection of test data
-        $property = new \ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
-        $property->setAccessible(true);
-        $property->setValue(null);
+        $reflectionClass = new ReflectionClass(TestObjectHandler::class);
+        $reflectionClass->setStaticPropertyValue('testObjectHandler', null);
 
         // clear test object handler to force recollection of test data
-        $property = new \ReflectionProperty(ObjectManager::class, 'instance');
-        $property->setAccessible(true);
-        $property->setValue(null);
+        $reflectionClass = new ReflectionClass(ObjectManager::class);
+        $reflectionClass->setStaticPropertyValue('instance', null);
 
         // clear suite generator to force recollection of test data
-        $property = new \ReflectionProperty(SuiteGenerator::class, 'instance');
-        $property->setAccessible(true);
-        $property->setValue(null);
+        $reflectionClass = new ReflectionClass(SuiteGenerator::class);
+        $reflectionClass->setStaticPropertyValue('instance', null);
 
         // clear suite object handler to force recollection of test data
-        $property = new \ReflectionProperty(SuiteObjectHandler::class, 'instance');
-        $property->setAccessible(true);
-        $property->setValue(null);
+        $reflectionClass = new ReflectionClass(SuiteObjectHandler::class);
+        $reflectionClass->setStaticPropertyValue('instance', null);
     }
 }

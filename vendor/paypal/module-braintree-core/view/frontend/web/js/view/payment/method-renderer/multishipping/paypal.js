@@ -3,13 +3,13 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 define([
     'jquery',
     'underscore',
     'braintreeCheckoutPayPalAdapter',
     'Magento_Checkout/js/model/quote',
     'PayPal_Braintree/js/view/payment/method-renderer/paypal',
+    'PayPal_Braintree/js/helper/format-amount',
     'Magento_Checkout/js/action/set-payment-information',
     'Magento_Checkout/js/model/payment/additional-validators',
     'Magento_Checkout/js/model/full-screen-loader',
@@ -20,6 +20,7 @@ define([
     Braintree,
     quote,
     Component,
+    formatAmount,
     setPaymentInformationAction,
     additionalValidators,
     fullScreenLoader,
@@ -52,7 +53,6 @@ define([
                 }
             }, this);
             this.clientConfig.buttonPayPalId = 'parent-payment-continue';
-
         },
 
         /**
@@ -75,7 +75,7 @@ define([
          */
         reInitPayPal: function () {
             this.disableButton();
-            this.clientConfig.paypal.amount = parseFloat(this.grandTotalAmount).toFixed(2);
+            this.clientConfig.paypal.amount = formatAmount(this.grandTotalAmount);
 
             if (!quote.isVirtual()) {
                 this.clientConfig.paypal.enableShippingAddress = false;
@@ -87,7 +87,7 @@ define([
             if (Braintree.getPayPalInstance()) {
                 Braintree.getPayPalInstance().teardown(function () {
                     Braintree.setup();
-                }.bind(this));
+                });
                 Braintree.setPayPalInstance(null);
             } else {
                 Braintree.setup();
@@ -96,91 +96,87 @@ define([
         },
 
         loadPayPalButton: function (paypalCheckoutInstance, funding) {
-            let paypalPayment = Braintree.config.paypal,
-                onPaymentMethodReceived = Braintree.config.onPaymentMethodReceived;
-            let style = {
-                color: Braintree.getColor(funding),
-                shape: Braintree.getShape(funding),
-                size: Braintree.getSize(funding),
-                label: Braintree.getLabel(funding)
-            };
-
-            if (Braintree.getBranding()) {
-                style.branding = Braintree.getBranding();
-            }
-            if (Braintree.getFundingIcons()) {
-                style.fundingicons = Braintree.getFundingIcons();
-            }
-
             if (funding === 'credit') {
-                Braintree.config.buttonId = this.clientConfig.buttonCreditId;
+                Braintree.config.buttonId = this.getCreditButtonId();
             } else if (funding === 'paylater') {
-                Braintree.config.buttonId = this.clientConfig.buttonPaylaterId;
+                Braintree.config.buttonId = this.getPayLaterButtonId();
             } else {
-                Braintree.config.buttonId = this.clientConfig.buttonPayPalId;
+                Braintree.config.buttonId = this.getPayPalButtonId();
             }
+
+            let paypalPayment = Braintree.config.paypal,
+                onPaymentMethodReceived = Braintree.config.onPaymentMethodReceived,
+                style = {
+                    label: Braintree.getLabel(funding),
+                    color: Braintree.getColor(funding),
+                    shape: Braintree.getShape(funding)
+                },
+                payPalButtonId = Braintree.config.buttonId,
+                payPalButtonElement = $('#' + Braintree.config.buttonId),
+                events = Braintree.events,
+
+                button = window.paypal.Buttons({
+                    fundingSource: funding,
+                    env: Braintree.getEnvironment(),
+                    style: style,
+                    commit: true,
+                    locale: Braintree.config.paypal.locale,
+
+                    createOrder: function () {
+                        return paypalCheckoutInstance.createPayment(paypalPayment);
+                    },
+
+                    onCancel: function (data) {
+                        console.log('checkout.js payment cancelled', JSON.stringify(data, 0, 2));
+
+                        if (typeof events.onCancel === 'function') {
+                            events.onCancel();
+                        }
+                    },
+
+                    onError: function (err) {
+                        let error = 'PayPal Checkout could not be initialized. Please contact the store owner.';
+
+                        Braintree.showError($t(error));
+                        Braintree.config.paypalInstance = null;
+                        console.error('Paypal checkout.js error', err);
+
+                        if (typeof events.onError === 'function') {
+                            events.onError(err);
+                        }
+                    },
+
+                    onClick: function (data) {
+                    // To check term & conditions input checked - validate additional validators.
+                        if (!additionalValidators.validate()) {
+                            return false;
+                        }
+
+                        if (typeof events.onClick === 'function') {
+                            events.onClick(data);
+                        }
+                    },
+
+                    onApprove: function (data) {
+                        return paypalCheckoutInstance.tokenizePayment(data)
+                            .then(function (payload) {
+                                onPaymentMethodReceived(payload);
+                            });
+                    }
+                });
+
+            payPalButtonElement.html('');
 
             // Render
             Braintree.config.paypalInstance = paypalCheckoutInstance;
-            var events = Braintree.events;
-            $('#' + Braintree.config.buttonId).html('');
 
-            var button = paypal.Buttons({
-                fundingSource: funding,
-                env: Braintree.getEnvironment(),
-                style: style,
-                commit: true,
-                locale: Braintree.config.paypal.locale,
-
-                createOrder: function () {
-                    return paypalCheckoutInstance.createPayment(paypalPayment);
-                },
-
-                onCancel: function (data) {
-                    console.log('checkout.js payment cancelled', JSON.stringify(data, 0, 2));
-
-                    if (typeof events.onCancel === 'function') {
-                        events.onCancel();
-                    }
-                },
-
-                onError: function (err) {
-                    Braintree.showError($t("PayPal Checkout could not be initialized. Please contact the store owner."));
-                    Braintree.config.paypalInstance = null;
-                    console.error('Paypal checkout.js error', err);
-
-                    if (typeof events.onError === 'function') {
-                        events.onError(err);
-                    }
-                }.bind(this),
-
-                onClick: function (data) {
-                    // To check term & conditions input checked - validate additional validators.
-                    if (!additionalValidators.validate()) {
-                        return false;
-                    }
-
-                    if (typeof events.onClick === 'function') {
-                        events.onClick(data);
-                    }
-                }.bind(this),
-
-                onApprove: function (data, actions) {
-                    return paypalCheckoutInstance.tokenizePayment(data)
-                        .then(function (payload) {
-                            onPaymentMethodReceived(payload);
-                        });
-                }
-
-            });
-            if (button.isEligible() && $('#' + Braintree.config.buttonId).length) {
-
-                button.render('#' + Braintree.config.buttonId).then(function () {
+            if (button.isEligible() && payPalButtonElement.length) {
+                button.render('#' + payPalButtonId).then(function () {
                     Braintree.enableButton();
                     if (typeof Braintree.config.onPaymentMethodError === 'function') {
                         Braintree.config.onPaymentMethodError();
                     }
-                }.bind(this)).then(function (data) {
+                }).then(function (data) {
                     if (typeof events.onRender === 'function') {
                         events.onRender(data);
                     }
@@ -190,19 +186,20 @@ define([
 
         /**
          * Get configuration for PayPal
+         *
          * @returns {Object}
          */
         getPayPalConfig: function () {
-            var totals = quote.totals(),
-                config = {},
-                isActiveVaultEnabler = this.isActiveVault();
+            let totals = quote.totals(),
+                config = {};
 
             config.paypal = {
                 flow: 'checkout',
-                amount: parseFloat(this.grandTotalAmount).toFixed(2),
+                amount: formatAmount(this.grandTotalAmount),
                 currency: totals['base_currency_code'],
                 locale: this.getLocale(),
                 requestBillingAgreement: true,
+
                 /**
                  * Triggers on any Braintree error
                  */
@@ -230,8 +227,12 @@ define([
             return config;
         },
 
+        /**
+         * Get shipping address
+         *
+         * @returns {{}}
+         */
         getShippingAddress: function () {
-
             return {};
         },
 
@@ -239,7 +240,7 @@ define([
          * @override
          */
         getData: function () {
-            var data = this._super();
+            let data = this._super();
 
             data['additional_data']['is_active_payment_token_enabler'] = true;
 
@@ -251,15 +252,6 @@ define([
          */
         isActiveVault: function () {
             return true;
-        },
-
-        /**
-         * Skipping order review step on checkout with multiple addresses is not allowed.
-         *
-         * @returns {Boolean}
-         */
-        isSkipOrderReview: function () {
-            return false;
         },
 
         /**
@@ -277,9 +269,9 @@ define([
          * @param {Boolean} isActive
          */
         updateSubmitButtonHtml: function (isActive) {
-            $(this.submitButtonSelector).removeClass("primary");
+            $(this.submitButtonSelector).removeClass('primary');
             if (this.isPaymentMethodNonceReceived() || !isActive) {
-                $(this.submitButtonSelector).addClass("primary");
+                $(this.submitButtonSelector).addClass('primary');
                 $(this.submitButtonSelector).html(this.reviewButtonHtml);
             }
         },
@@ -317,7 +309,7 @@ define([
          */
         done: function () {
             fullScreenLoader.stopLoader();
-            $('#multishipping-billing-form').submit();
+            $('#multishipping-billing-form').trigger('submit');
 
             return this;
         }

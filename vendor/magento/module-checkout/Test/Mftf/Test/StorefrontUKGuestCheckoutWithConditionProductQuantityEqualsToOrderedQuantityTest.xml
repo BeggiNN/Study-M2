@@ -15,7 +15,6 @@
             <severity value="CRITICAL"/>
             <testCaseId value="MC-14711"/>
             <group value="mtf_migrated"/>
-            <group value="guest_checkout"/>
         </annotations>
 
         <before>
@@ -53,6 +52,7 @@
             <argument name="customerAddress" value="UK_Not_Default_Address"/>
         </actionGroup>
         <actionGroup ref="StorefrontCheckoutClickNextButtonActionGroup" stepKey="clickOnNextButton"/>
+        <actionGroup ref="CheckoutSelectCheckMoneyOrderPaymentActionGroup" stepKey="selectCheckMoneyOrder"/>
         <!-- Place order and Assert success message -->
         <actionGroup ref="ClickPlaceOrderActionGroup" stepKey="clickOnPlaceOrder"/>
 

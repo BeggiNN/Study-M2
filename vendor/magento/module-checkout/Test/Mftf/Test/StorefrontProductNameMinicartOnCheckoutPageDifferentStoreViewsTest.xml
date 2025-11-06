@@ -18,7 +18,6 @@
             <testCaseId value="MC-28566"/>
             <useCaseId value="MAGETWO-96421"/>
             <group value="checkout"/>
-            <group value="guest_checkout"/>
         </annotations>
         <before>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
@@ -104,7 +103,7 @@
 
         <!--Proceed to checkout and check product name in Order Summary area-->
         <actionGroup ref="StorefrontClickProceedToCheckoutActionGroup" stepKey="proceedToCheckout"/>
-        <waitForElementVisible selector="{{CheckoutShippingSection.email}}" stepKey="waitForShippingPageLoad"/>
+        <waitForElementVisible selector="{{CheckoutShippingSection.emailAddress}}" stepKey="waitForShippingPageLoad"/>
         <conditionalClick selector="{{CheckoutShippingGuestInfoSection.itemInCart}}" dependentSelector="{{CheckoutShippingGuestInfoSection.itemInCartActive}}" visible="false" stepKey="clickItemInCart"/>
         <grabTextFrom selector="{{CheckoutShippingGuestInfoSection.productName}}" stepKey="grabProductNameShipping"/>
         <assertStringContainsString stepKey="assertProductNameShipping">

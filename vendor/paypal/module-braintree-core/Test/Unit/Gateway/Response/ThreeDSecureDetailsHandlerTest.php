@@ -1,43 +1,42 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Response;
 
 use Braintree\Transaction;
 use PayPal\Braintree\Gateway\Response\ThreeDSecureDetailsHandler;
 use Magento\Payment\Gateway\Data\PaymentDataObject;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
 class ThreeDSecureDetailsHandlerTest extends \PHPUnit\Framework\TestCase
 {
-
-    const TRANSACTION_ID = '432er5ww3e';
-
-    /**
-     * @var \PayPal\Braintree\Gateway\Response\ThreeDSecureDetailsHandler
-     */
-    private $handler;
+    public const TRANSACTION_ID = '432er5ww3e';
 
     /**
-     * @var \Magento\Sales\Model\Order\Payment|MockObject
+     * @var ThreeDSecureDetailsHandler
      */
-    private $payment;
+    private ThreeDSecureDetailsHandler $handler;
 
     /**
-     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
+     * @var Payment|MockObject
      */
-    private $subjectReaderMock;
+    private Payment|MockObject $payment;
+
+    /**
+     * @var SubjectReader|MockObject
+     */
+    private MockObject|SubjectReader $subjectReaderMock;
 
     protected function setUp(): void
     {
         $this->payment = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'unsAdditionalInformation',
                 'hasAdditionalInformation',
                 'setAdditionalInformation',
@@ -51,9 +50,6 @@ class ThreeDSecureDetailsHandlerTest extends \PHPUnit\Framework\TestCase
         $this->handler = new ThreeDSecureDetailsHandler($this->subjectReaderMock);
     }
 
-    /**
-     * @covers \PayPal\Braintree\Gateway\Response\ThreeDSecureDetailsHandler::handle
-     */
     public function testHandle()
     {
         $this->markTestSkipped('Skip this test');
@@ -72,10 +68,10 @@ class ThreeDSecureDetailsHandlerTest extends \PHPUnit\Framework\TestCase
             ->with($response)
             ->willReturn($transaction);
 
-        $this->payment->expects(static::at(1))
+        $this->payment->expects(static::once(1))
             ->method('setAdditionalInformation')
             ->with('liabilityShifted', 'Yes');
-        $this->payment->expects(static::at(2))
+        $this->payment->expects(static::once(2))
             ->method('setAdditionalInformation')
             ->with('liabilityShiftPossible', 'Yes');
 

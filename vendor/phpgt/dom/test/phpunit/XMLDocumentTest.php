@@ -1,50 +1,134 @@
 <?php
 namespace Gt\Dom\Test;
 
-use Gt\Dom\Test\Helper\Helper;
+use DOMDocument;
+use Gt\Dom\DocumentType;
+use Gt\Dom\Element;
+use Gt\Dom\ElementType;
+use Gt\Dom\Exception\InvalidCharacterException;
+use Gt\Dom\Exception\WriteOnNonHTMLDocumentException;
+use Gt\Dom\HTMLDocument;
+use Gt\Dom\Test\TestFactory\DocumentTestFactory;
 use Gt\Dom\XMLDocument;
+use Gt\PropFunc\PropertyDoesNotExistException;
 use PHPUnit\Framework\TestCase;
 
 class XMLDocumentTest extends TestCase {
-	public function testConstruction() {
-		// test construction from raw XML
-		$fromRawXML = new XMLDocument(Helper::XML);
-		$this->assertInstanceOf(XMLDocument::class, $fromRawXML);
-		// test construction from a DOMDocument object
-		$domDocument = new \DOMDocument('1.0', 'UTF-8');
-		$domDocument->loadXML(Helper::XML);
-
-		$fromDOMDocument = new XMLDocument($domDocument);
-		$this->assertInstanceOf(XMLDocument::class, $fromDOMDocument);
-
-		// test construction from a XMLDocument object, just to be sure
-		$fromXMLDocument = new XMLDocument($fromRawXML);
-		$this->assertInstanceOf(XMLDocument::class, $fromXMLDocument);
+	public function testBodyNullOnXML():void {
+		$sut = new XMLDocument();
+		self::expectException(PropertyDoesNotExistException::class);
+		/** @noinspection PhpExpressionResultUnusedInspection */
+		/** @noinspection PhpUndefinedFieldInspection */
+		$sut->body;
 	}
 
-	public function testQuerySelector() {
-		$document = new XMLDocument(Helper::XML);
-		$firstFoodName = $document->querySelector("food name");
-		self::assertEquals("Belgian Waffles", $firstFoodName->nodeValue);
+	public function testToStringEmptyXML():void {
+		$sut = new XMLDocument();
+		if(version_compare(PHP_VERSION, "8.4", ">=")) {
+			self::assertEquals("<?xml version=\"1.0\"?>\n<xml/>\n", (string)$sut);
+		}
+		else {
+			self::assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<xml/>\n", (string)$sut);
+		}
 	}
 
-	public function testQuerySelectorAttribute() {
-		$document = new XMLDocument(Helper::XML);
-		$offerFood = $document->querySelector("food[offer]");
-		self::assertEquals("10%", $offerFood->getAttribute("offer"));
+	public function testPropContentTypeEmpty():void {
+		$sut = new XMLDocument();
+		self::assertEquals("application/xml", $sut->contentType);
 	}
 
-	public function testQuerySelectorAll() {
-		$document = new XMLDocument(Helper::XML);
-		$totalCalories = 0;
+	public function testDoctype():void {
+		$sut = new HTMLDocument();
+		self::assertInstanceOf(DocumentType::class, $sut->doctype);
+	}
 
-		foreach($document->querySelectorAll("breakfast-menu>food calories") as $caloriesElement) {
-			$totalCalories += (int)$caloriesElement->nodeValue;
+	public function testDocumentElementXML():void {
+		$sut = new XMLDocument();
+		self::assertSame(ElementType::Element, $sut->documentElement->elementType);
+	}
+
+	public function testHeadNullOnXML():void {
+		$sut = new XMLDocument();
+		self::expectException(PropertyDoesNotExistException::class);
+		/** @noinspection PhpExpressionResultUnusedInspection */
+		/** @noinspection PhpUndefinedFieldInspection */
+		/** @phpstan-ignore-next-line */
+		$sut->head;
+	}
+
+	public function testWriteDirectlyToDocument():void {
+		$message = "Hello from PHPUnit!";
+		$sut = new XMLDocument();
+		self::expectException(WriteOnNonHTMLDocumentException::class);
+		$sut->open();
+		$sut->write($message);
+	}
+
+	public function testCreateCDATASection():void {
+		$sut = new XMLDocument();
+		$data = "Example CDATASection data!";
+		$cdata = $sut->createCDATASection($data);
+		self::assertEquals($data, $cdata->nodeValue);
+	}
+
+	public function testCreateCDATASectionInvalidCharacter():void {
+		$sut = new XMLDocument();
+		$data = "Illegal Characters ]]>";
+		self::expectException(InvalidCharacterException::class);
+		$sut->createCDATASection($data);
+	}
+
+	public function testGetElementByIdXMLBug():void {
+// There is a known bug in XML documents where getElementById doesn't actually
+// match elements. This has been patched by Gt\Dom, but to prove it, this test
+// will expose the original bug on the native document.
+		$bugDocument = new DOMDocument("1.0", "UTF-8");
+		$bugDocument->loadXML(DocumentTestFactory::XML_SHAPE);
+		$missingElement = $bugDocument->getElementById("target");
+// This _shouldn't_ be null, but it is in the libxml2 implementation (buggy!)
+		self::assertNull($missingElement);
+
+		$sut = new XMLDocument(DocumentTestFactory::XML_SHAPE);
+		$element = $sut->getElementById("target");
+		self::assertInstanceOf(Element::class, $element);
+		self::assertEquals("circle", $element->tagName);
+	}
+
+	public function testEvaluate():void {
+		$sut = new XMLDocument(DocumentTestFactory::XML_BREAKFAST_MENU);
+
+		$i = null;
+		foreach($sut->evaluate("//food") as $i => $foodElement) {
+			self::assertInstanceOf(Element::class, $foodElement);
 		}
 
-		self::assertEquals(
-			650 + 900 + 900 + 600 + 950,
-			$totalCalories
+		self::assertSame(4, $i);
+	}
+
+	public function testGetElementsByClassName():void {
+		$sut = new XMLDocument();
+		$root = $sut->createElement("root");
+		$sut->firstChild->appendChild($root);
+		$trunk = $sut->createElement("trunk");
+		$root->appendChild($trunk);
+		$leaf = $sut->createElement("leaf");
+		$trunk->appendChild($leaf);
+
+		$root->className = "below-ground brown";
+		$trunk->className = "above-ground brown";
+		$leaf->className = "above-ground green";
+
+		self::assertCount(
+			2,
+			$sut->getElementsByClassName("above-ground")
+		);
+		self::assertCount(
+			1,
+			$sut->getElementsByClassName("green")
+		);
+		self::assertCount(
+			2,
+			$sut->getElementsByClassName("brown")
 		);
 	}
 }

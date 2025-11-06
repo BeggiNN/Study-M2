@@ -8,10 +8,10 @@ class Interceptor extends \Magento\Framework\DB\Adapter\Pdo\Mysql implements \Ma
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\Framework\Stdlib\StringUtils $string, \Magento\Framework\Stdlib\DateTime $dateTime, \Magento\Framework\DB\LoggerInterface $logger, \Magento\Framework\DB\SelectFactory $selectFactory, array $config = [], ?\Magento\Framework\Serialize\SerializerInterface $serializer = null)
+    public function __construct(\Magento\Framework\Stdlib\StringUtils $string, \Magento\Framework\Stdlib\DateTime $dateTime, \Magento\Framework\DB\LoggerInterface $logger, \Magento\Framework\DB\SelectFactory $selectFactory, array $config = [], ?\Magento\Framework\Serialize\SerializerInterface $serializer = null, ?\Magento\Framework\Setup\Declaration\Schema\Dto\Factories\Table $dtoFactoriesTable = null)
     {
         $this->___init();
-        parent::__construct($string, $dateTime, $logger, $selectFactory, $config, $serializer);
+        parent::__construct($string, $dateTime, $logger, $selectFactory, $config, $serializer, $dtoFactoriesTable);
     }
 
     /**
@@ -894,6 +894,15 @@ class Interceptor extends \Magento\Framework\DB\Adapter\Pdo\Mysql implements \Ma
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'closeConnection');
         return $pluginInfo ? $this->___callPlugins('closeConnection', func_get_args(), $pluginInfo) : parent::closeConnection();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, '__debugInfo');
+        return $pluginInfo ? $this->___callPlugins('__debugInfo', func_get_args(), $pluginInfo) : parent::__debugInfo();
     }
 
     /**

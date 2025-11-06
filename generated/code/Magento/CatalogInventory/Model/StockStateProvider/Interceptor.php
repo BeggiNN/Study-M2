@@ -8,10 +8,10 @@ class Interceptor extends \Magento\CatalogInventory\Model\StockStateProvider imp
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\Framework\Math\Division $mathDivision, \Magento\Framework\Locale\FormatInterface $localeFormat, \Magento\Framework\DataObject\Factory $objectFactory, \Magento\Catalog\Model\ProductFactory $productFactory, $qtyCheckApplicable = true)
+    public function __construct(\Magento\Framework\Math\Division $mathDivision, \Magento\Framework\Locale\FormatInterface $localeFormat, \Magento\Framework\DataObject\Factory $objectFactory, \Magento\Catalog\Model\ProductFactory $productFactory, \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig, $qtyCheckApplicable = true)
     {
         $this->___init();
-        parent::__construct($mathDivision, $localeFormat, $objectFactory, $productFactory, $qtyCheckApplicable);
+        parent::__construct($mathDivision, $localeFormat, $objectFactory, $productFactory, $scopeConfig, $qtyCheckApplicable);
     }
 
     /**

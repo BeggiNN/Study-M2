@@ -3,7 +3,7 @@
 declare (strict_types=1);
 namespace Rector\Naming\Naming;
 
-use RectorPrefix202308\Nette\Utils\Strings;
+use RectorPrefix202411\Nette\Utils\Strings;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\StaticType;
@@ -11,13 +11,13 @@ use PHPStan\Type\ThisType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use PHPStan\Type\TypeWithClassName;
-use Rector\Core\Exception\ShouldNotHappenException;
-use Rector\Core\Util\StringUtils;
+use Rector\Exception\ShouldNotHappenException;
 use Rector\Naming\RectorNamingInflector;
 use Rector\Naming\ValueObject\ExpectedName;
 use Rector\NodeTypeResolver\NodeTypeResolver;
 use Rector\StaticTypeMapper\ValueObject\Type\AliasedObjectType;
 use Rector\StaticTypeMapper\ValueObject\Type\SelfObjectType;
+use Rector\Util\StringUtils;
 /**
  * @see \Rector\Tests\Naming\Naming\PropertyNamingTest
  */
@@ -71,9 +71,14 @@ final class PropertyNaming
     }
     public function getExpectedNameFromType(Type $type) : ?ExpectedName
     {
-        // keep doctrine collections untouched
-        if ($type instanceof ObjectType && $type->isInstanceOf('Doctrine\\Common\\Collections\\Collection')->yes()) {
-            return null;
+        // keep collections untouched
+        if ($type instanceof ObjectType) {
+            if ($type->isInstanceOf('Doctrine\\Common\\Collections\\Collection')->yes()) {
+                return null;
+            }
+            if ($type->isInstanceOf('Illuminate\\Support\\Collection')->yes()) {
+                return null;
+            }
         }
         $className = $this->resolveClassNameFromType($type);
         if (!\is_string($className)) {

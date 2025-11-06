@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,8 +21,8 @@ declare(strict_types=1);
 
 namespace OpenSearch\Serializers;
 
-use OpenSearch\Common\Exceptions;
-use OpenSearch\Common\Exceptions\Serializer\JsonErrorException;
+use OpenSearch\Exception\JsonException;
+use OpenSearch\Exception\RuntimeException;
 
 if (!defined('JSON_INVALID_UTF8_SUBSTITUTE')) {
     //PHP < 7.2 Define it as 0 so it does nothing
@@ -41,7 +41,7 @@ class SmartSerializer implements SerializerInterface
         } else {
             $data = json_encode($data, JSON_PRESERVE_ZERO_FRACTION + JSON_INVALID_UTF8_SUBSTITUTE);
             if ($data === false) {
-                throw new Exceptions\RuntimeException("Failed to JSON encode: ".json_last_error_msg());
+                throw new RuntimeException("Failed to JSON encode: ".json_last_error_msg());
             }
             if ($data === '[]') {
                 return '{}';
@@ -56,26 +56,16 @@ class SmartSerializer implements SerializerInterface
      */
     public function deserialize(?string $data, array $headers)
     {
-        if (isset($headers['content_type']) === true) {
-            if (strpos($headers['content_type'], 'json') !== false) {
-                return $this->decode($data);
-            } else {
-                //Not json, return as string
-                return $data;
-            }
-        } else {
-            //No content headers, assume json
+        if ($this->isJson($headers)) {
             return $this->decode($data);
         }
+        return $data;
     }
 
     /**
-     * @todo For 2.0, remove the E_NOTICE check before raising the exception.
+     * Decode JSON data.
      *
-     * @param string|null $data
-     *
-     * @return array
-     * @throws JsonErrorException
+     * @throws \OpenSearch\Exception\JsonException
      */
     private function decode(?string $data): array
     {
@@ -83,21 +73,37 @@ class SmartSerializer implements SerializerInterface
             return [];
         }
 
-        if (version_compare(PHP_VERSION, '7.3.0') >= 0) {
-            try {
-                $result = json_decode($data, true, 512, JSON_THROW_ON_ERROR);
-                return $result;
-            } catch (\JsonException $e) {
-                $result = $result ?? [];
-                throw new JsonErrorException($e->getCode(), $data, $result);
-            }
+        try {
+            return json_decode($data, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $e) {
+            throw new JsonException($e->getCode(), $data, $e);
+        }
+    }
+
+    /**
+     * Check the response content type to see if it is JSON.
+     *
+     * @param array<string,mixed> $headers
+     */
+    private function isJson(array $headers): bool
+    {
+        // Legacy support for 'transfer_stats'.
+        if (!empty($headers['content_type'])) {
+            return str_contains($headers['content_type'], 'json');
         }
 
-        $result = @json_decode($data, true);
-        // Throw exception only if E_NOTICE is on to maintain backwards-compatibility on systems that silently ignore E_NOTICEs.
-        if (json_last_error() !== JSON_ERROR_NONE && (error_reporting() & E_NOTICE) === E_NOTICE) {
-            throw new JsonErrorException(json_last_error(), $data, $result);
+        // Check PSR-7 headers.
+        $lowercaseHeaders = array_change_key_case($headers, CASE_LOWER);
+        if (array_key_exists('content-type', $lowercaseHeaders)) {
+            foreach ($lowercaseHeaders['content-type'] as $type) {
+                if (str_contains($type, 'json')) {
+                    return true;
+                }
+            }
+            return false;
         }
-        return $result;
+
+        // No content type header, so assume it is JSON.
+        return true;
     }
 }

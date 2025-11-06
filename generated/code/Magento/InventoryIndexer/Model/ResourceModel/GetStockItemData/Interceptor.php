@@ -8,10 +8,10 @@ class Interceptor extends \Magento\InventoryIndexer\Model\ResourceModel\GetStock
 {
     use \Magento\Framework\Interception\Interceptor;
 
-    public function __construct(\Magento\Framework\App\ResourceConnection $resource, \Magento\InventoryIndexer\Model\StockIndexTableNameResolverInterface $stockIndexTableNameResolver, \Magento\InventoryCatalogApi\Api\DefaultStockProviderInterface $defaultStockProvider, \Magento\InventoryCatalogApi\Model\GetProductIdsBySkusInterface $getProductIdsBySkus, ?\Magento\InventoryCatalogApi\Model\IsSingleSourceModeInterface $isSingleSourceMode = null, ?\Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForSkuInterface $isSourceItemManagementAllowedForSku = null)
+    public function __construct(\Magento\Framework\App\ResourceConnection $resource, \Magento\InventoryIndexer\Model\StockIndexTableNameResolverInterface $stockIndexTableNameResolver, \Magento\InventoryCatalogApi\Api\DefaultStockProviderInterface $defaultStockProvider, \Magento\InventoryCatalogApi\Model\GetProductIdsBySkusInterface $getProductIdsBySkus, ?\Magento\InventoryCatalogApi\Model\IsSingleSourceModeInterface $isSingleSourceMode = null, ?\Magento\InventoryConfigurationApi\Model\IsSourceItemManagementAllowedForSkuInterface $isSourceItemManagementAllowedForSku = null, ?\Magento\InventoryIndexer\Model\ResourceModel\StockItemDataHandler $stockItemDataHandler = null)
     {
         $this->___init();
-        parent::__construct($resource, $stockIndexTableNameResolver, $defaultStockProvider, $getProductIdsBySkus, $isSingleSourceMode, $isSourceItemManagementAllowedForSku);
+        parent::__construct($resource, $stockIndexTableNameResolver, $defaultStockProvider, $getProductIdsBySkus, $isSingleSourceMode, $isSourceItemManagementAllowedForSku, $stockItemDataHandler);
     }
 
     /**

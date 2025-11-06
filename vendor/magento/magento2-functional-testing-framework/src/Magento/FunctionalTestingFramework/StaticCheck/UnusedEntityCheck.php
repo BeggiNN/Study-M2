@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\StaticCheck;
@@ -36,6 +36,16 @@ class UnusedEntityCheck implements StaticCheckInterface
      * @var ScriptUtil $scriptUtil
      */
     private $scriptUtil;
+
+    /**
+     * @var array
+     */
+    private $errors = [];
+
+    /**
+     * @var string
+     */
+    private $output = '';
 
     /**
      * Checks test dependencies, determined by references in tests versus the dependencies listed in the Magento module
@@ -625,7 +635,7 @@ class UnusedEntityCheck implements StaticCheckInterface
     /**
      * Return output
      *
-     * @return array
+     * @return string
      */
     public function getOutput()
     {

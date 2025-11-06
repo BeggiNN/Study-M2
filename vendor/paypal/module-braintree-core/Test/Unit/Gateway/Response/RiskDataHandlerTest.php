@@ -1,15 +1,18 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Response;
 
 use Braintree\Transaction;
+use Magento\Framework\Exception\LocalizedException;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Gateway\Response\RiskDataHandler;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Model\Order\Payment;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
 /**
@@ -20,12 +23,12 @@ class RiskDataHandlerTest extends \PHPUnit\Framework\TestCase
     /**
      * @var RiskDataHandler
      */
-    private $riskDataHandler;
+    private RiskDataHandler $riskDataHandler;
 
     /**
      * @var SubjectReader|MockObject
      */
-    private $subjectReader;
+    private SubjectReader|MockObject $subjectReader;
 
     /**
      * Set up
@@ -34,7 +37,7 @@ class RiskDataHandlerTest extends \PHPUnit\Framework\TestCase
     {
         $this->subjectReader = $this->getMockBuilder(SubjectReader::class)
             ->disableOriginalConstructor()
-            ->setMethods(['readPayment', 'readTransaction'])
+            ->onlyMethods(['readPayment', 'readTransaction'])
             ->getMock();
 
         $this->riskDataHandler = new RiskDataHandler($this->subjectReader);
@@ -42,18 +45,21 @@ class RiskDataHandlerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Test for handle method
+     *
      * @covers \PayPal\Braintree\Gateway\Response\RiskDataHandler::handle
      * @param string $riskDecision
-     * @param boolean $isFraud
+     * @param bool $isFraud
+     * @throws LocalizedException
+     * @throws Exception
      * @dataProvider riskDataProvider
      */
-    public function testHandle($riskDecision, $isFraud)
+    public function testHandle(string $riskDecision, bool $isFraud)
     {
         $this->markTestSkipped('Skip this test');
         /** @var Payment|MockObject $payment */
         $payment = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods(['setAdditionalInformation', 'setIsFraudDetected'])
+            ->onlyMethods(['setAdditionalInformation', 'setIsFraudDetected'])
             ->getMock();
         /** @var PaymentDataObjectInterface|MockObject $paymentDO */
         $paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -84,10 +90,10 @@ class RiskDataHandlerTest extends \PHPUnit\Framework\TestCase
             ->with($response)
             ->willReturn($transaction);
 
-        $payment->expects(static::at(0))
+        $payment->expects(static::once(0))
             ->method('setAdditionalInformation')
             ->with(RiskDataHandler::RISK_DATA_ID, 'test-id');
-        $payment->expects(static::at(1))
+        $payment->expects(static::once(1))
             ->method('setAdditionalInformation')
             ->with(RiskDataHandler::RISK_DATA_DECISION, $riskDecision);
 
@@ -105,9 +111,10 @@ class RiskDataHandlerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get list of variations to test fraud
+     *
      * @return array
      */
-    public function riskDataProvider()
+    public static function riskDataProvider(): array
     {
         return [
             ['decision' => 'Not Evaluated', 'isFraud' => false],

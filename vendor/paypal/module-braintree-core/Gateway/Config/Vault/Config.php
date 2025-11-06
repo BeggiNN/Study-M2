@@ -1,41 +1,62 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Config\Vault;
 
+use Magento\Payment\Gateway\Config\Config as GatewayConfig;
 use PayPal\Braintree\Model\StoreConfigResolver;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 
-class Config extends \Magento\Payment\Gateway\Config\Config
+class Config extends GatewayConfig
 {
-    const KEY_CVV = 'cvv';
+    private const KEY_ACTIVE = 'active';
+    private const KEY_CVV = 'cvv';
 
     /**
      * @var StoreConfigResolver
      */
-    private $storeConfigResolver;
+    private StoreConfigResolver $storeConfigResolver;
 
     /**
      * Config constructor.
      *
      * @param StoreConfigResolver $storeConfigResolver
      * @param ScopeConfigInterface $scopeConfig
-     * @param null $methodCode
+     * @param string|null $methodCode
      * @param string $pathPattern
      */
     public function __construct(
         StoreConfigResolver $storeConfigResolver,
         ScopeConfigInterface $scopeConfig,
-        $methodCode = null,
-        $pathPattern = \Magento\Payment\Gateway\Config\Config::DEFAULT_PATH_PATTERN
+        ?string $methodCode = null,
+        string $pathPattern = GatewayConfig::DEFAULT_PATH_PATTERN
     ) {
-        \Magento\Payment\Gateway\Config\Config::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->storeConfigResolver = $storeConfigResolver;
+        parent::__construct($scopeConfig, $methodCode, $pathPattern);
     }
 
     /**
+     * Is Braintree Vault (cards) active?
+     *
+     * @param int|null $storeId
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function isActive(?int $storeId = null): bool
+    {
+        return (bool) $this->getValue(self::KEY_ACTIVE, $storeId ?? $this->storeConfigResolver->getStoreId());
+    }
+
+    /**
+     * Is CVV verification for vaulted card enabled?
+     *
      * @return bool
      * @throws InputException
      * @throws NoSuchEntityException

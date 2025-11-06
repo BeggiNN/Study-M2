@@ -16,6 +16,7 @@
             <severity value="CRITICAL"/>
             <testCaseId value="MC-11296"/>
             <group value="catalog"/>
+            <group value="indexers_by_schedule_mode_only"/>
         </annotations>
 
         <before>
@@ -24,32 +25,21 @@
             <createData entity="_defaultCategory" stepKey="createAnchoredCategory1"/>
             <createData entity="_defaultCategory" stepKey="createSecondCategory"/>
 
-            <!-- Switch "Category Product" and "Product Category" indexers to "Update by Schedule" mode -->
-            <actionGroup ref="AdminOpenIndexManagementPageActionGroup" stepKey="onIndexManagement"/>
+            <comment userInput="BIC workaround" stepKey="onIndexManagement"/>
+            <comment userInput="BIC workaround" stepKey="switchCategoryProduct"/>
+            <comment userInput="BIC workaround" stepKey="switchProductCategory"/>
+            <comment userInput="BIC workaround" stepKey="switchCatalogSearch"/>
 
-            <actionGroup ref="AdminSwitchIndexerToActionModeActionGroup" stepKey="switchCategoryProduct">
-                <argument name="indexerValue" value="catalog_category_product"/>
-            </actionGroup>
-            <actionGroup ref="AdminSwitchIndexerToActionModeActionGroup" stepKey="switchProductCategory">
-                <argument name="indexerValue" value="catalog_product_category"/>
-            </actionGroup>
-            <actionGroup ref="AdminSwitchIndexerToActionModeActionGroup" stepKey="switchCatalogSearch">
-                <argument name="indexerValue" value="catalogsearch_fulltext"/>
-            </actionGroup>
+            <!-- Switch "Category Product", "Product Category" and "Catalog Search" indexers to "Update by Schedule" mode -->
+            <comment userInput="Adding the comment to replace 'indexer:set-mode schedule' command for preserving Backward Compatibility" stepKey="setScheduleIndexerMode"/>
         </before>
 
         <after>
-            <!-- Switch "Category Product" and "Product Category" indexers to "Update by Save" mode -->
-            <actionGroup ref="AdminOpenIndexManagementPageActionGroup" stepKey="onIndexManagement"/>
-
-            <actionGroup ref="AdminSwitchIndexerToActionModeActionGroup" stepKey="switchCategoryProduct">
-                <argument name="indexerValue" value="catalog_category_product"/>
-                <argument name="action" value="Update on Save"/>
-            </actionGroup>
-            <actionGroup ref="AdminSwitchIndexerToActionModeActionGroup" stepKey="switchProductCategory">
-                <argument name="indexerValue" value="catalog_product_category"/>
-                <argument name="action" value="Update on Save"/>
-            </actionGroup>
+            <comment userInput="BIC workaround" stepKey="onIndexManagement"/>
+            <comment userInput="BIC workaround" stepKey="switchCategoryProduct"/>
+            <comment userInput="BIC workaround" stepKey="switchProductCategory"/>
+            <!-- Switch "Category Product", "Product Category" and "Catalog Search" indexers to "Update by Save" mode -->
+            <comment userInput="Adding the comment to replace 'indexer:set-mode realtime' command for preserving Backward Compatibility" stepKey="setRealtimeIndexerMode"/>
 
             <deleteData createDataKey="simpleProduct" stepKey="deleteProduct"/>
             <deleteData createDataKey="createSecondCategory" stepKey="deleteSecondCategory"/>

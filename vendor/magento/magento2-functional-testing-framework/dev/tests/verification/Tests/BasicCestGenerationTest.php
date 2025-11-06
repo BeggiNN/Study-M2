@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace tests\verification\Tests;
 
 use tests\util\MftfTestCase;
@@ -58,5 +59,18 @@ class BasicCestGenerationTest extends MftfTestCase
     public function testWithXmlComments()
     {
         $this->generateAndCompareTest('XmlCommentedTest');
+    }
+
+    /**
+     * Tests magentoCLI and magentoCLISecret commands with env 'MAGENTO_CLI_WAIT_TIMEOUT' set
+     *
+     * @throws \Exception
+     * @throws \Magento\FunctionalTestingFramework\Exceptions\TestReferenceException
+     */
+    public function testMagentoCli()
+    {
+        putenv("MAGENTO_CLI_WAIT_TIMEOUT=45");
+        $this->generateAndCompareTest('MagentoCliTest');
+        putenv("MAGENTO_CLI_WAIT_TIMEOUT");
     }
 }

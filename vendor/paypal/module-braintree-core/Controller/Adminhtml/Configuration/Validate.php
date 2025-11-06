@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Controller\Adminhtml\Configuration;
 
@@ -12,12 +17,12 @@ use PayPal\Braintree\Model\Adminhtml\Source\Environment;
 
 class Validate extends Action
 {
-    const ADMIN_RESOURCE = 'Magento_Config::config';
+    public const ADMIN_RESOURCE = 'Magento_Config::config';
 
     /**
      * @var Config
      */
-    protected $config;
+    private Config $config;
 
     /**
      * Validate constructor.
@@ -33,6 +38,8 @@ class Validate extends Action
     }
 
     /**
+     * Validate credentials
+     *
      * @return ResultInterface
      */
     public function execute(): ResultInterface
@@ -42,8 +49,7 @@ class Validate extends Action
         $storeId = $this->getRequest()->getParam('storeId', 0);
         $environment = $this->getRequest()->getParam('environment');
 
-        if (false !== strpos($publicKey, '*')) {
-
+        if (str_contains($publicKey, '*')) {
             if ($environment === Environment::ENVIRONMENT_SANDBOX) {
                 $publicKey = $this->config->getValue(Config::KEY_SANDBOX_PUBLIC_KEY, $storeId);
             } else {
@@ -51,7 +57,7 @@ class Validate extends Action
             }
         }
 
-        if (false !== strpos($privateKey, '*')) {
+        if (str_contains($privateKey, '*')) {
             if ($environment === Environment::ENVIRONMENT_SANDBOX) {
                 $privateKey = $this->config->getValue(Config::KEY_SANDBOX_PRIVATE_KEY, $storeId);
             } else {

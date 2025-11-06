@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\Util\Sorter;
 
 use Magento\FunctionalTestingFramework\Exceptions\FastFailException;
@@ -487,8 +488,8 @@ class ParallelGroupSorter
             }
 
             $group = $this->createTestGroup($maxTime, $test, $size, $availableTests);
-            $splitSuites["{$suiteName}_${splitCount}_G"] = $group;
-            $this->addSuiteToConfig($suiteName, "{$suiteName}_${splitCount}_G", $group);
+            $splitSuites["{$suiteName}_{$splitCount}_G"] = $group;
+            $this->addSuiteToConfig($suiteName, "{$suiteName}_{$splitCount}_G", $group);
 
             $availableTests = array_diff_key($availableTests, $group);
             $splitCount++;

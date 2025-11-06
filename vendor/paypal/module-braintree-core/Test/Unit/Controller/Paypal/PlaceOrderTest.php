@@ -1,10 +1,12 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Controller\Paypal;
 
+use Magento\Framework\Exception\NotFoundException;
 use PayPal\Braintree\Controller\Paypal\PlaceOrder;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\OrderPlace;
@@ -15,57 +17,59 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Quote\Model\Quote;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
 
 /**
- * @see \PayPal\Braintree\Controller\Paypal\PlaceOrder
+ * @see PlaceOrder
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class PlaceOrderTest extends \PHPUnit\Framework\TestCase
+class PlaceOrderTest extends TestCase
 {
     /**
-     * @var OrderPlace|\PHPUnit\Framework\MockObject\MockObject
+     * @var OrderPlace|MockObject
      */
-    private $orderPlaceMock;
+    private OrderPlace|MockObject $orderPlaceMock;
 
     /**
-     * @var Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $configMock;
+    private Config|MockObject $configMock;
 
     /**
-     * @var Session|\PHPUnit\Framework\MockObject\MockObject
+     * @var Session|MockObject
      */
-    private $checkoutSessionMock;
+    private Session|MockObject $checkoutSessionMock;
 
     /**
-     * @var RequestInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RequestInterface|MockObject
      */
-    private $requestMock;
+    private RequestInterface|MockObject $requestMock;
 
     /**
-     * @var ResultFactory|\PHPUnit\Framework\MockObject\MockObject
+     * @var ResultFactory|MockObject
      */
-    private $resultFactoryMock;
+    private ResultFactory|MockObject $resultFactoryMock;
 
     /**
-     * @var ManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var ManagerInterface|MockObject
      */
-    protected $messageManagerMock;
+    protected ManagerInterface|MockObject $messageManagerMock;
 
     /**
      * @var PlaceOrder
      */
-    private $placeOrder;
+    private PlaceOrder $placeOrder;
 
     protected function setUp(): void
     {
-        /** @var Context|\PHPUnit\Framework\MockObject\MockObject $contextMock */
+        /** @var Context|MockObject $contextMock */
         $contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
             ->getMock();
         $this->requestMock = $this->getMockBuilder(RequestInterface::class)
-            ->setMethods(['getPostValue'])
+            ->addMethods(['getPostValue'])
             ->getMockForAbstractClass();
         $this->resultFactoryMock = $this->getMockBuilder(ResultFactory::class)
             ->disableOriginalConstructor()
@@ -100,6 +104,9 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * @throws NotFoundException
+     */
     public function testExecute()
     {
         $agreement = ['test-data'];
@@ -139,6 +146,9 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
         self::assertEquals($this->placeOrder->execute(), $resultMock);
     }
 
+    /**
+     * @throws NotFoundException
+     */
     public function testExecuteException()
     {
         $agreement = ['test-data'];
@@ -173,28 +183,25 @@ class PlaceOrderTest extends \PHPUnit\Framework\TestCase
 
         $this->messageManagerMock->expects(self::once())
             ->method('addExceptionMessage')
-            ->with(
-                self::isInstanceOf('Exception'),
-                'The order # cannot be processed.'
-            );
+            ->with(self::isInstanceOf('Exception'));
 
         self::assertEquals($this->placeOrder->execute(), $resultMock);
     }
 
     /**
-     * @return ResultInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @return ResultInterface|MockObject
      */
-    private function getResultMock()
+    private function getResultMock(): ResultInterface|MockObject
     {
         return $this->getMockBuilder(ResultInterface::class)
-            ->setMethods(['setPath'])
+            ->addMethods(['setPath'])
             ->getMockForAbstractClass();
     }
 
     /**
-     * @return Quote|\PHPUnit\Framework\MockObject\MockObject
+     * @return Quote|MockObject
      */
-    private function getQuoteMock()
+    private function getQuoteMock(): Quote|MockObject
     {
         return $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()

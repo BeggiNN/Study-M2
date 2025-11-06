@@ -5,12 +5,9 @@ namespace Rector\Renaming\NodeManipulator;
 
 use PhpParser\Node;
 use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassLike;
-use PhpParser\Node\Stmt\Namespace_;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\ReflectionProvider;
@@ -19,37 +16,15 @@ use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocClassRenamer;
 use Rector\BetterPhpDocParser\ValueObject\NodeTypes;
-use Rector\CodingStyle\Naming\ClassNaming;
-use Rector\Core\PhpParser\Node\BetterNodeFinder;
-use Rector\Core\Util\FileHasher;
-use Rector\NodeNameResolver\NodeNameResolver;
+use Rector\Comments\NodeDocBlock\DocBlockUpdater;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PhpDoc\NodeAnalyzer\DocBlockClassRenamer;
 use Rector\NodeTypeResolver\ValueObject\OldToNewType;
-use Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser;
+use Rector\Renaming\Collector\RenamedNameCollector;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
+use Rector\Util\FileHasher;
 final class ClassRenamer
 {
-    /**
-     * @readonly
-     * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
-     */
-    private $betterNodeFinder;
-    /**
-     * @readonly
-     * @var \Rector\PhpDocParser\NodeTraverser\SimpleCallableNodeTraverser
-     */
-    private $simpleCallableNodeTraverser;
-    /**
-     * @readonly
-     * @var \Rector\CodingStyle\Naming\ClassNaming
-     */
-    private $classNaming;
-    /**
-     * @readonly
-     * @var \Rector\NodeNameResolver\NodeNameResolver
-     */
-    private $nodeNameResolver;
     /**
      * @readonly
      * @var \Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocClassRenamer
@@ -72,48 +47,52 @@ final class ClassRenamer
     private $reflectionProvider;
     /**
      * @readonly
-     * @var \Rector\Core\Util\FileHasher
+     * @var \Rector\Util\FileHasher
      */
     private $fileHasher;
     /**
-     * @var string[]
+     * @readonly
+     * @var \Rector\Comments\NodeDocBlock\DocBlockUpdater
      */
-    private $alreadyProcessedClasses = [];
+    private $docBlockUpdater;
+    /**
+     * @readonly
+     * @var \Rector\Renaming\Collector\RenamedNameCollector
+     */
+    private $renamedNameCollector;
     /**
      * @var array<string, OldToNewType[]>
      */
     private $oldToNewTypesByCacheKey = [];
-    public function __construct(BetterNodeFinder $betterNodeFinder, SimpleCallableNodeTraverser $simpleCallableNodeTraverser, ClassNaming $classNaming, NodeNameResolver $nodeNameResolver, PhpDocClassRenamer $phpDocClassRenamer, PhpDocInfoFactory $phpDocInfoFactory, DocBlockClassRenamer $docBlockClassRenamer, ReflectionProvider $reflectionProvider, FileHasher $fileHasher)
+    public function __construct(PhpDocClassRenamer $phpDocClassRenamer, PhpDocInfoFactory $phpDocInfoFactory, DocBlockClassRenamer $docBlockClassRenamer, ReflectionProvider $reflectionProvider, FileHasher $fileHasher, DocBlockUpdater $docBlockUpdater, RenamedNameCollector $renamedNameCollector)
     {
-        $this->betterNodeFinder = $betterNodeFinder;
-        $this->simpleCallableNodeTraverser = $simpleCallableNodeTraverser;
-        $this->classNaming = $classNaming;
-        $this->nodeNameResolver = $nodeNameResolver;
         $this->phpDocClassRenamer = $phpDocClassRenamer;
         $this->phpDocInfoFactory = $phpDocInfoFactory;
         $this->docBlockClassRenamer = $docBlockClassRenamer;
         $this->reflectionProvider = $reflectionProvider;
         $this->fileHasher = $fileHasher;
+        $this->docBlockUpdater = $docBlockUpdater;
+        $this->renamedNameCollector = $renamedNameCollector;
     }
     /**
      * @param array<string, string> $oldToNewClasses
+     * @return ($node is FullyQualified ? FullyQualified : Node)
      */
     public function renameNode(Node $node, array $oldToNewClasses, ?Scope $scope) : ?Node
     {
         $oldToNewTypes = $this->createOldToNewTypes($oldToNewClasses);
-        if ($node instanceof Name) {
+        if ($node instanceof FullyQualified) {
             return $this->refactorName($node, $oldToNewClasses);
         }
-        $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($node);
-        $this->refactorPhpDoc($node, $oldToNewTypes, $oldToNewClasses, $phpDocInfo);
-        if ($node instanceof Namespace_) {
-            return $this->refactorNamespace($node, $oldToNewClasses);
+        $phpDocInfo = $this->phpDocInfoFactory->createFromNode($node);
+        if ($phpDocInfo instanceof PhpDocInfo) {
+            $hasPhpDocChanged = $this->refactorPhpDoc($node, $oldToNewTypes, $oldToNewClasses, $phpDocInfo);
+            if ($hasPhpDocChanged) {
+                return $node;
+            }
         }
         if ($node instanceof ClassLike) {
             return $this->refactorClassLike($node, $oldToNewClasses, $scope);
-        }
-        if ($phpDocInfo->hasChanged()) {
-            return $node;
         }
         return null;
     }
@@ -121,20 +100,25 @@ final class ClassRenamer
      * @param OldToNewType[] $oldToNewTypes
      * @param array<string, string> $oldToNewClasses
      */
-    private function refactorPhpDoc(Node $node, array $oldToNewTypes, array $oldToNewClasses, PhpDocInfo $phpDocInfo) : void
+    private function refactorPhpDoc(Node $node, array $oldToNewTypes, array $oldToNewClasses, PhpDocInfo $phpDocInfo) : bool
     {
         if (!$phpDocInfo->hasByTypes(NodeTypes::TYPE_AWARE_NODES) && !$phpDocInfo->hasByAnnotationClasses(NodeTypes::TYPE_AWARE_DOCTRINE_ANNOTATION_CLASSES)) {
-            return;
+            return \false;
         }
         if ($node instanceof AttributeGroup) {
-            return;
+            return \false;
         }
-        $this->docBlockClassRenamer->renamePhpDocType($phpDocInfo, $oldToNewTypes);
-        $this->phpDocClassRenamer->changeTypeInAnnotationTypes($node, $phpDocInfo, $oldToNewClasses);
+        $hasChanged = $this->docBlockClassRenamer->renamePhpDocType($phpDocInfo, $oldToNewTypes, $node);
+        $hasChanged = $this->phpDocClassRenamer->changeTypeInAnnotationTypes($node, $phpDocInfo, $oldToNewClasses, $hasChanged);
+        if ($hasChanged) {
+            $this->docBlockUpdater->updateRefactoredNodeWithPhpDocInfo($node);
+            return \true;
+        }
+        return \false;
     }
-    private function shouldSkip(string $newName, Name $name) : bool
+    private function shouldSkip(string $newName, FullyQualified $fullyQualified) : bool
     {
-        if ($name->getAttribute(AttributeKey::IS_STATICCALL_CLASS_NAME) === \true && $this->reflectionProvider->hasClass($newName)) {
+        if ($fullyQualified->getAttribute(AttributeKey::IS_STATICCALL_CLASS_NAME) === \true && $this->reflectionProvider->hasClass($newName)) {
             $classReflection = $this->reflectionProvider->getClass($newName);
             return $classReflection->isInterface();
         }
@@ -143,56 +127,24 @@ final class ClassRenamer
     /**
      * @param array<string, string> $oldToNewClasses
      */
-    private function refactorName(Name $name, array $oldToNewClasses) : ?Name
+    private function refactorName(FullyQualified $fullyQualified, array $oldToNewClasses) : ?FullyQualified
     {
-        if ($name->getAttribute(AttributeKey::IS_NAMESPACE_NAME) === \true) {
+        if ($fullyQualified->getAttribute(AttributeKey::IS_FUNCCALL_NAME) === \true) {
             return null;
         }
-        $stringName = $this->nodeNameResolver->getName($name);
+        $stringName = $fullyQualified->toString();
         $newName = $oldToNewClasses[$stringName] ?? null;
         if ($newName === null) {
             return null;
         }
-        if (!$this->isClassToInterfaceValidChange($name, $newName)) {
+        if (!$this->isClassToInterfaceValidChange($fullyQualified, $newName)) {
             return null;
         }
-        // no need to preslash "use \SomeNamespace" of imported namespace
-        if ($name->getAttribute(AttributeKey::IS_USEUSE_NAME) === \true) {
-            // no need to rename imports, they will be handled by autoimport and coding standard
-            // also they might cause some rename
+        if ($this->shouldSkip($newName, $fullyQualified)) {
             return null;
         }
-        if ($this->shouldSkip($newName, $name)) {
-            return null;
-        }
+        $this->renamedNameCollector->add($stringName);
         return new FullyQualified($newName);
-    }
-    /**
-     * @param array<string, string> $oldToNewClasses
-     */
-    private function refactorNamespace(Namespace_ $namespace, array $oldToNewClasses) : ?Node
-    {
-        $name = $this->nodeNameResolver->getName($namespace);
-        if ($name === null) {
-            return null;
-        }
-        $classLike = $this->getClassOfNamespaceToRefactor($namespace, $oldToNewClasses);
-        if (!$classLike instanceof ClassLike) {
-            return null;
-        }
-        $currentName = (string) $this->nodeNameResolver->getName($classLike);
-        $newClassFullyQualified = $oldToNewClasses[$currentName];
-        if ($this->reflectionProvider->hasClass($newClassFullyQualified)) {
-            return null;
-        }
-        $newNamespace = $this->classNaming->getNamespace($newClassFullyQualified);
-        // Renaming to class without namespace (example MyNamespace\DateTime -> DateTimeImmutable)
-        if (!\is_string($newNamespace)) {
-            $classLike->name = new Identifier($newClassFullyQualified);
-            return $classLike;
-        }
-        $namespace->name = new Name($newNamespace);
-        return $namespace;
     }
     /**
      * @param array<string, string> $oldToNewClasses
@@ -200,32 +152,25 @@ final class ClassRenamer
     private function refactorClassLike(ClassLike $classLike, array $oldToNewClasses, ?Scope $scope) : ?Node
     {
         // rename interfaces
-        $this->renameClassImplements($classLike, $oldToNewClasses, $scope);
-        $className = (string) $this->nodeNameResolver->getName($classLike);
-        $newName = $oldToNewClasses[$className] ?? null;
-        if ($newName === null) {
+        if (!$classLike instanceof Class_) {
             return null;
         }
-        // prevents re-iterating same class in endless loop
-        if (\in_array($className, $this->alreadyProcessedClasses, \true)) {
-            return null;
+        $hasChanged = \false;
+        $classLike->implements = \array_unique($classLike->implements);
+        foreach ($classLike->implements as $key => $implementName) {
+            $namespaceName = $scope instanceof Scope ? $scope->getNamespace() : null;
+            $fullyQualifiedName = $namespaceName . '\\' . $implementName->toString();
+            $newName = $oldToNewClasses[$fullyQualifiedName] ?? null;
+            if ($newName === null) {
+                continue;
+            }
+            $classLike->implements[$key] = new FullyQualified($newName);
+            $hasChanged = \true;
         }
-        $this->alreadyProcessedClasses[] = $className;
-        $newName = $oldToNewClasses[$className];
-        $newClassNamePart = $this->nodeNameResolver->getShortName($newName);
-        $newNamespacePart = $this->classNaming->getNamespace($newName);
-        if ($this->isClassAboutToBeDuplicated($newName)) {
-            return null;
+        if ($hasChanged) {
+            return $classLike;
         }
-        $classLike->name = new Identifier($newClassNamePart);
-        $classNamingGetNamespace = $this->classNaming->getNamespace($className);
-        // Old class did not have any namespace, we need to wrap class with Namespace_ node
-        if ($newNamespacePart !== null && $classNamingGetNamespace === null) {
-            $this->changeNameToFullyQualifiedName($classLike);
-            $name = new Name($newNamespacePart);
-            return new Namespace_($name, [$classLike]);
-        }
-        return $classLike;
+        return null;
     }
     /**
      * Checks validity:
@@ -239,75 +184,24 @@ final class ClassRenamer
      * - implements SomeInterface
      * - implements SomeClass
      */
-    private function isClassToInterfaceValidChange(Name $name, string $newClassName) : bool
+    private function isClassToInterfaceValidChange(FullyQualified $fullyQualified, string $newClassName) : bool
     {
         if (!$this->reflectionProvider->hasClass($newClassName)) {
             return \true;
         }
         $classReflection = $this->reflectionProvider->getClass($newClassName);
         // ensure new is not with interface
-        if ($name->getAttribute(AttributeKey::IS_NEW_INSTANCE_NAME) !== \true) {
-            return $this->isValidClassNameChange($name, $classReflection);
+        if ($fullyQualified->getAttribute(AttributeKey::IS_NEW_INSTANCE_NAME) !== \true) {
+            return $this->isValidClassNameChange($fullyQualified, $classReflection);
         }
         if (!$classReflection->isInterface()) {
-            return $this->isValidClassNameChange($name, $classReflection);
+            return $this->isValidClassNameChange($fullyQualified, $classReflection);
         }
         return \false;
     }
-    /**
-     * @param array<string, string> $oldToNewClasses
-     */
-    private function getClassOfNamespaceToRefactor(Namespace_ $namespace, array $oldToNewClasses) : ?ClassLike
+    private function isValidClassNameChange(FullyQualified $fullyQualified, ClassReflection $classReflection) : bool
     {
-        $foundClass = $this->betterNodeFinder->findFirst($namespace, function (Node $node) use($oldToNewClasses) : bool {
-            if (!$node instanceof ClassLike) {
-                return \false;
-            }
-            $classLikeName = $this->nodeNameResolver->getName($node);
-            return isset($oldToNewClasses[$classLikeName]);
-        });
-        return $foundClass instanceof ClassLike ? $foundClass : null;
-    }
-    /**
-     * @param string[] $oldToNewClasses
-     */
-    private function renameClassImplements(ClassLike $classLike, array $oldToNewClasses, ?Scope $scope) : void
-    {
-        if (!$classLike instanceof Class_) {
-            return;
-        }
-        $classLike->implements = \array_unique($classLike->implements);
-        foreach ($classLike->implements as $key => $implementName) {
-            $virtualNode = (bool) $implementName->getAttribute(AttributeKey::VIRTUAL_NODE);
-            if (!$virtualNode) {
-                continue;
-            }
-            $namespaceName = $scope instanceof Scope ? $scope->getNamespace() : null;
-            $fullyQualifiedName = $namespaceName . '\\' . $implementName->toString();
-            $newName = $oldToNewClasses[$fullyQualifiedName] ?? null;
-            if ($newName === null) {
-                continue;
-            }
-            $classLike->implements[$key] = new FullyQualified($newName);
-        }
-    }
-    private function isClassAboutToBeDuplicated(string $newName) : bool
-    {
-        return $this->reflectionProvider->hasClass($newName);
-    }
-    private function changeNameToFullyQualifiedName(ClassLike $classLike) : void
-    {
-        $this->simpleCallableNodeTraverser->traverseNodesWithCallable($classLike, static function (Node $node) {
-            if (!$node instanceof FullyQualified) {
-                return null;
-            }
-            // invoke override
-            $node->setAttribute(AttributeKey::ORIGINAL_NODE, null);
-        });
-    }
-    private function isValidClassNameChange(Name $name, ClassReflection $classReflection) : bool
-    {
-        if ($name->getAttribute(AttributeKey::IS_CLASS_EXTENDS) === \true) {
+        if ($fullyQualified->getAttribute(AttributeKey::IS_CLASS_EXTENDS) === \true) {
             // is class to interface?
             if ($classReflection->isInterface()) {
                 return \false;
@@ -316,7 +210,7 @@ final class ClassRenamer
                 return \false;
             }
         }
-        if ($name->getAttribute(AttributeKey::IS_CLASS_IMPLEMENT) === \true) {
+        if ($fullyQualified->getAttribute(AttributeKey::IS_CLASS_IMPLEMENT) === \true) {
             // is interface to class?
             return !$classReflection->isClass();
         }

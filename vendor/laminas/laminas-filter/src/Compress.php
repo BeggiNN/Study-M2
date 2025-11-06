@@ -20,6 +20,9 @@ use function ucfirst;
 /**
  * Compresses a given string
  *
+ * @deprecated Since 2.40.0. This filter will be removed in 3.0 and replaced with `CompressString` and
+ *             `CompressToArchive`
+ *
  * @psalm-type AdapterType = 'Bz2'|'Gz'|'Lzf'|'Rar'|'Snappy'|'Tar'|'Zip'
  * @psalm-type AdapterTypeOrInstance = Compress\CompressionAlgorithmInterface|AdapterType
  * @psalm-type Options = array{

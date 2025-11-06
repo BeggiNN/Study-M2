@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,11 +21,13 @@ declare(strict_types=1);
 
 namespace OpenSearch\Endpoints;
 
-use OpenSearch\Common\Exceptions\UnexpectedValueException;
+use OpenSearch\EndpointInterface;
+use OpenSearch\Exception\UnexpectedValueException;
 use OpenSearch\Serializers\SerializerInterface;
+
 use function array_filter;
 
-abstract class AbstractEndpoint
+abstract class AbstractEndpoint implements EndpointInterface
 {
     /**
      * @var array
@@ -33,22 +35,22 @@ abstract class AbstractEndpoint
     protected $params = [];
 
     /**
-     * @var string
+     * @var string|null
      */
     protected $index = null;
 
     /**
-     * @var string|int
+     * @var string|int|null
      */
     protected $id = null;
 
     /**
-     * @var string
+     * @var string|null
      */
     protected $method = null;
 
     /**
-     * @var string|array
+     * @var string|array|null
      */
     protected $body = null;
 
@@ -77,19 +79,20 @@ abstract class AbstractEndpoint
      */
     abstract public function getMethod(): string;
 
-
     /**
      * Set the parameters for this endpoint
      *
-     * @param string[] $params Array of parameters
+     * @param mixed[] $params Array of parameters
      * @return $this
      */
-    public function setParams(array $params)
+    public function setParams(array $params): static
     {
         $this->extractOptions($params);
         $this->checkUserParams($params);
         $params = $this->convertCustom($params);
         $this->params = $this->convertArraysToStrings($params);
+
+        $this->checkForDeprecations();
 
         return $this;
     }
@@ -110,9 +113,11 @@ abstract class AbstractEndpoint
     }
 
     /**
+     * @param string|string[]|null $index
+     *
      * @return $this
      */
-    public function setIndex($index)
+    public function setIndex($index): static
     {
         if ($index === null) {
             return $this;
@@ -124,17 +129,12 @@ abstract class AbstractEndpoint
             $index = implode(",", $index);
         }
 
-        $this->index = urlencode($index);
+        $this->index = $index;
 
         return $this;
     }
 
-    /**
-     * @param int|string $docID
-     *
-     * @return $this
-     */
-    public function setId($docID)
+    public function setId(int|string|null $docID): static
     {
         if ($docID === null) {
             return $this;
@@ -149,16 +149,12 @@ abstract class AbstractEndpoint
         return $this;
     }
 
-    /**
-     * @return array|string
-     */
-    public function getBody()
+    public function getBody(): string|array|null
     {
         return $this->body;
     }
 
-
-    public function setBody(array $body)
+    public function setBody(string|iterable|null $body): static
     {
         $this->body = $body;
 
@@ -185,7 +181,7 @@ abstract class AbstractEndpoint
     }
 
     /**
-     * @param array $params
+     * @param array<string, mixed> $params
      *
      * @throws UnexpectedValueException
      */
@@ -215,7 +211,7 @@ abstract class AbstractEndpoint
     }
 
     /**
-     * @param array $params Note: this is passed by-reference!
+     * @param array<string, mixed> $params Note: this is passed by-reference!
      */
     private function extractOptions(&$params)
     {
@@ -245,6 +241,11 @@ abstract class AbstractEndpoint
         }
     }
 
+    /**
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, mixed>
+     */
     private function convertCustom(array $params): array
     {
         if (isset($params['custom']) === true) {
@@ -279,5 +280,40 @@ abstract class AbstractEndpoint
         }
 
         return false;
+    }
+
+    /**
+     * This function returns all param deprecations also optional with a replacement field
+     *
+     * @return array<string, string|null>
+     */
+    protected function getParamDeprecation(): array
+    {
+        return [];
+    }
+
+    private function checkForDeprecations(): void
+    {
+        $deprecations = $this->getParamDeprecation();
+
+        if ($deprecations === []) {
+            return;
+        }
+
+        $keys = array_keys($this->params);
+
+        foreach ($keys as $key) {
+            if (array_key_exists($key, $deprecations)) {
+                $val = $deprecations[$key];
+
+                $msg = sprintf('The parameter "%s" is deprecated and will be removed without replacement in the next major version', $key);
+
+                if ($val) {
+                    $msg = sprintf('The parameter "%s" is deprecated and will be replaced with parameter "%s" in the next major version', $key, $val);
+                }
+
+                trigger_error($msg, E_USER_DEPRECATED);
+            }
+        }
     }
 }

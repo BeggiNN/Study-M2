@@ -1,10 +1,7 @@
 <?php
 /**
- * Parses and verifies the doc comments for functions.
- *
- * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2015 Squiz Pty Ltd (ABN 77 084 670 600)
- * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\Sniffs\Commenting;
@@ -422,7 +419,9 @@ class FunctionCommentSniff extends PEARFunctionCommentSniff
                                   $typeHint,
                                   $param['var'],
                                  );
-                        $phpcsFile->addError($error, $stackPtr, 'IncorrectTypeHint', $data);
+                        if ($suggestedTypeHint != "null" && (ltrim($typeHint, '?') !== $suggestedTypeHint)) {
+                            $phpcsFile->addError($error, $stackPtr, 'IncorrectTypeHint', $data);
+                        }
                     }//end if
                 } else if ($suggestedTypeHint === '' && isset($realParams[$pos]) === true) {
                     $typeHint = $realParams[$pos]['type_hint'];

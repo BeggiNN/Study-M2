@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Util;
@@ -39,11 +40,11 @@ class ModuleResolverTest extends MagentoTestCase
         
         $moduleResolverServiceInstance = new ReflectionProperty(ModuleResolverService::class, 'INSTANCE');
         $moduleResolverServiceInstance->setAccessible(true);
-        $moduleResolverServiceInstance->setValue(null);
+        $moduleResolverServiceInstance->setValue(null, null);
 
         $mftfAppConfigInstance = new ReflectionProperty(MftfApplicationConfig::class, 'MFTF_APPLICATION_CONTEXT');
         $mftfAppConfigInstance->setAccessible(true);
-        $mftfAppConfigInstance->setValue(null);
+        $mftfAppConfigInstance->setValue(null, null);
     }
 
     /**
@@ -151,7 +152,7 @@ class ModuleResolverTest extends MagentoTestCase
         // clear test object handler value to inject parsed content
         $property = new ReflectionProperty(ModuleResolver::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $this->mockForceGenerate(false);
         // Define the Module paths from default TESTS_MODULE_PATH
@@ -923,7 +924,7 @@ class ModuleResolverTest extends MagentoTestCase
     {
         $property = new ReflectionProperty(ModuleResolverService::class, 'INSTANCE');
         $property->setAccessible(true);
-        $property->setValue($moduleResolverService);
+        $property->setValue(null, $moduleResolverService);
     }
 
     /**
@@ -942,7 +943,7 @@ class ModuleResolverTest extends MagentoTestCase
 
         $property = new ReflectionProperty(MftfApplicationConfig::class, 'MFTF_APPLICATION_CONTEXT');
         $property->setAccessible(true);
-        $property->setValue($mockConfig);
+        $property->setValue(null, $mockConfig);
     }
 
     /**

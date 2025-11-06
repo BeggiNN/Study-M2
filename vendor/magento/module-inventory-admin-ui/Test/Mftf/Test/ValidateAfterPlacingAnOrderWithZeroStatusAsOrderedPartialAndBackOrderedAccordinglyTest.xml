@@ -58,7 +58,9 @@
         <actionGroup ref="CliIndexerReindexActionGroup" stepKey="performReindexAfterFillBackordersConfig">
             <argument name="indices" value=""/>
         </actionGroup>
-        <magentoCLI command="cache:flush" stepKey="cleanCacheAfterFillBackordersConfig"/>
+        <actionGroup ref="CliCacheFlushActionGroup" stepKey="cleanCacheAfterFillBackordersConfig">
+            <argument name="tags" value=""/>
+        </actionGroup>
 
          <!--Assign source to product, and save the product-->
         <amOnPage url="{{AdminProductEditPage.url($$product.id$$)}}" stepKey="openProductEditPage"/>
@@ -84,6 +86,7 @@
         <!--Place order.-->
         <actionGroup ref="GoToCheckoutFromMinicartActionGroup" stepKey="navigateToCheckout"/>
         <actionGroup ref="StorefrontCheckoutClickNextButtonActionGroup" stepKey="clickOnNextPaymentPage"/>
+        <actionGroup ref="CheckoutSelectCheckMoneyOrderPaymentActionGroup" stepKey="selectCheckMoneyOrder"/>
         <actionGroup ref="ClickPlaceOrderActionGroup" stepKey="clickOnPlaceOrder"/>
         <actionGroup ref="StorefrontClickOrderLinkFromCheckoutSuccessPageActionGroup" stepKey="clickOrderLink"/>
         <grabFromCurrentUrl regex="~/order_id/(\d+)/~" stepKey="orderId"/>
@@ -164,6 +167,7 @@
         <!--Place order Again.-->
         <actionGroup ref="GoToCheckoutFromMinicartActionGroup" stepKey="navigateToCheckoutAgain"/>
         <actionGroup ref="StorefrontCheckoutClickNextButtonActionGroup" stepKey="clickOnNextPaymentPageAgain"/>
+        <actionGroup ref="CheckoutSelectCheckMoneyOrderPaymentActionGroup" stepKey="selectCheckMoneyOrderAgain"/>
         <actionGroup ref="ClickPlaceOrderActionGroup" stepKey="clickOnPlaceOrderAgain"/>
         <actionGroup ref="StorefrontClickOrderLinkFromCheckoutSuccessPageActionGroup" stepKey="clickOrderLinkAgain"/>
         <grabFromCurrentUrl regex="~/order_id/(\d+)/~" stepKey="orderId1"/>
@@ -192,7 +196,9 @@
             <actionGroup ref="CliIndexerReindexActionGroup" stepKey="performReindexAfterFillBackordersConfig1">
                 <argument name="indices" value=""/>
             </actionGroup>
-            <magentoCLI command="cache:flush" stepKey="cleanCacheAfterFillBackordersConfig1"/>
+            <actionGroup ref="CliCacheFlushActionGroup" stepKey="cleanCacheAfterFillBackordersConfig1">
+                <argument name="tags" value=""/>
+            </actionGroup>
 
             <!--Delete the created products and catagory.-->
             <deleteData createDataKey="product" stepKey="deleteProduct"/>

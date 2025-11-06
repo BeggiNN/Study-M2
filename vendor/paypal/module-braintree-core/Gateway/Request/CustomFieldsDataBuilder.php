@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Request;
 
@@ -7,12 +12,12 @@ use PayPal\Braintree\Model\CustomFields\Pool;
 
 class CustomFieldsDataBuilder implements BuilderInterface
 {
-    const CUSTOM_FIELDS = 'customFields';
+    public const CUSTOM_FIELDS = 'customFields';
 
     /**
      * @var Pool $pool
      */
-    protected $pool;
+    protected Pool $pool;
 
     /**
      * CustomFieldsDataBuilder constructor

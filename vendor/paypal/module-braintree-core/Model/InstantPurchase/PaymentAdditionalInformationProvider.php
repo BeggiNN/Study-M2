@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\InstantPurchase;
 
 use PayPal\Braintree\Gateway\Command\GetPaymentNonceCommand;
@@ -13,14 +14,13 @@ use Magento\Vault\Api\Data\PaymentTokenInterface;
  * Provides additional information of Braintree specific payment method for Instant Purchase.
  *
  * Class PaymentAdditionalInformationProvider
- * @package PayPal\Braintree\Model\InstantPurchase
  */
 class PaymentAdditionalInformationProvider implements PaymentAdditionalInformationProviderInterface
 {
     /**
      * @var GetPaymentNonceCommand
      */
-    private $getPaymentNonceCommand;
+    private GetPaymentNonceCommand $getPaymentNonceCommand;
 
     /**
      * PaymentAdditionalInformationProvider constructor.

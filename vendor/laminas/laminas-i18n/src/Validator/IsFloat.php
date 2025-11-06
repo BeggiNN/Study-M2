@@ -23,6 +23,7 @@ use function preg_match;
 use function preg_quote;
 use function str_replace;
 
+/** @final */
 class IsFloat extends AbstractValidator
 {
     public const INVALID   = 'floatInvalid';
@@ -31,7 +32,7 @@ class IsFloat extends AbstractValidator
     /**
      * Validation failure message template definitions
      *
-     * @var string[]
+     * @var array<string, string>
      */
     protected $messageTemplates = [
         self::INVALID   => 'Invalid type given. String, integer or float expected',
@@ -75,6 +76,8 @@ class IsFloat extends AbstractValidator
     /**
      * Returns the set locale
      *
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0
+     *
      * @return string
      */
     public function getLocale()
@@ -87,6 +90,8 @@ class IsFloat extends AbstractValidator
 
     /**
      * Sets the locale to use
+     *
+     * @deprecated Since 2.28.0 - This method will be removed in 3.0. Provide options to the constructor instead.
      *
      * @param string|null $locale
      * @return $this
@@ -171,7 +176,11 @@ class IsFloat extends AbstractValidator
         $decSeparatorPosition   = $this->wrapper->strpos($value, $decSeparator);
 
         //We have separators, and they are flipped. i.e. 2.000,000 for en-US
-        if ($groupSeparatorPosition && $decSeparatorPosition && $groupSeparatorPosition > $decSeparatorPosition) {
+        if (
+            $groupSeparatorPosition !== false
+            && $decSeparatorPosition !== false
+            && $groupSeparatorPosition > $decSeparatorPosition
+        ) {
             $this->error(self::NOT_FLOAT);
 
             return false;
@@ -195,7 +204,8 @@ class IsFloat extends AbstractValidator
                     '/'
                 )
                 . ']{0,3}';
-            $suffix      = $formatter->getTextAttribute(NumberFormatter::NEGATIVE_SUFFIX)
+            $suffix      = $formatter->getTextAttribute(NumberFormatter::NEGATIVE_SUFFIX);
+            $suffix      = $suffix !== false
                 ? '['
                     . preg_quote(
                         $formatter->getTextAttribute(NumberFormatter::POSITIVE_SUFFIX)
@@ -238,7 +248,8 @@ class IsFloat extends AbstractValidator
 
         // No strrpos() in wrappers yet. ICU 4.x doesn't have grouping size for
         // everything. ICU 52 has 3 for ALL locales.
-        $groupSize = $formatter->getAttribute(NumberFormatter::GROUPING_SIZE) ?: 3;
+        $groupSize = $formatter->getAttribute(NumberFormatter::GROUPING_SIZE);
+        $groupSize = $groupSize === false ? 3 : $groupSize;
         assert(is_int($groupSize));
         $lastStringGroup = $this->wrapper->strlen($value) > $groupSize ?
             $this->wrapper->substr($value, 0 - $groupSize) :

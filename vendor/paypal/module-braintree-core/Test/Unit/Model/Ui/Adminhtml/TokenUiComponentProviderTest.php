@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Model\Ui\Adminhtml;
 
 use PayPal\Braintree\Model\Ui\Adminhtml\TokenUiComponentProvider;
@@ -10,31 +11,34 @@ use Magento\Framework\UrlInterface;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterface;
 use Magento\Vault\Model\Ui\TokenUiComponentInterfaceFactory;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
 
 class TokenUiComponentProviderTest extends \PHPUnit\Framework\TestCase
 {
-
     /**
      * @var TokenUiComponentInterfaceFactory|MockObject
      */
-    private $componentFactory;
+    private TokenUiComponentInterfaceFactory|MockObject $componentFactory;
 
     /**
      * @var UrlInterface|MockObject
      */
-    private $urlBuilder;
+    private UrlInterface|MockObject $urlBuilder;
 
     /**
      * @var TokenUiComponentProvider
      */
-    private $tokenUiComponentProvider;
+    private TokenUiComponentProvider $tokenUiComponentProvider;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->componentFactory = $this->getMockBuilder(TokenUiComponentInterfaceFactory::class)
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
 
         $this->urlBuilder = $this->createMock(UrlInterface::class);
@@ -47,6 +51,7 @@ class TokenUiComponentProviderTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @covers \PayPal\Braintree\Model\Ui\Adminhtml\TokenUiComponentProvider::getComponentForToken
+     * @throws Exception
      */
     public function testGetComponentForToken()
     {

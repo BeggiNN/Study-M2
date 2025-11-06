@@ -3,16 +3,15 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 
 define([
     'jquery',
     'PayPal_Braintree/js/view/payment/method-renderer/cc-form',
+    'PayPal_Braintree/js/model/vault-enabler',
     'PayPal_Braintree/js/validator',
-    'Magento_Vault/js/view/payment/vault-enabler',
     'Magento_Checkout/js/model/payment/additional-validators',
     'mage/translate'
-], function ($, Component, validator, VaultEnabler, additionalValidators, $t) {
+], function ($, Component, vaultEnablerModel, validator, additionalValidators, $t) {
     'use strict';
 
     return Component.extend({
@@ -41,8 +40,8 @@ define([
          */
         initialize: function () {
             this._super();
-            this.vaultEnabler = new VaultEnabler();
-            this.vaultEnabler.setPaymentCode(this.getVaultCode());
+            this.vaultEnabler = vaultEnablerModel.getVaultEnabler();
+            vaultEnablerModel.setPaymentCode(this.getVaultCode());
 
             return this;
         },
@@ -54,6 +53,21 @@ define([
             this._super();
 
             this.clientConfig.hostedFields = this.getHostedFields();
+            this.clientConfig.styles = {
+                'input': {
+                    'font-size': '14pt',
+                    'color': '#3A3A3A'
+                },
+                ':focus': {
+                    'color': 'black'
+                },
+                '.valid': {
+                    'color': 'green'
+                },
+                '.invalid': {
+                    'color': 'red'
+                }
+            };
             this.clientConfig.onInstanceReady = this.onInstanceReady.bind(this);
         },
 
@@ -63,7 +77,7 @@ define([
         getData: function () {
             var data = this._super();
 
-            this.vaultEnabler.visitAdditionalData(data);
+            vaultEnablerModel.visitAdditionalData(data);
 
             return data;
         },
@@ -72,7 +86,7 @@ define([
          * @returns {Bool}
          */
         isVaultEnabled: function () {
-            return this.vaultEnabler.isVaultEnabled();
+            return vaultEnablerModel.isVaultEnabled();
         },
 
         /**
@@ -174,7 +188,7 @@ define([
         validateCardType: function () {
             return this.validateField(
                 'cc_number',
-                (this.isValidCardNumber)
+                this.isValidCardNumber
             );
         },
 
@@ -185,7 +199,7 @@ define([
         validateExpirationDate: function () {
             return this.validateField(
                 'expirationDate',
-                (this.isValidExpirationDate === true)
+                this.isValidExpirationDate === true
             );
         },
 
@@ -202,7 +216,7 @@ define([
 
             return this.validateField(
                 'cc_cid',
-                (this.isValidCvvNumber === true)
+                this.isValidCvvNumber === true
             );
         },
 
@@ -222,6 +236,7 @@ define([
                 this.placeOrder();
             }
         },
+
         /**
          * @returns {String}
          */

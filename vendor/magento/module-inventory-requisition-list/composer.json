@@ -8,13 +8,13 @@
     "config": {
         "sort-packages": true
     },
-    "version": "1.2.4-p4",
+    "version": "1.2.6",
     "require": {
         "magento/framework": "*",
         "magento/module-catalog": "*",
         "magento/module-inventory-sales-api": "1.2.*",
         "magento/module-inventory-configuration-api": "1.2.*",
-        "php": "~8.1.0||~8.2.0"
+        "php": "~8.2.0||~8.3.0||~8.4.0"
     },
     "suggest": {
         "magento/module-requisition-list": "*"

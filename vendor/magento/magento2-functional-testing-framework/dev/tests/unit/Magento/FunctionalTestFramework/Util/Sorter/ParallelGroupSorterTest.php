@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Util\Sorter;
@@ -496,7 +497,7 @@ class ParallelGroupSorterTest extends MagentoTestCase
     {
         $instanceProperty = new ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
         $instanceProperty->setAccessible(true);
-        $instanceProperty->setValue(null);
+        $instanceProperty->setValue(null, null);
     }
 
     /**

@@ -1,11 +1,14 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202308\OndraM\CiDetector\Ci;
+namespace RectorPrefix202411\OndraM\CiDetector\Ci;
 
-use RectorPrefix202308\OndraM\CiDetector\CiDetector;
-use RectorPrefix202308\OndraM\CiDetector\Env;
-use RectorPrefix202308\OndraM\CiDetector\TrinaryLogic;
+use RectorPrefix202411\OndraM\CiDetector\CiDetector;
+use RectorPrefix202411\OndraM\CiDetector\Env;
+use RectorPrefix202411\OndraM\CiDetector\TrinaryLogic;
+/**
+ * @deprecated Will be removed in next major version
+ */
 class Wercker extends AbstractCi
 {
     public static function isDetected(Env $env) : bool

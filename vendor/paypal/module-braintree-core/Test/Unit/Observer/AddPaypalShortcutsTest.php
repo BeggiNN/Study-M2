@@ -1,10 +1,12 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Observer;
 
+use Magento\Framework\Exception\LocalizedException;
 use PayPal\Braintree\Block\Paypal\Button;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use Magento\Catalog\Block\ShortcutButtons;
@@ -15,21 +17,19 @@ use Magento\Framework\View\LayoutInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @see \PayPal\Braintree\Observer\AddPaypalShortcuts
+ * @see AddPaypalShortcuts
  */
 class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var Config|MockObject
+     * @throws LocalizedException
      */
-    private $config;
-
     public function testExecute()
     {
-        $this->config = $this->getMockBuilder(Config::class)
+        $config = $this->getMockBuilder(Config::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $addPaypalShortcuts = new AddPaypalShortcuts($this->config);
+        $addPaypalShortcuts = new AddPaypalShortcuts($config);
 
         /** @var Observer|MockObject $observerMock */
         $observerMock = $this->getMockBuilder(Observer::class)
@@ -38,7 +38,7 @@ class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
 
         /** @var Event|MockObject $eventMock */
         $eventMock = $this->getMockBuilder(Event::class)
-            ->setMethods(['getContainer'])
+            ->addMethods(['getContainer'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -54,7 +54,7 @@ class AddPaypalShortcutsTest extends \PHPUnit\Framework\TestCase
             ->disableOriginalConstructor()
             ->getMock();
 
-        $this->config->method('isActive')
+        $config->method('isActive')
             ->willReturn(true);
 
         $observerMock->expects(self::once())

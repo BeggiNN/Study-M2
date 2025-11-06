@@ -8,12 +8,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace RectorPrefix202308\Symfony\Component\Console\Completion;
+namespace RectorPrefix202411\Symfony\Component\Console\Completion;
 
-use RectorPrefix202308\Symfony\Component\Console\Exception\RuntimeException;
-use RectorPrefix202308\Symfony\Component\Console\Input\ArgvInput;
-use RectorPrefix202308\Symfony\Component\Console\Input\InputDefinition;
-use RectorPrefix202308\Symfony\Component\Console\Input\InputOption;
+use RectorPrefix202411\Symfony\Component\Console\Exception\RuntimeException;
+use RectorPrefix202411\Symfony\Component\Console\Input\ArgvInput;
+use RectorPrefix202411\Symfony\Component\Console\Input\InputDefinition;
+use RectorPrefix202411\Symfony\Component\Console\Input\InputOption;
 /**
  * An input specialized for shell completion.
  *
@@ -28,10 +28,25 @@ final class CompletionInput extends ArgvInput
     public const TYPE_OPTION_VALUE = 'option_value';
     public const TYPE_OPTION_NAME = 'option_name';
     public const TYPE_NONE = 'none';
+    /**
+     * @var mixed[]
+     */
     private $tokens;
+    /**
+     * @var int
+     */
     private $currentIndex;
+    /**
+     * @var string
+     */
     private $completionType;
+    /**
+     * @var string|null
+     */
     private $completionName;
+    /**
+     * @var string
+     */
     private $completionValue = '';
     /**
      * Converts a terminal string into tokens.
@@ -47,7 +62,7 @@ final class CompletionInput extends ArgvInput
      * Create an input based on an COMP_WORDS token list.
      *
      * @param string[] $tokens       the set of split tokens (e.g. COMP_WORDS or argv)
-     * @param          $currentIndex the index of the cursor (e.g. COMP_CWORD)
+     * @param int      $currentIndex the index of the cursor (e.g. COMP_CWORD)
      */
     public static function fromTokens(array $tokens, int $currentIndex) : self
     {
@@ -98,6 +113,7 @@ final class CompletionInput extends ArgvInput
             if (\is_array($argumentValue)) {
                 \end($argumentValue);
                 $this->completionValue = $argumentValue ? $argumentValue[\key($argumentValue)] : null;
+                \reset($argumentValue);
             } else {
                 $this->completionValue = $argumentValue;
             }
@@ -122,7 +138,9 @@ final class CompletionInput extends ArgvInput
      * TYPE_OPTION_NAME    when completing the name of an input option
      * TYPE_NONE           when nothing should be completed
      *
-     * @return string One of self::TYPE_* constants. TYPE_OPTION_NAME and TYPE_NONE are already implemented by the Console component
+     * TYPE_OPTION_NAME and TYPE_NONE are already implemented by the Console component.
+     *
+     * @return self::TYPE_*
      */
     public function getCompletionType() : string
     {

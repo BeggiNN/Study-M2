@@ -69,7 +69,17 @@ class Proxy extends \Magento\Backend\Model\Auth\Session implements \Magento\Fram
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -85,6 +95,16 @@ class Proxy extends \Magento\Backend\Model\Auth\Session implements \Magento\Fram
                 : $this->_objectManager->create($this->_instanceName);
         }
         return $this->_subject;
+    }
+
+    /**
+     * Reset state of proxied instance
+     */
+    public function _resetState() : void
+    {
+        if ($this->_subject) {
+            $this->_subject->_resetState(); 
+        }
     }
 
     /**
@@ -205,6 +225,14 @@ class Proxy extends \Magento\Backend\Model\Auth\Session implements \Magento\Fram
     public function start()
     {
         return $this->_getSubject()->start();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function registerShutdown()
+    {
+        return $this->_getSubject()->registerShutdown();
     }
 
     /**

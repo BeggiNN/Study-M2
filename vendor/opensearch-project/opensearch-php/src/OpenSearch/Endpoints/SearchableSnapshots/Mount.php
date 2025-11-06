@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OpenSearch\Endpoints\SearchableSnapshots;
 
-use OpenSearch\Common\Exceptions\RuntimeException;
+use OpenSearch\Exception\RuntimeException;
 use OpenSearch\Endpoints\AbstractEndpoint;
 
 class Mount extends AbstractEndpoint
@@ -44,7 +44,8 @@ class Mount extends AbstractEndpoint
     {
         return [
             'master_timeout',
-            'wait_for_completion'
+            'wait_for_completion',
+            'cluster_manager_timeout'
         ];
     }
 
@@ -53,7 +54,7 @@ class Mount extends AbstractEndpoint
         return 'POST';
     }
 
-    public function setBody($body): Mount
+    public function setBody($body): static
     {
         if (isset($body) !== true) {
             return $this;
@@ -63,7 +64,7 @@ class Mount extends AbstractEndpoint
         return $this;
     }
 
-    public function setRepository($repository): Mount
+    public function setRepository($repository): static
     {
         if (isset($repository) !== true) {
             return $this;
@@ -73,7 +74,7 @@ class Mount extends AbstractEndpoint
         return $this;
     }
 
-    public function setSnapshot($snapshot): Mount
+    public function setSnapshot($snapshot): static
     {
         if (isset($snapshot) !== true) {
             return $this;
@@ -81,5 +82,9 @@ class Mount extends AbstractEndpoint
         $this->snapshot = $snapshot;
 
         return $this;
+    }
+    protected function getParamDeprecation(): array
+    {
+        return ['master_timeout' => 'cluster_manager_timeout'];
     }
 }

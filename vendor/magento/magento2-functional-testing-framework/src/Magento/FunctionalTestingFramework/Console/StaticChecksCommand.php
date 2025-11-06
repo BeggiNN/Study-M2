@@ -1,9 +1,10 @@
 <?php
 // @codingStandardsIgnoreFile
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2019 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types = 1);
 
 namespace Magento\FunctionalTestingFramework\Console;
@@ -117,7 +118,7 @@ class StaticChecksCommand extends Command
 
             $staticOutput = $staticCheck->getOutput();
             LoggingUtil::getInstance()->getLogger(get_class($staticCheck))->info($staticOutput);
-            $this->ioStyle->text($staticOutput);
+            $this->ioStyle->text($staticOutput??"");
 
             $this->ioStyle->text('Total execution time is ' . (string)($end - $start) . ' seconds.' . PHP_EOL);
         }

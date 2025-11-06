@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\Config\Reader;
 
 use Magento\FunctionalTestingFramework\Config\MftfApplicationConfig;
@@ -124,7 +125,7 @@ class Filesystem implements \Magento\FunctionalTestingFramework\Config\ReaderInt
      * @param string|null $scope
      * @return array
      */
-    public function read($scope = null)
+    public function read(?string $scope = null)
     {
         $scope = $scope ?: $this->defaultScope;
         $fileList = $this->fileResolver->get($this->fileName, $scope);
@@ -228,7 +229,7 @@ class Filesystem implements \Magento\FunctionalTestingFramework\Config\ReaderInt
      * @throws \Exception
      * @return void
      */
-    protected function validateSchema($configMerger, $filename = null)
+    protected function validateSchema($configMerger, ?string $filename = null)
     {
         if ($this->validationState->isValidationRequired()) {
             $errors = [];

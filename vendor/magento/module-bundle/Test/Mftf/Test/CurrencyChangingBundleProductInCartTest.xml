@@ -79,9 +79,6 @@
                 <argument name="product" value="$$simpleProduct1$$"/>
                 <argument name="currency" value="EUR - Euro"/>
             </actionGroup>
-            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="runCronIndex">
-                <argument name="indices" value=""/>
-            </actionGroup>
             <actionGroup ref="StoreFrontAddProductToCartFromBundleWithCurrencyActionGroup" stepKey="addProduct2ToCartAndChangeCurrencyToUSD">
                 <argument name="product" value="$$simpleProduct2$$"/>
                 <argument name="currency" value="USD - US Dollar"/>

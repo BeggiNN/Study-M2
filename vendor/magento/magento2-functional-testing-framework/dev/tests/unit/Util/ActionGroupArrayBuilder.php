@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2019 Adobe
+ * All Rights Reserved.
  */
 
 namespace tests\unit\Util;
@@ -111,7 +111,7 @@ class ActionGroupArrayBuilder
      * @param string $extendedActionGroup
      * @return $this
      */
-    public function withExtendedAction($extendedActionGroup = null)
+    public function withExtendedAction(?string $extendedActionGroup = null)
     {
         $this->extends = $extendedActionGroup;
         return $this;

@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Suite\Handlers;
@@ -90,12 +91,12 @@ class SuiteObjectHandlerTest extends MagentoTestCase
         // clear test object handler value to inject parsed content
         $property = new ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         // clear suite object handler value to inject parsed content
         $property = new ReflectionProperty(SuiteObjectHandler::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $mockDataParser = $this->createMock(TestDataParser::class);
         $mockDataParser
@@ -128,6 +129,6 @@ class SuiteObjectHandlerTest extends MagentoTestCase
 
         $property = new ReflectionProperty(ObjectManager::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($instance);
+        $property->setValue(null, $instance);
     }
 }

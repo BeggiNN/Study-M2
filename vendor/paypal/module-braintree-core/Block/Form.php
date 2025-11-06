@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block;
 
@@ -137,7 +138,7 @@ class Form extends Cc
      */
     private function getConfiguredCardTypes(): array
     {
-        $types = $this->ccType->getCcTypeLabelMap();
+        $types = $this->ccType->getAllowedTypes();
         $configCardTypes = array_fill_keys($this->gatewayConfig->getAvailableCardTypes(), '');
 
         return array_intersect_key($types, $configCardTypes);

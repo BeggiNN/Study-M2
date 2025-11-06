@@ -11,6 +11,8 @@ use function sprintf;
 
 /**
  * Plural rule evaluator.
+ *
+ * @final
  */
 class Rule
 {
@@ -29,22 +31,18 @@ class Rule
     protected $ast;
 
     /**
-     * Number of plurals in this rule.
-     *
-     * @var int
-     */
-    protected $numPlurals;
-
-    /**
      * Create a new plural rule.
      *
      * @param int   $numPlurals
-     * @param array $ast
      */
-    protected function __construct($numPlurals, array $ast)
-    {
-        $this->numPlurals = $numPlurals;
-        $this->ast        = $ast;
+    protected function __construct(
+        /**
+         * Number of plurals in this rule.
+         */
+        protected $numPlurals,
+        array $ast
+    ) {
+        $this->ast = $ast;
     }
 
     /**
@@ -80,7 +78,6 @@ class Rule
     /**
      * Evaluate a part of an ast.
      *
-     * @param  array $ast
      * @param  int   $number
      * @return int
      * @throws Exception\ParseException

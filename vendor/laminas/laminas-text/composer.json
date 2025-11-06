@@ -15,6 +15,7 @@
         "chat": "https://laminas.dev/chat",
         "forum": "https://discourse.laminas.dev"
     },
+    "abandoned": true,
     "config": {
         "sort-packages": true,
         "platform": {
@@ -27,15 +28,15 @@
     "extra": {
     },
     "require": {
-        "php": "~8.1.0 || ~8.2.0 || ~8.3.0",
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0",
         "laminas/laminas-servicemanager": "^3.22.0",
         "laminas/laminas-stdlib": "^3.7.1"
     },
     "require-dev": {
-        "laminas/laminas-coding-standard": "~2.5.0",
-        "phpunit/phpunit": "^9.5",
+        "laminas/laminas-coding-standard": "^3.0.1",
+        "phpunit/phpunit": "^10.5.38",
         "psalm/plugin-phpunit": "^0.18.4",
-        "vimeo/psalm": "^5.1"
+        "vimeo/psalm": "^5.26.1"
     },
     "autoload": {
         "psr-4": {

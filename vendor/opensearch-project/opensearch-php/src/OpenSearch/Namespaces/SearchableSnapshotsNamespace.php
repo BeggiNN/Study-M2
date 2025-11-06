@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,11 +21,10 @@ declare(strict_types=1);
 
 namespace OpenSearch\Namespaces;
 
-use OpenSearch\Namespaces\AbstractNamespace;
-
 /**
  * Class SearchableSnapshotsNamespace
  *
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
  */
 class SearchableSnapshotsNamespace extends AbstractNamespace
 {
@@ -56,7 +55,7 @@ class SearchableSnapshotsNamespace extends AbstractNamespace
     /**
      * $params['repository']          = (string) The name of the repository containing the snapshot of the index to mount
      * $params['snapshot']            = (string) The name of the snapshot of the index to mount
-     * $params['master_timeout']      = (time) Explicit operation timeout for connection to master node
+     * $params['cluster_manager_timeout']      = (time) Explicit operation timeout for connection to cluster_manager node
      * $params['wait_for_completion'] = (boolean) Should this request wait until the operation has completed before returning (Default = false)
      * $params['body']                = (array) The restore configuration for mounting the snapshot as searchable (Required)
      *

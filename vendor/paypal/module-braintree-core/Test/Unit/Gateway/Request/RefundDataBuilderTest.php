@@ -1,35 +1,38 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
+use InvalidArgumentException;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
 use PayPal\Braintree\Gateway\Request\RefundDataBuilder;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Api\Data\TransactionInterface;
 use Magento\Sales\Model\Order\Payment;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 
 class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var SubjectReader | \PHPUnit\Framework\MockObject\MockObject
+     * @var SubjectReader|MockObject
      */
-    private $subjectReader;
+    private MockObject|SubjectReader $subjectReader;
 
     /**
-     * @var LoggerInterface | MockObject
+     * @var LoggerInterface|MockObject
      */
-    private $logger;
+    private LoggerInterface|MockObject $logger;
 
     /**
      * @var RefundDataBuilder
      */
-    private $dataBuilder;
+    private RefundDataBuilder $dataBuilder;
 
     protected function setUp(): void
     {
@@ -43,6 +46,9 @@ class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->dataBuilder = new RefundDataBuilder($this->subjectReader, $this->logger);
     }
 
+    /**
+     * @throws Exception
+     */
     public function testBuild()
     {
         $paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -78,6 +84,9 @@ class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * @throws Exception
+     */
     public function testBuildNullAmount()
     {
         $paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -102,7 +111,7 @@ class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->subjectReader->expects(static::once())
             ->method('readAmount')
             ->with($buildSubject)
-            ->willThrowException(new \InvalidArgumentException());
+            ->willThrowException(new InvalidArgumentException());
 
         static::assertEquals(
             [
@@ -113,6 +122,9 @@ class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * @throws Exception
+     */
     public function testBuildCutOffLegacyTransactionIdPostfix()
     {
         $paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -138,7 +150,7 @@ class RefundDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->subjectReader->expects(static::once())
             ->method('readAmount')
             ->with($buildSubject)
-            ->willThrowException(new \InvalidArgumentException());
+            ->willThrowException(new InvalidArgumentException());
 
         static::assertEquals(
             [

@@ -1,15 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Model\Order\Payment;
+use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Gateway\Request\CaptureDataBuilder;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 
 class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
@@ -17,28 +21,36 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
     /**
      * @var CaptureDataBuilder
      */
-    private $builder;
+    private CaptureDataBuilder $builder;
 
     /**
      * @var Payment|MockObject
      */
-    private $payment;
+    private Payment|MockObject $payment;
 
     /**
-     * @var Payment|MockObject
+     * @var PaymentDataObjectInterface|MockObject
      */
-    private $paymentDO;
+    private PaymentDataObjectInterface|MockObject $paymentDO;
 
     /**
      * @var SubjectReader|MockObject
      */
-    private $subjectReaderMock;
+    private MockObject|SubjectReader $subjectReaderMock;
+
+    /**
+     * @var Config|MockObject
+     */
+    private Config|MockObject $configMock;
 
     /**
      * @var OrderAdapterInterface|MockObject
      */
-    private $order;
+    private OrderAdapterInterface|MockObject $order;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -51,8 +63,11 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->subjectReaderMock = $this->getMockBuilder(SubjectReader::class)
             ->disableOriginalConstructor()
             ->getMock();
+        $this->configMock = $this->getMockBuilder(Config::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        $this->builder = new CaptureDataBuilder($this->subjectReaderMock);
+        $this->builder = new CaptureDataBuilder($this->subjectReaderMock, $this->configMock);
     }
 
     /**
@@ -60,8 +75,7 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
      */
     public function testBuildWithException()
     {
-        $this->markTestSkipped('Skip this test');
-        $this->expectException(\Magento\Framework\Exception\LocalizedException::class);
+        $this->expectException(LocalizedException::class);
         $this->expectExceptionMessage('No authorization transaction to proceed capture.');
 
         $amount = 10.00;
@@ -88,17 +102,20 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @covers \PayPal\Braintree\Gateway\Request\CaptureDataBuilder::build
+     * @throws LocalizedException
      */
     public function testBuild()
     {
         $transactionId = 'b3b99d';
         $amount = 10.00;
         $orderId = '000000002';
+        $merchantAccountId = 'test';
 
         $expected = [
             'transaction_id' => $transactionId,
             'amount' => $amount,
-            'orderId' => $orderId
+            'orderId' => $orderId,
+            'merchantAccountId' => $merchantAccountId
         ];
 
         $buildSubject = [
@@ -123,12 +140,20 @@ class CaptureDataBuilderTest extends \PHPUnit\Framework\TestCase
             ->with($buildSubject)
             ->willReturn($amount);
 
-        $this->paymentDO->expects(static::once())
+        $this->paymentDO->expects(static::any())
             ->method('getOrder')
             ->willReturn($this->order);
 
         $this->order->expects(static::once())
             ->method('getOrderIncrementId')
+            ->willReturn($orderId);
+
+        $this->configMock->expects(static::once())
+            ->method('getMerchantAccountId')
+            ->willReturn($merchantAccountId);
+
+        $this->order->expects(static::once())
+            ->method('getStoreId')
             ->willReturn($orderId);
 
         static::assertEquals($expected, $this->builder->build($buildSubject));

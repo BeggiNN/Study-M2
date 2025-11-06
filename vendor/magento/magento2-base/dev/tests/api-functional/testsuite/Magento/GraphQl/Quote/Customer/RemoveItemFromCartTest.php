@@ -148,7 +148,6 @@ class RemoveItemFromCartTest extends GraphQlAbstract
             'test_quote',
             'simple_product'
         );
-
         $query = $this->getQuery($anotherCustomerQuoteMaskedId, $anotherCustomerQuoteItemId);
 
         try {

@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,6 +21,19 @@ declare(strict_types=1);
 
 namespace OpenSearch\Common\Exceptions;
 
-class Missing404Exception extends \Exception implements OpenSearchException
+use OpenSearch\Exception\NotFoundHttpException;
+
+@trigger_error(
+    // @phpstan-ignore classConstant.deprecatedClass
+    Missing404Exception::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\Exception\NotFoundHttpException instead.',
+    E_USER_DEPRECATED
+);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ *
+ * @see \OpenSearch\Exception\NotFoundHttpException
+ */
+class Missing404Exception extends NotFoundHttpException
 {
 }

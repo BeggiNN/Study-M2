@@ -10,8 +10,10 @@ use PhpParser\Node\Expr\BinaryOp\Smaller;
 use PhpParser\Node\Expr\BinaryOp\SmallerOrEqual;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Scalar\LNumber;
-use Rector\Core\PhpParser\Comparing\NodeComparator;
+use PHPStan\Type\NeverType;
 use Rector\NodeNameResolver\NodeNameResolver;
+use Rector\NodeTypeResolver\NodeTypeResolver;
+use Rector\PhpParser\Comparing\NodeComparator;
 final class CountManipulator
 {
     /**
@@ -21,13 +23,19 @@ final class CountManipulator
     private $nodeNameResolver;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Comparing\NodeComparator
+     * @var \Rector\PhpParser\Comparing\NodeComparator
      */
     private $nodeComparator;
-    public function __construct(NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator)
+    /**
+     * @readonly
+     * @var \Rector\NodeTypeResolver\NodeTypeResolver
+     */
+    private $nodeTypeResolver;
+    public function __construct(NodeNameResolver $nodeNameResolver, NodeComparator $nodeComparator, NodeTypeResolver $nodeTypeResolver)
     {
         $this->nodeNameResolver = $nodeNameResolver;
         $this->nodeComparator = $nodeComparator;
+        $this->nodeTypeResolver = $nodeTypeResolver;
     }
     public function isCounterHigherThanOne(Expr $firstExpr, Expr $secondExpr) : bool
     {
@@ -99,6 +107,13 @@ final class CountManipulator
             return \false;
         }
         $countedExpr = $node->getArgs()[0]->value;
-        return $this->nodeComparator->areNodesEqual($countedExpr, $expr);
+        if ($this->nodeComparator->areNodesEqual($countedExpr, $expr)) {
+            $exprType = $this->nodeTypeResolver->getNativeType($expr);
+            if (!$exprType->isArray()->yes()) {
+                return $exprType instanceof NeverType;
+            }
+            return \true;
+        }
+        return \false;
     }
 }

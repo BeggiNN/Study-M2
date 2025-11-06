@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Suite;
@@ -95,7 +95,6 @@ class SuiteGenerator
      */
     public function generateAllSuites($testManifest)
     {
-        $this->generateTestgroupmembership($testManifest);
         $suites = $testManifest->getSuiteConfig();
 
         foreach ($suites as $suiteName => $suiteContent) {

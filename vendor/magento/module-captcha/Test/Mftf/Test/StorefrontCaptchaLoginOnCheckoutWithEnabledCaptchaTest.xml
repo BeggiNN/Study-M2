@@ -16,7 +16,6 @@
             <description value="Customer should be able to login using Sign In link on checkout with enabled captcha"/>
             <severity value="MAJOR"/>
             <group value="captcha"/>
-            <group value="guest_checkout"/>
         </annotations>
         <before>
             <createData entity="SimpleSubCategory" stepKey="createCategory"/>

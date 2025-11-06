@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\InstantPurchase\CreditCard;
 
 use PayPal\Braintree\Gateway\Config\Config;
@@ -12,23 +13,21 @@ use Magento\InstantPurchase\PaymentMethodIntegration\AvailabilityCheckerInterfac
  * Check availability of Braintree vaulted cards for Instant Purchase
  *
  * Class AvailabilityChecker
- * @package PayPal\Braintree\Model\InstantPurchase\CreditCard
  */
 class AvailabilityChecker implements AvailabilityCheckerInterface
 {
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * AvailabilityChecker constructor.
      *
      * @param Config $config
      */
-    public function __construct(
-        Config $config
-    ) {
+    public function __construct(Config $config)
+    {
         $this->config = $config;
     }
 

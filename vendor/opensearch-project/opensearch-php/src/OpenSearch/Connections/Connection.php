@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,18 +21,22 @@ declare(strict_types=1);
 
 namespace OpenSearch\Connections;
 
+use Exception;
+use GuzzleHttp\Ring\Core;
+use GuzzleHttp\Ring\Exception\ConnectException;
+use GuzzleHttp\Ring\Exception\RingException;
 use OpenSearch\Client;
 use OpenSearch\Common\Exceptions\BadRequest400Exception;
 use OpenSearch\Common\Exceptions\Conflict409Exception;
 use OpenSearch\Common\Exceptions\Curl\CouldNotConnectToHost;
 use OpenSearch\Common\Exceptions\Curl\CouldNotResolveHostException;
 use OpenSearch\Common\Exceptions\Curl\OperationTimeoutException;
-use OpenSearch\Common\Exceptions\OpenSearchException;
 use OpenSearch\Common\Exceptions\Forbidden403Exception;
 use OpenSearch\Common\Exceptions\MaxRetriesException;
 use OpenSearch\Common\Exceptions\Missing404Exception;
 use OpenSearch\Common\Exceptions\NoDocumentsToGetException;
 use OpenSearch\Common\Exceptions\NoShardAvailableException;
+use OpenSearch\Common\Exceptions\OpenSearchException;
 use OpenSearch\Common\Exceptions\RequestTimeout408Exception;
 use OpenSearch\Common\Exceptions\RoutingMissingException;
 use OpenSearch\Common\Exceptions\ScriptLangNotSupportedException;
@@ -41,12 +45,14 @@ use OpenSearch\Common\Exceptions\TransportException;
 use OpenSearch\Common\Exceptions\Unauthorized401Exception;
 use OpenSearch\Serializers\SerializerInterface;
 use OpenSearch\Transport;
-use Exception;
-use GuzzleHttp\Ring\Core;
-use GuzzleHttp\Ring\Exception\ConnectException;
-use GuzzleHttp\Ring\Exception\RingException;
 use Psr\Log\LoggerInterface;
 
+// @phpstan-ignore classConstant.deprecatedClass
+@trigger_error(Connection::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0.', E_USER_DEPRECATED);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ */
 class Connection implements ConnectionInterface
 {
     /**
@@ -95,7 +101,7 @@ class Connection implements ConnectionInterface
     protected $connectionParams;
 
     /**
-     * @var array
+     * @var array<string, list<string>>
      */
     protected $headers = [];
 
@@ -129,6 +135,10 @@ class Connection implements ConnectionInterface
      */
     private $OSVersion = null;
 
+    /**
+     * @param array{host: string, port?: int, scheme?: string, user?: string, pass?: string, path?: string} $hostDetails
+     * @param array{client?: array{headers?: array<string, list<string>>, curl?: array<int, mixed>}} $connectionParams
+     */
     public function __construct(
         callable $handler,
         array $hostDetails,
@@ -192,13 +202,13 @@ class Connection implements ConnectionInterface
     /**
      * @param  string    $method
      * @param  string    $uri
-     * @param  null|array   $params
-     * @param  null      $body
+     * @param  null|array<string, mixed> $params
+     * @param  mixed     $body
      * @param  array     $options
-     * @param  Transport $transport
+     * @param  Transport|null $transport
      * @return mixed
      */
-    public function performRequest(string $method, string $uri, ?array $params = [], $body = null, array $options = [], Transport $transport = null)
+    public function performRequest(string $method, string $uri, ?array $params = [], $body = null, array $options = [], ?Transport $transport = null)
     {
         if ($body !== null) {
             $body = $this->serializer->serialize($body);
@@ -252,7 +262,7 @@ class Connection implements ConnectionInterface
 
     private function wrapHandler(callable $handler): callable
     {
-        return function (array $request, Connection $connection, Transport $transport = null, $options) use ($handler) {
+        return function (array $request, Connection $connection, ?Transport $transport, $options) use ($handler) {
             $this->lastRequest = [];
             $this->lastRequest['request'] = $request;
 
@@ -344,6 +354,9 @@ class Connection implements ConnectionInterface
         };
     }
 
+    /**
+     * @param array<string, string|int|bool>|null $params
+     */
     private function getURI(string $uri, ?array $params): string
     {
         if (isset($params) === true && !empty($params)) {
@@ -367,9 +380,12 @@ class Connection implements ConnectionInterface
             $uri = $this->path . $uri;
         }
 
-        return $uri ?? '';
+        return $uri;
     }
 
+    /**
+     * @return array<string, list<string>>
+     */
     public function getHeaders(): array
     {
         return $this->headers;
@@ -427,11 +443,11 @@ class Connection implements ConnectionInterface
      *
      * @param array      $request
      * @param array      $response
-     * @param \Exception $exception
+     * @param \Throwable $exception
      *
      * @return void
      */
-    public function logRequestFail(array $request, array $response, \Exception $exception): void
+    public function logRequestFail(array $request, array $response, \Throwable $exception): void
     {
         $port = $request['client']['curl'][CURLOPT_PORT] ?? $response['transfer_stats']['primary_port'] ?? '';
         $uri = $this->addPortInUrl($response['effective_url'], (int) $port);
@@ -631,34 +647,37 @@ class Connection implements ConnectionInterface
         return $curlCommand;
     }
 
-    private function process4xxError(array $request, array $response, array $ignore): ?OpenSearchException
+    /**
+     * @throws OpenSearchException
+     */
+    private function process4xxError(array $request, array $response, array $ignore): void
     {
         $statusCode = $response['status'];
 
         /**
- * @var \Exception $exception
-*/
+         * @var \Exception $exception
+        */
         $exception = $this->tryDeserialize400Error($response);
 
         if (array_search($response['status'], $ignore) !== false) {
-            return null;
+            return;
         }
 
         $responseBody = $this->convertBodyToString($response['body'], $statusCode, $exception);
         if ($statusCode === 401) {
-            $exception = new Unauthorized401Exception($responseBody, $statusCode);
+            $exception = new Unauthorized401Exception($responseBody);
         } elseif ($statusCode === 403) {
-            $exception = new Forbidden403Exception($responseBody, $statusCode);
+            $exception = new Forbidden403Exception($responseBody);
         } elseif ($statusCode === 404) {
-            $exception = new Missing404Exception($responseBody, $statusCode);
+            $exception = new Missing404Exception($responseBody);
         } elseif ($statusCode === 409) {
             $exception = new Conflict409Exception($responseBody, $statusCode);
         } elseif ($statusCode === 400 && strpos($responseBody, 'script_lang not supported') !== false) {
-            $exception = new ScriptLangNotSupportedException($responseBody. $statusCode);
+            $exception = new ScriptLangNotSupportedException($responseBody);
         } elseif ($statusCode === 408) {
-            $exception = new RequestTimeout408Exception($responseBody, $statusCode);
+            $exception = new RequestTimeout408Exception($responseBody);
         } else {
-            $exception = new BadRequest400Exception($responseBody, $statusCode);
+            $exception = new BadRequest400Exception($responseBody);
         }
 
         $this->logRequestFail($request, $response, $exception);
@@ -666,14 +685,17 @@ class Connection implements ConnectionInterface
         throw $exception;
     }
 
-    private function process5xxError(array $request, array $response, array $ignore): ?OpenSearchException
+    /**
+     * @throws OpenSearchException
+     */
+    private function process5xxError(array $request, array $response, array $ignore): void
     {
         $statusCode = (int) $response['status'];
         $responseBody = $response['body'];
 
         /**
- * @var \Exception $exception
-*/
+         * @var \Exception $exception
+        */
         $exception = $this->tryDeserialize500Error($response);
 
         $exceptionText = "[$statusCode Server Exception] ".$exception->getMessage();
@@ -681,19 +703,18 @@ class Connection implements ConnectionInterface
         $this->log->error($exception->getTraceAsString());
 
         if (array_search($statusCode, $ignore) !== false) {
-            return null;
+            return;
         }
 
         if ($statusCode === 500 && strpos($responseBody, "RoutingMissingException") !== false) {
-            $exception = new RoutingMissingException($exception->getMessage(), $statusCode, $exception);
+            $exception = new RoutingMissingException($exception->getMessage(), [], 0, $exception);
         } elseif ($statusCode === 500 && preg_match('/ActionRequestValidationException.+ no documents to get/', $responseBody) === 1) {
-            $exception = new NoDocumentsToGetException($exception->getMessage(), $statusCode, $exception);
+            $exception = new NoDocumentsToGetException($exception->getMessage(), [], 0, $exception);
         } elseif ($statusCode === 500 && strpos($responseBody, 'NoShardAvailableActionException') !== false) {
-            $exception = new NoShardAvailableException($exception->getMessage(), $statusCode, $exception);
+            $exception = new NoShardAvailableException($exception->getMessage(), [], 0, $exception);
         } else {
             $exception = new ServerErrorResponseException(
                 $this->convertBodyToString($responseBody, $statusCode, $exception),
-                $statusCode
             );
         }
 
@@ -742,14 +763,9 @@ class Connection implements ConnectionInterface
             // 2.0 structured exceptions
             if (is_array($error['error']) && array_key_exists('reason', $error['error']) === true) {
                 // Try to use root cause first (only grabs the first root cause)
-                $root = $error['error']['root_cause'];
-                if (isset($root) && isset($root[0])) {
-                    $cause = $root[0]['reason'];
-                    $type = $root[0]['type'];
-                } else {
-                    $cause = $error['error']['reason'];
-                    $type = $error['error']['type'];
-                }
+                $info = $error['error']['root_cause'][0] ?? $error['error'];
+                $cause = $info['reason'];
+                $type = $info['type'];
                 // added json_encode to convert into a string
                 $original = new $errorClass(json_encode($response['body']), $response['status']);
 

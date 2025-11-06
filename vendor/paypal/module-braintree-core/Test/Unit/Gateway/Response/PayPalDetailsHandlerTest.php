@@ -1,14 +1,14 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Response;
 
 use Braintree\Transaction;
 use PayPal\Braintree\Gateway\Response\PayPalDetailsHandler;
 use Magento\Payment\Gateway\Data\PaymentDataObject;
-use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Payment;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PHPUnit\Framework\MockObject\MockObject as MockObject;
@@ -18,23 +18,23 @@ class PayPalDetailsHandlerTest extends \PHPUnit\Framework\TestCase
     /**
      * @var PayPalDetailsHandler|MockObject
      */
-    private $payPalHandler;
+    private PayPalDetailsHandler|MockObject $payPalHandler;
 
     /**
      * @var Payment|MockObject
      */
-    private $payment;
+    private Payment|MockObject $payment;
 
     /**
      * @var SubjectReader|MockObject
      */
-    private $subjectReader;
+    private MockObject|SubjectReader $subjectReader;
 
     protected function setUp(): void
     {
         $this->payment = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
-            ->setMethods([
+            ->onlyMethods([
                 'setAdditionalInformation',
             ])
             ->getMock();
@@ -79,10 +79,10 @@ class PayPalDetailsHandlerTest extends \PHPUnit\Framework\TestCase
      * Create mock for payment data object and order payment
      * @return MockObject
      */
-    private function getPaymentDataObjectMock()
+    private function getPaymentDataObjectMock(): MockObject
     {
         $mock = $this->getMockBuilder(PaymentDataObject::class)
-            ->setMethods(['getPayment'])
+            ->onlyMethods(['getPayment'])
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -97,7 +97,7 @@ class PayPalDetailsHandlerTest extends \PHPUnit\Framework\TestCase
      * Create Braintree transaction
      * @return Transaction
      */
-    private function getBraintreeTransaction()
+    private function getBraintreeTransaction(): Transaction
     {
         $attributes = [
             'id' => '23ui8be',
@@ -107,8 +107,6 @@ class PayPalDetailsHandlerTest extends \PHPUnit\Framework\TestCase
             ]
         ];
 
-        $transaction = Transaction::factory($attributes);
-
-        return $transaction;
+        return Transaction::factory($attributes);
     }
 }

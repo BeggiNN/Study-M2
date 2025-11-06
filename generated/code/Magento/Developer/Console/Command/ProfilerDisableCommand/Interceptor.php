@@ -44,7 +44,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getHelperSet()
+    public function getHelperSet() : ?\Symfony\Component\Console\Helper\HelperSet
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getHelperSet');
         return $pluginInfo ? $this->___callPlugins('getHelperSet', func_get_args(), $pluginInfo) : parent::getHelperSet();
@@ -53,7 +53,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getApplication()
+    public function getApplication() : ?\Symfony\Component\Console\Application
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getApplication');
         return $pluginInfo ? $this->___callPlugins('getApplication', func_get_args(), $pluginInfo) : parent::getApplication();
@@ -71,7 +71,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function run(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output)
+    public function run(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) : int
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'run');
         return $pluginInfo ? $this->___callPlugins('run', func_get_args(), $pluginInfo) : parent::run($input, $output);
@@ -89,7 +89,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setCode(callable $code)
+    public function setCode(callable $code) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setCode');
         return $pluginInfo ? $this->___callPlugins('setCode', func_get_args(), $pluginInfo) : parent::setCode($code);
@@ -98,16 +98,16 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function mergeApplicationDefinition(bool $mergeArgs = true)
+    public function mergeApplicationDefinition(bool $mergeArgs = true) : void
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'mergeApplicationDefinition');
-        return $pluginInfo ? $this->___callPlugins('mergeApplicationDefinition', func_get_args(), $pluginInfo) : parent::mergeApplicationDefinition($mergeArgs);
+        $pluginInfo ? $this->___callPlugins('mergeApplicationDefinition', func_get_args(), $pluginInfo) : parent::mergeApplicationDefinition($mergeArgs);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setDefinition($definition)
+    public function setDefinition(\Symfony\Component\Console\Input\InputDefinition|array $definition) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setDefinition');
         return $pluginInfo ? $this->___callPlugins('setDefinition', func_get_args(), $pluginInfo) : parent::setDefinition($definition);
@@ -116,7 +116,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getDefinition()
+    public function getDefinition() : \Symfony\Component\Console\Input\InputDefinition
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getDefinition');
         return $pluginInfo ? $this->___callPlugins('getDefinition', func_get_args(), $pluginInfo) : parent::getDefinition();
@@ -125,7 +125,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getNativeDefinition()
+    public function getNativeDefinition() : \Symfony\Component\Console\Input\InputDefinition
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getNativeDefinition');
         return $pluginInfo ? $this->___callPlugins('getNativeDefinition', func_get_args(), $pluginInfo) : parent::getNativeDefinition();
@@ -134,7 +134,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function addArgument(string $name, ?int $mode = null, string $description = '', $default = null)
+    public function addArgument(string $name, ?int $mode = null, string $description = '', mixed $default = null) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'addArgument');
         return $pluginInfo ? $this->___callPlugins('addArgument', func_get_args(), $pluginInfo) : parent::addArgument($name, $mode, $description, $default);
@@ -143,7 +143,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function addOption(string $name, $shortcut = null, ?int $mode = null, string $description = '', $default = null)
+    public function addOption(string $name, string|array|null $shortcut = null, ?int $mode = null, string $description = '', mixed $default = null) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'addOption');
         return $pluginInfo ? $this->___callPlugins('addOption', func_get_args(), $pluginInfo) : parent::addOption($name, $shortcut, $mode, $description, $default);
@@ -152,7 +152,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setName(string $name)
+    public function setName(string $name) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setName');
         return $pluginInfo ? $this->___callPlugins('setName', func_get_args(), $pluginInfo) : parent::setName($name);
@@ -161,7 +161,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setProcessTitle(string $title)
+    public function setProcessTitle(string $title) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setProcessTitle');
         return $pluginInfo ? $this->___callPlugins('setProcessTitle', func_get_args(), $pluginInfo) : parent::setProcessTitle($title);
@@ -170,7 +170,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getName()
+    public function getName() : ?string
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getName');
         return $pluginInfo ? $this->___callPlugins('getName', func_get_args(), $pluginInfo) : parent::getName();
@@ -179,7 +179,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setHidden(bool $hidden)
+    public function setHidden(bool $hidden = true) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setHidden');
         return $pluginInfo ? $this->___callPlugins('setHidden', func_get_args(), $pluginInfo) : parent::setHidden($hidden);
@@ -188,7 +188,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function isHidden()
+    public function isHidden() : bool
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'isHidden');
         return $pluginInfo ? $this->___callPlugins('isHidden', func_get_args(), $pluginInfo) : parent::isHidden();
@@ -197,7 +197,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setDescription(string $description)
+    public function setDescription(string $description) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setDescription');
         return $pluginInfo ? $this->___callPlugins('setDescription', func_get_args(), $pluginInfo) : parent::setDescription($description);
@@ -206,7 +206,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getDescription()
+    public function getDescription() : string
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getDescription');
         return $pluginInfo ? $this->___callPlugins('getDescription', func_get_args(), $pluginInfo) : parent::getDescription();
@@ -215,7 +215,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setHelp(string $help)
+    public function setHelp(string $help) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setHelp');
         return $pluginInfo ? $this->___callPlugins('setHelp', func_get_args(), $pluginInfo) : parent::setHelp($help);
@@ -224,7 +224,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getHelp()
+    public function getHelp() : string
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getHelp');
         return $pluginInfo ? $this->___callPlugins('getHelp', func_get_args(), $pluginInfo) : parent::getHelp();
@@ -233,7 +233,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getProcessedHelp()
+    public function getProcessedHelp() : string
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getProcessedHelp');
         return $pluginInfo ? $this->___callPlugins('getProcessedHelp', func_get_args(), $pluginInfo) : parent::getProcessedHelp();
@@ -242,7 +242,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function setAliases(iterable $aliases)
+    public function setAliases(iterable $aliases) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setAliases');
         return $pluginInfo ? $this->___callPlugins('setAliases', func_get_args(), $pluginInfo) : parent::setAliases($aliases);
@@ -251,7 +251,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getAliases()
+    public function getAliases() : array
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getAliases');
         return $pluginInfo ? $this->___callPlugins('getAliases', func_get_args(), $pluginInfo) : parent::getAliases();
@@ -260,7 +260,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getSynopsis(bool $short = false)
+    public function getSynopsis(bool $short = false) : string
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getSynopsis');
         return $pluginInfo ? $this->___callPlugins('getSynopsis', func_get_args(), $pluginInfo) : parent::getSynopsis($short);
@@ -269,7 +269,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function addUsage(string $usage)
+    public function addUsage(string $usage) : static
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'addUsage');
         return $pluginInfo ? $this->___callPlugins('addUsage', func_get_args(), $pluginInfo) : parent::addUsage($usage);
@@ -278,7 +278,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getUsages()
+    public function getUsages() : array
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getUsages');
         return $pluginInfo ? $this->___callPlugins('getUsages', func_get_args(), $pluginInfo) : parent::getUsages();
@@ -287,7 +287,7 @@ class Interceptor extends \Magento\Developer\Console\Command\ProfilerDisableComm
     /**
      * {@inheritdoc}
      */
-    public function getHelper(string $name)
+    public function getHelper(string $name) : mixed
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getHelper');
         return $pluginInfo ? $this->___callPlugins('getHelper', func_get_args(), $pluginInfo) : parent::getHelper($name);

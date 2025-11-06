@@ -15,11 +15,13 @@ use PhpParser\Node\Stmt\Property;
 use PhpParser\Node\Stmt\PropertyProperty;
 use PHPStan\PhpDocParser\Ast\PhpDoc\ParamTagValueNode;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfo;
+use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
 use Rector\BetterPhpDocParser\PhpDocManipulator\PhpDocTypeChanger;
-use Rector\Core\PhpParser\Printer\BetterStandardPrinter;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\MethodName;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\PhpParser\Printer\BetterStandardPrinter;
+use Rector\Rector\AbstractRector;
+use Rector\ValueObject\MethodName;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -36,13 +38,25 @@ final class DowngradePropertyPromotionRector extends AbstractRector
     private $phpDocTypeChanger;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Printer\BetterStandardPrinter
+     * @var \Rector\PhpParser\Printer\BetterStandardPrinter
      */
     private $betterStandardPrinter;
-    public function __construct(PhpDocTypeChanger $phpDocTypeChanger, BetterStandardPrinter $betterStandardPrinter)
+    /**
+     * @readonly
+     * @var \Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory
+     */
+    private $phpDocInfoFactory;
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    public function __construct(PhpDocTypeChanger $phpDocTypeChanger, BetterStandardPrinter $betterStandardPrinter, PhpDocInfoFactory $phpDocInfoFactory, BetterNodeFinder $betterNodeFinder)
     {
         $this->phpDocTypeChanger = $phpDocTypeChanger;
         $this->betterStandardPrinter = $betterStandardPrinter;
+        $this->phpDocInfoFactory = $phpDocInfoFactory;
+        $this->betterNodeFinder = $betterNodeFinder;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -79,14 +93,16 @@ CODE_SAMPLE
      */
     public function refactor(Node $node) : ?Node
     {
-        $oldComments = $this->getOldComments($node);
-        $promotedParams = $this->resolvePromotedParams($node);
+        $constructorClassMethod = $node->getMethod(MethodName::CONSTRUCT);
+        if (!$constructorClassMethod instanceof ClassMethod) {
+            return null;
+        }
+        $oldComments = $this->getOldComments($constructorClassMethod);
+        $promotedParams = $this->resolvePromotedParams($constructorClassMethod);
         if ($promotedParams === []) {
             return null;
         }
-        /** @var ClassMethod $constructClassMethod */
-        $constructClassMethod = $node->getMethod(MethodName::CONSTRUCT);
-        $properties = $this->resolvePropertiesFromPromotedParams($constructClassMethod, $promotedParams, $node);
+        $properties = $this->resolvePropertiesFromPromotedParams($constructorClassMethod, $promotedParams, $node);
         $this->addPropertyAssignsToConstructorClassMethod($properties, $node, $oldComments);
         foreach ($promotedParams as $promotedParam) {
             $promotedParam->flags = 0;
@@ -96,12 +112,8 @@ CODE_SAMPLE
     /**
      * @return array<string, Comment|null>
      */
-    private function getOldComments(Class_ $class) : array
+    private function getOldComments(ClassMethod $constructorClassMethod) : array
     {
-        $constructorClassMethod = $class->getMethod(MethodName::CONSTRUCT);
-        if (!$constructorClassMethod instanceof ClassMethod) {
-            return [];
-        }
         $oldComments = [];
         foreach ($constructorClassMethod->params as $param) {
             $oldComments[$this->getName($param->var)] = $param->getAttribute(AttributeKey::COMMENTS);
@@ -111,12 +123,8 @@ CODE_SAMPLE
     /**
      * @return Param[]
      */
-    private function resolvePromotedParams(Class_ $class) : array
+    private function resolvePromotedParams(ClassMethod $constructorClassMethod) : array
     {
-        $constructorClassMethod = $class->getMethod(MethodName::CONSTRUCT);
-        if (!$constructorClassMethod instanceof ClassMethod) {
-            return [];
-        }
         $promotedParams = [];
         foreach ($constructorClassMethod->params as $param) {
             if ($param->flags === 0) {

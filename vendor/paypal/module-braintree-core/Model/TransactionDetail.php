@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model;
 
@@ -10,9 +15,10 @@ class TransactionDetail extends AbstractModel implements TransactionDetailDataIn
 {
     /**
      * Initialize resource model
+     *
      * @return void
      */
-    protected function _construct() // @codingStandardsIgnoreLine
+    protected function _construct(): void // @codingStandardsIgnoreLine
     {
         $this->_init(TransactionDetailResource::class);
     }
@@ -20,7 +26,7 @@ class TransactionDetail extends AbstractModel implements TransactionDetailDataIn
     /**
      * @inheritdoc
      */
-    public function getId()
+    public function getId(): int|string|null
     {
         return $this->getData(self::ENTITY_ID);
     }
@@ -44,7 +50,7 @@ class TransactionDetail extends AbstractModel implements TransactionDetailDataIn
     /**
      * @inheritdoc
      */
-    public function setId($id)
+    public function setId($id): TransactionDetailDataInterface
     {
         return $this->setData(self::ENTITY_ID, $id);
     }
@@ -52,7 +58,7 @@ class TransactionDetail extends AbstractModel implements TransactionDetailDataIn
     /**
      * @inheritdoc
      */
-    public function setOrderId($orderId)
+    public function setOrderId(int $orderId): TransactionDetailDataInterface
     {
         return $this->setData(self::ORDER_ID, $orderId);
     }
@@ -60,7 +66,7 @@ class TransactionDetail extends AbstractModel implements TransactionDetailDataIn
     /**
      * @inheritdoc
      */
-    public function setTransactionSource($transactionSource)
+    public function setTransactionSource(string $transactionSource): TransactionDetailDataInterface
     {
         return $this->setData(self::TRANSACTION_SOURCE, $transactionSource);
     }

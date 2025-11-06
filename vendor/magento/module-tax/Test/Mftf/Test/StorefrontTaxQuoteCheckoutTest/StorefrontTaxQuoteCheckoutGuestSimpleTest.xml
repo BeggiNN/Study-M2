@@ -16,7 +16,6 @@
             <severity value="CRITICAL"/>
             <testCaseId value="MC-258"/>
             <group value="Tax"/>
-            <group value="guest_checkout"/>
         </annotations>
         <before>
             <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
@@ -79,7 +78,7 @@
         <!-- Fill in address for CA -->
         <actionGroup ref="StorefrontOpenCheckoutPageActionGroup" stepKey="goToCheckout"/>
         <waitForElementVisible selector="{{CheckoutShippingSection.emailAddress}}" stepKey="waitForEmailFieldVisible" />
-        <fillField selector="{{CheckoutShippingSection.email}}" userInput="{{Simple_US_Customer_CA.email}}" stepKey="enterEmail"/>
+        <fillField selector="{{CheckoutShippingSection.emailAddress}}" userInput="{{Simple_US_Customer_CA.email}}" stepKey="enterEmail"/>
         <waitForLoadingMaskToDisappear stepKey="waitEmailLoad"/>
         <actionGroup ref="LoggedInCheckoutFillNewBillingAddressActionGroup" stepKey="changeAddress">
             <argument name="Address" value="US_Address_CA"/>

@@ -10,9 +10,9 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Type\ObjectType;
 use Rector\BetterPhpDocParser\PhpDocInfo\PhpDocInfoFactory;
-use Rector\Core\Reflection\ReflectionResolver;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
+use Rector\Reflection\ReflectionResolver;
 final class TestsNodeAnalyzer
 {
     /**
@@ -32,7 +32,7 @@ final class TestsNodeAnalyzer
     private $phpDocInfoFactory;
     /**
      * @readonly
-     * @var \Rector\Core\Reflection\ReflectionResolver
+     * @var \Rector\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
     /**
@@ -64,7 +64,7 @@ final class TestsNodeAnalyzer
         if (!$classMethod->isPublic()) {
             return \false;
         }
-        if ($this->nodeNameResolver->isName($classMethod, 'test*')) {
+        if (\strncmp($classMethod->name->toString(), 'test', \strlen('test')) === 0) {
             return \true;
         }
         $phpDocInfo = $this->phpDocInfoFactory->createFromNodeOrEmpty($classMethod);

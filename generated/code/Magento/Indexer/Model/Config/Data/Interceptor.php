@@ -40,4 +40,13 @@ class Interceptor extends \Magento\Indexer\Model\Config\Data implements \Magento
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'reset');
         return $pluginInfo ? $this->___callPlugins('reset', func_get_args(), $pluginInfo) : parent::reset();
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function __debugInfo()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, '__debugInfo');
+        return $pluginInfo ? $this->___callPlugins('__debugInfo', func_get_args(), $pluginInfo) : parent::__debugInfo();
+    }
 }

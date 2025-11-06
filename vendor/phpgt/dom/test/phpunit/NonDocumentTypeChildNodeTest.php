@@ -1,30 +1,45 @@
 <?php
+
 namespace Gt\Dom\Test;
 
-use Gt\Dom\Element;
 use Gt\Dom\HTMLDocument;
-use Gt\Dom\Test\Helper\Helper;
 use PHPUnit\Framework\TestCase;
 
+
 class NonDocumentTypeChildNodeTest extends TestCase {
-	public function testElementSiblings() {
-		$document = new HTMLDocument(Helper::HTML_MORE);
-		$whoHeading = $document->getElementById("who");
-		$plugParagraph = $document->querySelector("p.plug");
-		$formsAnchor = $document->querySelector("a[name='forms']");
+	public function testNextElementSibling():void {
+		$document = new HTMLDocument();
+		$parent = $document->createElement("parent");
+		$c1 = $document->createElement("child");
+		$sut = $document->createElement("child");
+		$txt = 'non Element';
+		$c2 = $document->createElement("child");
 
-		$this->assertEquals("p", $whoHeading->nextElementSibling->tagName);
-		$this->assertSame($formsAnchor,
-			$whoHeading->nextElementSibling->nextElementSibling);
-		$this->assertSame($plugParagraph, $whoHeading->previousElementSibling);
+		$parent->append($c1, $sut, $txt, $c2);
+		self::assertSame($c2, $sut->nextElementSibling);
+	}
 
-		$this->assertInstanceOf(Element::class, $formsAnchor);
+	public function testNextElementSiblingNone():void {
+		$document = new HTMLDocument();
+		$sut = $document->createElement("example");
+		self::assertNull($sut->nextElementSibling);
+	}
 
-		$firstImg = $document->querySelector("img");
-		$this->assertEquals("h1", $firstImg->previousElementSibling->tagName);
-		$this->assertNull(
-			$firstImg->previousElementSibling->previousElementSibling);
-		$this->assertNull(
-			$document->body->lastElementChild->nextElementSibling);
+	public function testPreviousElementSibling():void {
+		$document = new HTMLDocument();
+		$parent = $document->createElement("parent");
+		$c1 = $document->createElement("child");
+		$txt = 'non Element';
+		$sut = $document->createElement("child");
+		$c2 = $document->createElement("child");
+
+		$parent->append($c1, $txt, $sut, $c2);
+		self::assertSame($c1, $sut->previousElementSibling);
+	}
+
+	public function testPreviousElementSiblingNone():void {
+		$document = new HTMLDocument();
+		$sut = $document->createElement("example");
+		self::assertNull($sut->previousElementSibling);
 	}
 }

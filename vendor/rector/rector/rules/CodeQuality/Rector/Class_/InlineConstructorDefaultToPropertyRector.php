@@ -12,9 +12,9 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Property;
-use Rector\Core\NodeAnalyzer\ExprAnalyzer;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\MethodName;
+use Rector\NodeAnalyzer\ExprAnalyzer;
+use Rector\Rector\AbstractRector;
+use Rector\ValueObject\MethodName;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -24,7 +24,7 @@ final class InlineConstructorDefaultToPropertyRector extends AbstractRector
 {
     /**
      * @readonly
-     * @var \Rector\Core\NodeAnalyzer\ExprAnalyzer
+     * @var \Rector\NodeAnalyzer\ExprAnalyzer
      */
     private $exprAnalyzer;
     public function __construct(ExprAnalyzer $exprAnalyzer)
@@ -123,6 +123,9 @@ CODE_SAMPLE
     }
     private function refactorProperty(Class_ $class, string $propertyName, Expr $defaultExpr, ClassMethod $constructClassMethod, int $key) : bool
     {
+        if ($class->isReadonly()) {
+            return \false;
+        }
         foreach ($class->stmts as $classStmt) {
             if (!$classStmt instanceof Property) {
                 continue;

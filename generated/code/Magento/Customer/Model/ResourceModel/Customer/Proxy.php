@@ -69,7 +69,17 @@ class Proxy extends \Magento\Customer\Model\ResourceModel\Customer implements \M
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -469,6 +479,16 @@ class Proxy extends \Magento\Customer\Model\ResourceModel\Customer implements \M
     public function afterDelete(\Magento\Framework\DataObject $object)
     {
         return $this->_getSubject()->afterDelete($object);
+    }
+
+    /**
+     * Reset state of proxied instance
+     */
+    public function _resetState() : void
+    {
+        if ($this->_subject) {
+            $this->_subject->_resetState(); 
+        }
     }
 
     /**

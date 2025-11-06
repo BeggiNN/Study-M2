@@ -23,7 +23,6 @@
             <group value="pagebuilder-slideItemPoster"/>
         </annotations>
         <before>
-	    <comment userInput="BIC workaround" stepKey="enabledOldMediaGallery"/>
             <magentoCLI command="config:set cms/wysiwyg/enabled enabled" stepKey="configWYSIWYG"/>
             <actionGroup ref="CliEnableTinyMCEActionGroup" stepKey="enableTinyMCE" />
             <createData entity="_emptyCmsPage" stepKey="createCMSPage"/>
@@ -61,7 +60,6 @@
             <actionGroup ref="CliMediaGalleryEnhancedEnableActionGroup" stepKey="disableOldMediaGallery">
                 <argument name="enabled" value="1"/>
             </actionGroup>
-	    <comment userInput="BIC workaround" stepKey="disabledOldMediaGallery"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
         </after>
         <!-- Add Slider -->

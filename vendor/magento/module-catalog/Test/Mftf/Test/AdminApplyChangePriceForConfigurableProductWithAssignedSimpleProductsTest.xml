@@ -15,7 +15,6 @@
             <severity value="MAJOR"/>
             <testCaseId value="AC-2031"/>
             <group value="Catalog"/>
-            <group value="AllIndexerBySchedule" />
         </annotations>
 
         <before>
@@ -96,7 +95,6 @@
         <comment userInput="BIC workaround" stepKey="createFirstConfigProductAddFirstChild"/>
 
         <!-- Assert first product in category -->
-        <comment userInput="BIC workaround" stepKey="runCron"/>
         <actionGroup ref="StorefrontNavigateToCategoryUrlActionGroup" stepKey="goToFirstCategoryPageStorefront">
             <argument name="categoryUrl" value="$firstSimpleCategory.custom_attributes[url_key]$"/>
         </actionGroup>

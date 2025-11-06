@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 namespace tests\unit\Util;
 
 use Magento\FunctionalTestingFramework\Suite\Util\SuiteObjectExtractor;
@@ -179,7 +180,7 @@ class SuiteDataArrayBuilder
      * @param null $afterHook
      * @return $this
      */
-    public function withAfterHook($afterHook = null)
+    public function withAfterHook(?array $afterHook = null)
     {
         if ($afterHook === null) {
             $this->afterHook = [$this->testActionAfterName => [
@@ -200,7 +201,7 @@ class SuiteDataArrayBuilder
      * @param null $beforeHook
      * @return $this
      */
-    public function withBeforeHook($beforeHook = null)
+    public function withBeforeHook(?array $beforeHook = null)
     {
         if ($beforeHook === null) {
             $this->beforeHook = [$this->testActionBeforeName => [

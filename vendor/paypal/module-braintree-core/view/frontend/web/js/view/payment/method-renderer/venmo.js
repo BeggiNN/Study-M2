@@ -8,7 +8,9 @@ define(
         'Magento_Ui/js/model/messageList',
         'Magento_Checkout/js/model/full-screen-loader',
         'Magento_Checkout/js/model/payment/additional-validators',
-        'mage/translate'
+        'mage/translate',
+        'Magento_Vault/js/view/payment/vault-enabler',
+        'underscore'
     ],
     function (
         Component,
@@ -19,7 +21,9 @@ define(
         messageList,
         fullScreenLoader,
         additionalValidators,
-        $t
+        $t,
+        VaultEnabler,
+        _
     ) {
         'use strict';
 
@@ -28,11 +32,12 @@ define(
                 deviceData: null,
                 paymentMethodNonce: null,
                 template: 'PayPal_Braintree/payment/venmo',
-                venmoInstance: null
+                venmoInstance: null,
+                vaultEnabler: null
             },
 
             clickVenmoBtn: function () {
-                let self = this;
+                var self = this;
 
                 if (!additionalValidators.validate()) {
                     return false;
@@ -59,7 +64,8 @@ define(
             },
 
             collectDeviceData: function (clientInstance, callback) {
-                let self = this;
+                var self = this;
+
                 dataCollector.create({
                     client: clientInstance,
                     paypal: true
@@ -76,7 +82,7 @@ define(
                 return window.checkoutConfig.payment[this.getCode()].clientToken;
             },
 
-            getCode: function() {
+            getCode: function () {
                 return 'braintree_venmo';
             },
 
@@ -90,6 +96,7 @@ define(
                 };
 
                 data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+                this.vaultEnabler.visitAdditionalData(data);
 
                 return data;
             },
@@ -98,7 +105,7 @@ define(
                 return window.checkoutConfig.payment[this.getCode()].paymentMarkSrc;
             },
 
-            getTitle: function() {
+            getTitle: function () {
                 return 'Venmo';
             },
 
@@ -108,44 +115,19 @@ define(
             },
 
             initialize: function () {
+                var self = this;
+
                 this._super();
+                this.vaultEnabler = new VaultEnabler();
+                this.vaultEnabler.setPaymentCode(this.getVaultCode());
 
-                let self = this;
-
-                braintree.create({
-                    authorization: self.getClientToken()
-                }, function (clientError, clientInstance) {
-                    if (clientError) {
-                        this.setErrorMsg($t('Unable to initialize Braintree Client.'));
-                        return;
-                    }
-
-                    // Collect device data
-                    self.collectDeviceData(clientInstance, function () {
-                        // callback from collectDeviceData
-                        venmo.create({
-                            client: clientInstance,
-                            allowDesktop: true,
-                            allowDesktopWebLogin: true,
-                            mobileWebFallBack: true,
-                            paymentMethodUsage: 'single_use',
-                            allowNewBrowserTab: false
-                        }, function (venmoErr, venmoInstance) {
-                            if (venmoErr) {
-                                self.setErrorMsg($t('Error initializing Venmo: %1').replace('%1', venmoErr));
-                                return;
-                            }
-
-                            if (!venmoInstance.isBrowserSupported()) {
-                                console.log('Browser does not support Venmo');
-                                return;
-                            }
-
-                            self.setVenmoInstance(venmoInstance);
-                        });
+                this.vaultEnabler.isActivePaymentTokenEnabler.subscribe(function () {
+                    self.venmoInstance.teardown(function () {
+                        self.initVenmo();
                     });
-                });
 
+                });
+                this.initVenmo();
                 return this;
             },
 
@@ -165,6 +147,61 @@ define(
 
             setVenmoInstance: function (instance) {
                 this.venmoInstance = instance;
+            },
+
+            isVaultEnabled: function () {
+                return this.vaultEnabler.isVaultEnabled();
+            },
+
+            /**
+             * @returns {String}
+             */
+            getVaultCode: function () {
+                return window.checkoutConfig.payment[this.getCode()].vaultCode;
+            },
+
+            getPaymentMethodUsage: function () {
+                return this.vaultEnabler.isActivePaymentTokenEnabler()
+                    ? 'multi_use'
+                    : 'single_use';
+            },
+
+            initVenmo: function () {
+                var self = this;
+
+                braintree.create({
+                    authorization: self.getClientToken()
+                }, function (clientError, clientInstance) {
+                    if (clientError) {
+                        this.setErrorMsg($t('Unable to initialize Braintree Client.'));
+                        return;
+                    }
+
+                    // Collect device data
+                    self.collectDeviceData(clientInstance, function () {
+                        // callback from collectDeviceData
+                        venmo.create({
+                            client: clientInstance,
+                            allowDesktop: true,
+                            allowDesktopWebLogin: true,
+                            mobileWebFallBack: true,
+                            paymentMethodUsage: self.getPaymentMethodUsage(),
+                            allowNewBrowserTab: false
+                        }, function (venmoErr, venmoInstance) {
+                            if (venmoErr) {
+                                self.setErrorMsg($t('Error initializing Venmo: %1').replace('%1', venmoErr));
+                                return;
+                            }
+
+                            if (!venmoInstance.isBrowserSupported()) {
+                                console.log('Browser does not support Venmo');
+                                return;
+                            }
+
+                            self.setVenmoInstance(venmoInstance);
+                        });
+                    });
+                });
             }
         });
     }

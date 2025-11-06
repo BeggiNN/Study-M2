@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Gateway\Request;
 
 use PayPal\Braintree\Gateway\Config\Config;
@@ -40,6 +41,12 @@ class PaymentDataBuilder implements BuilderInterface
     public const MERCHANT_ACCOUNT_ID = 'merchantAccountId';
 
     /**
+     * The Braintree vaulted customer ID used to create a transaction.
+     * A customer ID should only be provided if making a transaction using an existing vaulted payment method.
+     */
+    public const CUSTOMER_ID = 'customerId';
+
+    /**
      * Order ID Key
      */
     public const ORDER_ID = 'orderId';
@@ -47,12 +54,12 @@ class PaymentDataBuilder implements BuilderInterface
     /**
      * @var Config $config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var SubjectReader $subjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
     /**
      * Constructor

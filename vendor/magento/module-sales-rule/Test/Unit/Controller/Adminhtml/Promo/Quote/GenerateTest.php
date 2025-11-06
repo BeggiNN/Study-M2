@@ -11,7 +11,6 @@ use Magento\Backend\App\Action\Context;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\App\Request\Http as HttpRequest;
-use Magento\Framework\App\Response\Http as HttpResponse;
 use Magento\Framework\App\Response\Http\FileFactory;
 use Magento\Framework\App\ViewInterface;
 use Magento\Framework\Json\Helper\Data;
@@ -29,8 +28,11 @@ use Magento\SalesRule\Model\Quote\GetCouponCodeLengthInterface;
 use Magento\SalesRule\Model\Rule;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Magento\Framework\App\Response\Http as HttpResponse;
 
 /**
+ * Class for testing coupon generation
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  * @SuppressWarnings(PHPMD.TooManyFields)
  */

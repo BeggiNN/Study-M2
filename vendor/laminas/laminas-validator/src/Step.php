@@ -15,6 +15,7 @@ use function strlen;
 use function strpos;
 use function substr;
 
+/** @final */
 class Step extends AbstractValidator
 {
     public const INVALID  = 'typeInvalid';
@@ -26,10 +27,10 @@ class Step extends AbstractValidator
         self::NOT_STEP => 'The input is not a valid step',
     ];
 
-    /** @var mixed */
+    /** @var numeric */
     protected $baseValue = 0;
 
-    /** @var mixed */
+    /** @var numeric */
     protected $step = 1;
 
     /**
@@ -64,6 +65,9 @@ class Step extends AbstractValidator
     /**
      * Sets the base value from which the step should be computed
      *
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in v3.0
+     *
+     * @param numeric $baseValue
      * @return $this
      */
     public function setBaseValue(mixed $baseValue)
@@ -75,7 +79,9 @@ class Step extends AbstractValidator
     /**
      * Returns the base value from which the step should be computed
      *
-     * @return string
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in v3.0
+     *
+     * @return numeric
      */
     public function getBaseValue()
     {
@@ -85,6 +91,9 @@ class Step extends AbstractValidator
     /**
      * Sets the step value
      *
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in v3.0
+     *
+     * @param numeric $step
      * @return $this
      */
     public function setStep(mixed $step)
@@ -96,7 +105,9 @@ class Step extends AbstractValidator
     /**
      * Returns the step value
      *
-     * @return string
+     * @deprecated Since 2.61.0 All option getters and setters will be removed in v3.0
+     *
+     * @return numeric
      */
     public function getStep()
     {
@@ -133,8 +144,8 @@ class Step extends AbstractValidator
     /**
      * replaces the internal fmod function which give wrong results on many cases
      *
-     * @param int|float $x
-     * @param int|float $y
+     * @param numeric $x
+     * @param numeric $y
      * @return float
      */
     protected function fmod($x, $y)
@@ -152,8 +163,8 @@ class Step extends AbstractValidator
     /**
      * replaces the internal substraction operation which give wrong results on some cases
      *
-     * @param float $x
-     * @param float $y
+     * @param numeric $x
+     * @param numeric $y
      * @return float
      */
     private function sub($x, $y)
@@ -163,7 +174,7 @@ class Step extends AbstractValidator
     }
 
     /**
-     * @param float $float
+     * @param numeric $float
      */
     private function getPrecision($float): int
     {

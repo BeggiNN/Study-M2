@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\ObjectManager\Config\Reader;
 
 /**
@@ -65,6 +66,6 @@ class Dom extends \Magento\FunctionalTestingFramework\Config\Reader\Filesystem
      */
     protected function _createConfigMerger($mergerClass, $initialContents)
     {
-        return new $mergerClass($initialContents, $this->_idAttributes, self::TYPE_ATTRIBUTE, $this->_perFileSchema);
+        return new $mergerClass($initialContents, $this->idAttributes, self::TYPE_ATTRIBUTE, $this->perFileSchema);
     }
 }

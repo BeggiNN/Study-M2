@@ -1,22 +1,33 @@
 <?xml version="1.0"?>
 <!--
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 -->
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
     <type name="Magento\Checkout\Model\CompositeConfigProvider">
         <arguments>
             <argument name="configProviders" xsi:type="array">
-                <item name="braintree_config_provider" xsi:type="object">PayPal\Braintree\Model\Ui\ConfigProvider</item>
-                <item name="braintree_vault_config_provider" xsi:type="object">PayPal\Braintree\Model\Ui\Vault\ConfigProvider</item>
-                <item name="braintree_paypal_config_provider" xsi:type="object">PayPal\Braintree\Model\Ui\PayPal\ConfigProvider</item>
-                <item name="braintree_applepay_config_provider" xsi:type="object">PayPal\Braintree\Model\ApplePay\Ui\ConfigProvider</item>
-                <item name="braintree_googlepay_config_provider" xsi:type="object">PayPal\Braintree\Model\GooglePay\Ui\ConfigProvider</item>
-                <item name="braintree_venmo_config_provider" xsi:type="object">PayPal\Braintree\Model\Venmo\Ui\ConfigProvider</item>
-                <item name="braintree_ach_config_provider" xsi:type="object">PayPal\Braintree\Model\Ach\Ui\ConfigProvider</item>
-                <item name="braintree_lpm_config_provider" xsi:type="object">PayPal\Braintree\Model\Lpm\Ui\ConfigProvider</item>
+                <item name="braintree_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\ConfigProvider</item>
+                <item name="braintree_vault_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\Vault\ConfigProvider</item>
+                <item name="braintree_paypal_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\PayPal\ConfigProvider</item>
+                <item name="braintree_applepay_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\ApplePay\Ui\ConfigProvider</item>
+                <item name="braintree_googlepay_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\GooglePay\Ui\ConfigProvider</item>
+                <item name="braintree_venmo_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Venmo\Ui\ConfigProvider</item>
+                <item name="braintree_ach_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Ach\Ui\ConfigProvider</item>
+                <item name="braintree_lpm_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Lpm\Ui\ConfigProvider</item>
+                <item name="braintree_three_d_secure_config_provider"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\ThreeDeeSecure\ConfigProvider</item>
             </argument>
         </arguments>
     </type>
@@ -40,8 +51,18 @@
     <type name="Magento\Vault\Model\Ui\TokensConfigProvider">
         <arguments>
             <argument name="tokenUiComponentProviders" xsi:type="array">
-                <item name="braintree" xsi:type="object">PayPal\Braintree\Model\Ui\TokenUiComponentProvider</item>
-                <item name="braintree_paypal" xsi:type="object">PayPal\Braintree\Model\Ui\PayPal\TokenUiComponentProvider</item>
+                <item name="braintree"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\TokenUiComponentProvider</item>
+                <item name="braintree_paypal"
+                      xsi:type="object">PayPal\Braintree\Model\Ui\PayPal\TokenUiComponentProvider</item>
+                <item name="braintree_googlepay"
+                      xsi:type="object">PayPal\Braintree\Model\GooglePay\Ui\TokenUiComponentProvider</item>
+                <item name="braintree_applepay"
+                      xsi:type="object">PayPal\Braintree\Model\ApplePay\Ui\TokenUiComponentProvider</item>
+                <item name="braintree_venmo"
+                      xsi:type="object">PayPal\Braintree\Model\Venmo\Ui\TokenUiComponentProvider</item>
+                <item name="braintree_ach_direct_debit"
+                      xsi:type="object">PayPal\Braintree\Model\Ach\Ui\TokenUiComponentProvider</item>
             </argument>
         </arguments>
     </type>
@@ -98,17 +119,20 @@
     </type>
 
     <type name="Magento\Catalog\Block\Product\ListProduct">
-        <plugin name="braintreeProductDetailsBlockPlugin" type="\PayPal\Braintree\Plugin\ProductDetailsBlockPlugin" />
+        <plugin name="braintreeProductDetailsBlockPlugin"
+                type="\PayPal\Braintree\Plugin\ProductDetailsBlockPlugin" />
     </type>
 
     <type name="Magento\Vault\Api\PaymentTokenRepositoryInterface">
-        <plugin name="braintreeDeleteStoredPaymentPlugin" type="\PayPal\Braintree\Plugin\DeleteStoredPaymentPlugin" />
+        <plugin name="braintreeDeleteStoredPaymentPlugin"
+                type="\PayPal\Braintree\Plugin\DeleteStoredPaymentPlugin" />
     </type>
 
     <type name="Magento\Checkout\Block\Onepage">
         <arguments>
             <argument name="layoutProcessors" xsi:type="array">
-                <item name="braintree_recaptcha" xsi:type="object">\PayPal\Braintree\Block\LayoutProcessor\Checkout\Onepage</item>
+                <item name="braintree_recaptcha"
+                      xsi:type="object">\PayPal\Braintree\Block\LayoutProcessor\Checkout\Onepage</item>
             </argument>
         </arguments>
     </type>

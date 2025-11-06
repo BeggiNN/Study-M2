@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
 use PayPal\Braintree\Gateway\Config\Config;
@@ -14,18 +15,18 @@ class DescriptorDataBuilderTest extends \PHPUnit\Framework\TestCase
     /**
      * @var Config|MockObject
      */
-    private $config;
+    private Config|MockObject $config;
 
     /**
      * @var DescriptorDataBuilder
      */
-    private $builder;
+    private DescriptorDataBuilder $builder;
 
     protected function setUp(): void
     {
         $this->config = $this->getMockBuilder(Config::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getDynamicDescriptors'])
+            ->onlyMethods(['getDynamicDescriptors'])
             ->getMock();
 
         $this->builder = new DescriptorDataBuilder($this->config);
@@ -51,7 +52,7 @@ class DescriptorDataBuilderTest extends \PHPUnit\Framework\TestCase
      * Get variations for build method testing
      * @return array
      */
-    public function buildDataProvider()
+    public static function buildDataProvider(): array
     {
         $name = 'company * product';
         $phone = '333-22-22-333';

@@ -17,7 +17,6 @@
             <severity value="CRITICAL"/>
             <testCaseId value="MAGETWO-95167"/>
             <group value="bundle"/>
-            <group value="guest_checkout"/>
         </annotations>
         <before>
             <!--Enable freeShipping-->

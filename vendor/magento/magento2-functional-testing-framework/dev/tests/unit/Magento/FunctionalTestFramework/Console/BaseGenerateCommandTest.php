@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2019 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Console;
@@ -31,7 +32,7 @@ class BaseGenerateCommandTest extends TestCase
         $testsProperty->setValue($handler, []);
         $testObjectHandlerProperty = new ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
         $testObjectHandlerProperty->setAccessible(true);
-        $testObjectHandlerProperty->setValue($handler);
+        $testObjectHandlerProperty->setValue(null, $handler);
 
         $handler = SuiteObjectHandler::getInstance();
         $suiteObjectsProperty = new ReflectionProperty(SuiteObjectHandler::class, 'suiteObjects');
@@ -39,7 +40,7 @@ class BaseGenerateCommandTest extends TestCase
         $suiteObjectsProperty->setValue($handler, []);
         $suiteObjectHandlerProperty = new ReflectionProperty(SuiteObjectHandler::class, 'instance');
         $suiteObjectHandlerProperty->setAccessible(true);
-        $suiteObjectHandlerProperty->setValue($handler);
+        $suiteObjectHandlerProperty->setValue(null, $handler);
     }
 
     public function testOneTestOneSuiteConfig(): void
@@ -218,7 +219,7 @@ class BaseGenerateCommandTest extends TestCase
 
         $testObjectHandlerProperty = new ReflectionProperty(TestObjectHandler::class, 'testObjectHandler');
         $testObjectHandlerProperty->setAccessible(true);
-        $testObjectHandlerProperty->setValue($testObjectHandlerObject);
+        $testObjectHandlerProperty->setValue(null, $testObjectHandlerObject);
 
         $handler = TestObjectHandler::getInstance();
         $property = new ReflectionProperty(TestObjectHandler::class, 'tests');
@@ -234,7 +235,7 @@ class BaseGenerateCommandTest extends TestCase
 
         $suiteObjectHandlerProperty = new ReflectionProperty(SuiteObjectHandler::class, 'instance');
         $suiteObjectHandlerProperty->setAccessible(true);
-        $suiteObjectHandlerProperty->setValue($suiteObjectHandlerObject);
+        $suiteObjectHandlerProperty->setValue(null, $suiteObjectHandlerObject);
 
         $handler = SuiteObjectHandler::getInstance();
         $property = new ReflectionProperty(SuiteObjectHandler::class, 'suiteObjects');

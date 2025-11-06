@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Request;
 
@@ -9,12 +14,12 @@ use Magento\Payment\Gateway\Request\BuilderInterface;
 
 class TransactionSourceDataBuilder implements BuilderInterface
 {
-    const TRANSACTION_SOURCE = 'transactionSource';
+    public const TRANSACTION_SOURCE = 'transactionSource';
 
     /**
      * @var State $state
      */
-    private $state;
+    private State $state;
 
     /**
      * TransactionSourceDataBuilder constructor
@@ -28,8 +33,11 @@ class TransactionSourceDataBuilder implements BuilderInterface
 
     /**
      * Set TRANSACTION_SOURCE to moto if within the admin
-     * @inheritdoc
+     *
+     * @param array $buildSubject
+     * @return array
      * @throws LocalizedException
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function build(array $buildSubject): array
     {

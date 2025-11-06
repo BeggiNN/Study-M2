@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Util\Logger;
@@ -36,7 +36,6 @@ class LoggingUtil
         if (self::$instance === null) {
             self::$instance = new LoggingUtil();
         }
-
         return self::$instance;
     }
 

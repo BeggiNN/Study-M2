@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\DataGenerator\Objects;
@@ -20,12 +20,12 @@ function function_exists($val)
     return true;
 }
 
-function msq($id = null)
+function msq(?string $id = null)
 {
     return "msqUnique";
 }
 
-function msqs($id = null)
+function msqs(?string $id = null)
 {
     return "msqsUnique";
 }

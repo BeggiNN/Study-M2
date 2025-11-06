@@ -1,25 +1,17 @@
 <?php
 
 declare (strict_types=1);
-namespace RectorPrefix202308;
+namespace RectorPrefix202411;
 
+use RectorPrefix202411\Illuminate\Container\Container;
 use PhpParser\Node;
 use PhpParser\PrettyPrinter\Standard;
-// @deprecated, use dump() or dd() instead
-if (!\function_exists('dump_node')) {
-    /**
-     * @return never
-     * @param mixed $variable
-     */
-    function dump_node($variable, int $depth = 2)
-    {
-        \trigger_error('This function is deprecated, to avoid enforcing of Rector debug package. Use your own favorite debugging package instead');
-        exit;
-    }
-}
+use Rector\Console\Style\SymfonyStyleFactory;
+use Rector\Util\NodePrinter;
+use RectorPrefix202411\Symfony\Component\Console\Output\OutputInterface;
 if (!\function_exists('print_node')) {
     /**
-     * @param \PhpParser\Node|mixed[] $node
+     * @param Node|Node[] $node
      */
     function print_node($node) : void
     {
@@ -29,5 +21,20 @@ if (!\function_exists('print_node')) {
             $printedContent = $standard->prettyPrint([$node]);
             \var_dump($printedContent);
         }
+    }
+}
+if (!\function_exists('dump_node')) {
+    /**
+     * @param Node|Node[] $node
+     */
+    function dump_node($node) : void
+    {
+        $symfonyStyle = Container::getInstance()->make(SymfonyStyleFactory::class)->create();
+        // we turn up the verbosity so it's visible in tests overriding the
+        // default which is to be quite during tests
+        $symfonyStyle->setVerbosity(OutputInterface::VERBOSITY_VERBOSE);
+        $symfonyStyle->newLine();
+        $nodePrinter = new NodePrinter($symfonyStyle);
+        $nodePrinter->printNodes($node);
     }
 }

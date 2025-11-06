@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Lpm\Ui;
@@ -10,11 +14,12 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const METHOD_CODE = 'braintree_local_payment';
+    public const METHOD_CODE = 'braintree_local_payment';
+
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * ConfigProvider constructor.
@@ -27,6 +32,8 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get config
+     *
      * @return array
      * @throws InputException
      * @throws NoSuchEntityException
@@ -44,7 +51,9 @@ class ConfigProvider implements ConfigProviderInterface
                     'clientToken' => $this->config->getClientToken(),
                     'merchantAccountId' => $this->config->getMerchantAccountId(),
                     'paymentIcons' => $this->config->getPaymentIcons(),
-                    'title' => $this->config->getTitle()
+                    'title' => $this->config->getTitle(),
+                    'fallbackUrl' => $this->config->getFallbackUrl(),
+                    'fallbackButtonText' => $this->config->getFallbackButtonText()
                 ]
             ]
         ];

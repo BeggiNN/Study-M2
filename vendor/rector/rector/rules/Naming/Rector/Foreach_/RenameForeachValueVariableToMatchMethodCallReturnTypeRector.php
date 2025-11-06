@@ -10,13 +10,13 @@ use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\Node\Stmt\Function_;
 use PhpParser\NodeTraverser;
-use Rector\Core\Rector\AbstractRector;
 use Rector\Naming\Guard\BreakingVariableRenameGuard;
 use Rector\Naming\Matcher\ForeachMatcher;
 use Rector\Naming\Naming\ExpectedNameResolver;
 use Rector\Naming\NamingConvention\NamingConventionAnalyzer;
 use Rector\Naming\ValueObject\VariableAndCallForeach;
 use Rector\Naming\VariableRenamer;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -49,6 +49,10 @@ final class RenameForeachValueVariableToMatchMethodCallReturnTypeRector extends 
      * @var \Rector\Naming\Matcher\ForeachMatcher
      */
     private $foreachMatcher;
+    /**
+     * @var string[]
+     */
+    private const UNREADABLE_GENERIC_NAMES = ['traversable', 'iterable', 'generator', 'rewindableGenerator'];
     public function __construct(BreakingVariableRenameGuard $breakingVariableRenameGuard, ExpectedNameResolver $expectedNameResolver, NamingConventionAnalyzer $namingConventionAnalyzer, VariableRenamer $variableRenamer, ForeachMatcher $foreachMatcher)
     {
         $this->breakingVariableRenameGuard = $breakingVariableRenameGuard;
@@ -137,6 +141,9 @@ CODE_SAMPLE
     }
     private function shouldSkip(VariableAndCallForeach $variableAndCallForeach, string $expectedName) : bool
     {
+        if (\in_array($expectedName, self::UNREADABLE_GENERIC_NAMES, \true)) {
+            return \true;
+        }
         if ($this->namingConventionAnalyzer->isCallMatchingVariableName($variableAndCallForeach->getCall(), $variableAndCallForeach->getVariableName(), $expectedName)) {
             return \true;
         }

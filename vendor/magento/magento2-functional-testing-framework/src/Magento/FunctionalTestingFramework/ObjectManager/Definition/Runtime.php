@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\ObjectManager\Definition;
@@ -29,7 +29,7 @@ class Runtime implements \Magento\FunctionalTestingFramework\ObjectManager\Defin
      * Runtime constructor.
      * @param \Magento\FunctionalTestingFramework\Code\Reader\ClassReader|null $reader
      */
-    public function __construct(\Magento\FunctionalTestingFramework\Code\Reader\ClassReader $reader = null)
+    public function __construct(?\Magento\FunctionalTestingFramework\Code\Reader\ClassReader $reader = null)
     {
         $this->reader = $reader ? : new \Magento\FunctionalTestingFramework\Code\Reader\ClassReader();
     }

@@ -1,13 +1,12 @@
 define([
     'underscore',
-    'uiComponent',
-    'jquery'
-], function (_, Component, $) {
+    'uiComponent'
+], function (_, Component) {
     'use strict';
 
     return Component.extend({
         defaults: {
-            template: "PayPal_Braintree/credit/calculator",
+            template: 'PayPal_Braintree/credit/calculator',
             displaySummary: true, // "From X per month"
             displayInterestDetails: false, // Display the more in-depth summary of interest rates
             instalmentsFrom: 0,
@@ -24,11 +23,16 @@ define([
             merchantName: ''
         },
 
+        /**
+         * initialize and observe the default variables
+         *
+         * @returns {*}
+         */
         initObservable: function () {
             this._super();
             if (this.instalments.length > 0) {
                 this.currentInstalment = this.instalments[0];
-                this.instalmentsFrom = this.instalments[this.instalments.length-1].monthlyPayment;
+                this.instalmentsFrom = this.instalments[this.instalments.length - 1].monthlyPayment;
                 this.visible = true;
             } else {
                 this.loadInstalments();
@@ -38,26 +42,43 @@ define([
             return this;
         },
 
+        /**
+         * check current instalment
+         *
+         * @param term
+         * @returns {boolean}
+         */
         isCurrentInstalment: function (term) {
-            return (this.currentInstalment().term === term);
+            return this.currentInstalment().term === term;
         },
 
+        /**
+         * set current instalment
+         *
+         * @param instalment
+         */
         setCurrentInstalment: function (instalment) {
             this.currentInstalment(instalment);
         },
 
+        /**
+         * load instalments
+         *
+         * @returns {boolean}
+         */
         loadInstalments: function () {
             if (!this.endpoint) {
                 return false;
             }
 
-            var self = this;
+            let self = this;
+
             require(['Magento_Checkout/js/model/quote', 'jquery'], function (quote, $) {
-                if (typeof quote.totals().base_grand_total === 'undefined') {
+                if (typeof quote.totals()['base_grand_total'] === 'undefined') {
                     return false;
                 }
 
-                $.getJSON(self.endpoint, {amount: quote.totals().base_grand_total}, function (response) {
+                $.getJSON(self.endpoint, {amount: quote.totals()['base_grand_total']}, function (response) {
                     self.instalments(response);
                     self.setCurrentInstalment(response[0]);
                     self.visible(true);

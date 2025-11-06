@@ -1,10 +1,12 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Controller\Paypal;
 
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote;
 use Magento\Framework\View\Layout;
 use Magento\Checkout\Model\Session;
@@ -15,67 +17,69 @@ use Magento\Framework\Message\ManagerInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\View\Element\AbstractBlock;
+use Magento\Quote\Model\Quote\Payment;
 use PayPal\Braintree\Controller\Paypal\Review;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\QuoteUpdater;
 use PayPal\Braintree\Block\Paypal\Checkout\Review as CheckoutReview;
 use Magento\Framework\Serialize\Serializer\Json;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @see \PayPal\Braintree\Controller\Paypal\Review
+ * @see Review
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class ReviewTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var QuoteUpdater|\PHPUnit\Framework\MockObject\MockObject
+     * @var QuoteUpdater|MockObject
      */
-    private $quoteUpdaterMock;
+    private QuoteUpdater|MockObject $quoteUpdaterMock;
 
     /**
-     * @var Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $configMock;
+    private Config|MockObject $configMock;
 
     /**
-     * @var Session|\PHPUnit\Framework\MockObject\MockObject
+     * @var Session|MockObject
      */
-    private $checkoutSessionMock;
+    private Session|MockObject $checkoutSessionMock;
 
     /**
-     * @var RequestInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RequestInterface|MockObject
      */
-    private $requestMock;
+    private RequestInterface|MockObject $requestMock;
 
     /**
-     * @var ResultFactory|\PHPUnit\Framework\MockObject\MockObject
+     * @var ResultFactory|MockObject
      */
-    private $resultFactoryMock;
+    private ResultFactory|MockObject $resultFactoryMock;
 
     /**
-     * @var ManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var ManagerInterface|MockObject
      */
-    private $messageManagerMock;
+    private ManagerInterface|MockObject $messageManagerMock;
 
     /**
-     * @var Json|\PHPUnit\Framework\MockObject\MockObject
+     * @var Json|MockObject
      */
-    private $jsonMock;
+    private Json|MockObject $jsonMock;
 
     /**
      * @var Review
      */
-    private $review;
+    private Review $review;
 
     protected function setUp(): void
     {
-        /** @var Context|\PHPUnit\Framework\MockObject\MockObject $contextMock */
+        /** @var Context|MockObject $contextMock */
         $contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
             ->getMock();
         $this->requestMock = $this->getMockBuilder(RequestInterface::class)
-            ->setMethods(['getPostValue'])
+            ->addMethods(['getPostValue'])
             ->getMockForAbstractClass();
         $this->resultFactoryMock = $this->getMockBuilder(ResultFactory::class)
             ->disableOriginalConstructor()
@@ -225,7 +229,7 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
             ->method('getItemsCount')
             ->willReturn(1);
 
-        $paymentMock = $this->getMockBuilder(\Magento\Quote\Model\Quote\Payment::class)
+        $paymentMock = $this->getMockBuilder(Payment::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -245,7 +249,7 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
         $this->messageManagerMock->expects(self::once())
             ->method('addExceptionMessage')
             ->with(
-                self::isInstanceOf(\Magento\Framework\Exception\LocalizedException::class),
+                self::isInstanceOf(LocalizedException::class),
                 'We can\'t initialize checkout.'
             );
 
@@ -263,9 +267,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Redirect|\PHPUnit\Framework\MockObject\MockObject
+     * @return Redirect|MockObject
      */
-    private function getResultRedirectMock()
+    private function getResultRedirectMock(): MockObject|Redirect
     {
         return $this->getMockBuilder(Redirect::class)
             ->disableOriginalConstructor()
@@ -273,9 +277,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return AbstractBlock|\PHPUnit\Framework\MockObject\MockObject
+     * @return AbstractBlock|MockObject
      */
-    private function getChildBlockMock()
+    private function getChildBlockMock(): AbstractBlock|MockObject
     {
         return $this->getMockBuilder(AbstractBlock::class)
             ->disableOriginalConstructor()
@@ -283,9 +287,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return CheckoutReview|\PHPUnit\Framework\MockObject\MockObject
+     * @return CheckoutReview|MockObject
      */
-    private function getBlockMock()
+    private function getBlockMock(): MockObject|CheckoutReview
     {
         return $this->getMockBuilder(CheckoutReview::class)
             ->disableOriginalConstructor()
@@ -293,9 +297,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Layout|\PHPUnit\Framework\MockObject\MockObject
+     * @return Layout|MockObject
      */
-    private function getLayoutMock()
+    private function getLayoutMock(): Layout|MockObject
     {
         return $this->getMockBuilder(Layout::class)
             ->disableOriginalConstructor()
@@ -303,9 +307,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Page|\PHPUnit\Framework\MockObject\MockObject
+     * @return Page|MockObject
      */
-    private function getResultPageMock()
+    private function getResultPageMock(): Page|MockObject
     {
         return $this->getMockBuilder(Page::class)
             ->disableOriginalConstructor()
@@ -313,9 +317,9 @@ class ReviewTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Quote|\PHPUnit\Framework\MockObject\MockObject
+     * @return Quote|MockObject
      */
-    private function getQuoteMock()
+    private function getQuoteMock(): MockObject|Quote
     {
         return $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()

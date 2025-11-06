@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\ApplePay\Shortcut;
 
@@ -12,17 +17,22 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Payment\Model\MethodInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Tax\Helper\Data as TaxHelper;
 
 class Button extends AbstractButton implements ShortcutInterface
 {
-    const ALIAS_ELEMENT_INDEX = 'alias';
-
-    const BUTTON_ELEMENT_INDEX = 'button_id';
+    private const ALIAS_ELEMENT_INDEX = 'alias';
+    private const BUTTON_ELEMENT_INDEX = 'button_id';
 
     /**
      * @var DefaultConfigProvider $defaultConfigProvider
      */
-    private $defaultConfigProvider;
+    private DefaultConfigProvider $defaultConfigProvider;
+
+    /**
+     * @var TaxHelper
+     */
+    private TaxHelper $taxHelper;
 
     /**
      * Button constructor
@@ -32,6 +42,7 @@ class Button extends AbstractButton implements ShortcutInterface
      * @param MethodInterface $payment
      * @param Auth $auth
      * @param DefaultConfigProvider $defaultConfigProvider
+     * @param TaxHelper $taxHelper
      * @param array $data
      * @throws InputException
      * @throws NoSuchEntityException
@@ -42,10 +53,12 @@ class Button extends AbstractButton implements ShortcutInterface
         MethodInterface $payment,
         Auth $auth,
         DefaultConfigProvider $defaultConfigProvider,
+        TaxHelper $taxHelper,
         array $data = []
     ) {
         parent::__construct($context, $checkoutSession, $payment, $auth, $data);
         $this->defaultConfigProvider = $defaultConfigProvider;
+        $this->taxHelper = $taxHelper;
     }
 
     /**
@@ -57,6 +70,8 @@ class Button extends AbstractButton implements ShortcutInterface
     }
 
     /**
+     * Get container id
+     *
      * @return string
      */
     public function getContainerId(): string
@@ -88,10 +103,22 @@ class Button extends AbstractButton implements ShortcutInterface
     }
 
     /**
+     * Get extra class name
+     *
      * @return string
      */
     public function getExtraClassname(): string
     {
         return $this->getIsCart() ? 'cart' : 'minicart';
+    }
+
+    /**
+     * Check if product prices includes tax.
+     *
+     * @return bool
+     */
+    public function priceIncludesTax(): bool
+    {
+        return $this->taxHelper->priceIncludesTax();
     }
 }

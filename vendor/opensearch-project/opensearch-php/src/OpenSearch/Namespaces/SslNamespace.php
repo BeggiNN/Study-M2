@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,13 +21,12 @@ declare(strict_types=1);
 
 namespace OpenSearch\Namespaces;
 
-use OpenSearch\Namespaces\AbstractNamespace;
-
 /**
  * Class SslNamespace
  *
+ * @deprecated in 2.4.0 and will be removed in 3.0.0. Use SslNamespace instead.
  */
-class SslNamespace extends AbstractNamespace
+class SslNamespace extends SecurityNamespace
 {
     /**
      *
@@ -36,10 +35,6 @@ class SslNamespace extends AbstractNamespace
      */
     public function certificates(array $params = [])
     {
-        $endpointBuilder = $this->endpoints;
-        $endpoint = $endpointBuilder('Ssl\Certificates');
-        $endpoint->setParams($params);
-
-        return $this->performRequest($endpoint);
+        return $this->getCertificates($params);
     }
 }

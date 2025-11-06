@@ -1,8 +1,9 @@
 <?php
-    /**
-     * Copyright © Magento, Inc. All rights reserved.
-     * See COPYING.txt for license details.
-     */
+/**
+ * Copyright 2022 Adobe
+ * All Rights Reserved.
+ */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Module\Util;
@@ -34,7 +35,7 @@ class ModuleUtilTest extends TestCase
      *
      * @return array
      */
-    public function inDataProvider(): array
+    public static function inDataProvider(): array
     {
         $ctr1 = '';
         $ctr2 = '';

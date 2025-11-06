@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Controller\Paypal;
 
@@ -10,6 +11,7 @@ use Exception;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\ResultFactory;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\QuoteUpdater;
@@ -28,37 +30,37 @@ use Magento\Store\Model\StoreManagerInterface;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class OneClick extends Review
+class OneClick extends Review implements ActionInterface
 {
     /**
      * @var QuoteFactory
      */
-    protected $quoteFactory;
+    protected QuoteFactory $quoteFactory;
 
     /**
      * @var ProductRepositoryInterface
      */
-    protected $productRepository;
+    protected ProductRepositoryInterface $productRepository;
 
     /**
      * @var Validator
      */
-    protected $formKeyValidator;
+    protected Validator $formKeyValidator;
 
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    protected StoreManagerInterface $storeManager;
 
     /**
      * @var CartInterface
      */
-    protected $quote;
+    protected CartInterface $quote;
 
     /**
      * @var Data
      */
-    protected $jsonHelper;
+    protected Data $jsonHelper;
 
     /**
      * @var Json
@@ -185,6 +187,18 @@ class OneClick extends Review
         $this->checkoutSession->replaceQuote($quote);
 
         return parent::execute();
+    }
+
+    /**
+     * Set json
+     *
+     * @param Json $json
+     * @return $this
+     */
+    public function setJson(Json $json): OneClick
+    {
+        $this->json = $json;
+        return $this;
     }
 
     /**

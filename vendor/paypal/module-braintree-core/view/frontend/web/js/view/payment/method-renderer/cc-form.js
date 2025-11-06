@@ -3,7 +3,6 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 define(
     [
         'underscore',
@@ -70,7 +69,7 @@ define(
                     /**
                      * Allow a new nonce to be generated
                      */
-                    onPaymentMethodError: function() {
+                    onPaymentMethodError: function () {
                         this.isProcessing = false;
                     },
 
@@ -79,6 +78,9 @@ define(
                      * @param {String} deviceData
                      */
                     onDeviceDataReceived: function (deviceData) {
+                        if (this.additionalData === undefined) {
+                            this.additionalData = {};
+                        }
                         this.additionalData['device_data'] = deviceData;
                     },
 
@@ -126,6 +128,16 @@ define(
             },
 
             /**
+             * Store the CC message container so it can be switched if required later on.
+             *
+             * @returns {Object}
+             */
+            initialize: function () {
+                this._super();
+                this.ccMessageContainer = this.messageContainer;
+            },
+
+            /**
              * Get payment name
              *
              * @returns {String}
@@ -141,6 +153,7 @@ define(
              */
             isActive: function () {
                 let active = this.getCode() === this.isChecked();
+
                 this.active(active);
 
                 return active;
@@ -247,7 +260,7 @@ define(
                     'method': this.getCode(),
                     'additional_data': {
                         'payment_method_nonce': this.paymentMethodNonce,
-                        'g-recaptcha-response' : $("#token-grecaptcha-braintree").val()
+                        'g-recaptcha-response' : $('#token-grecaptcha-braintree').val()
                     }
                 };
 
@@ -281,11 +294,12 @@ define(
 
                 this.setPaymentMethodNonce(payload.nonce);
                 this.setCreditCardBin(payload.details.bin);
+                this.messageContainer = this.ccMessageContainer;
 
                 // place order on success validation
                 self.validatorManager.validate(self, function () {
                     return self.placeOrder('parent');
-                }, function() {
+                }, function () {
                     self.isProcessing = false;
                     self.paymentMethodNonce = null;
                     self.creditCardBin = null;
@@ -303,9 +317,9 @@ define(
 
                 if (this.isProcessing) {
                     return false;
-                } else {
-                    this.isProcessing = true;
                 }
+                this.isProcessing = true;
+
 
                 braintree.tokenizeHostedFields();
                 return false;
@@ -320,7 +334,7 @@ define(
                 return window.checkoutConfig.payment.braintree.icons.hasOwnProperty(type) ?
                     window.checkoutConfig.payment.braintree.icons[type]
                     : false;
-            },
+            }
         });
     }
 );

@@ -1,10 +1,15 @@
 <?php
 /**
- * Copyright © 2016 Magento. All rights reserved.
+ * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
 
-/** @var \PayPal\Braintree\Block\ApplePay\Shortcut\Button $block */
+/** @var Button $block */
+/** @var Escaper $escaper */
+
+use Magento\Framework\Escaper;
+use PayPal\Braintree\Block\ApplePay\Shortcut\Button;
+
 try {
     $id = sprintf('%s%s', $block->getContainerId(), random_int(PHP_INT_MIN, PHP_INT_MAX));
 } catch (Exception $e) {
@@ -23,13 +28,12 @@ $config = [
         'displayName' => $block->getMerchantName(),
         'actionSuccess' => $block->getActionSuccess(),
         'grandTotalAmount' => $block->getAmount(),
-        'isLoggedIn' => $block->isCustomerLoggedIn(),
-        'storeCode' => $block->getStorecode()
+        'storeCode' => $block->getStoreCode(),
+        'priceIncludesTax' => $block->priceIncludesTax(),
     ]
 ];
-
 ?>
-<div id="<?= $block->escapeHtmlAttr($id) ?>"
-     data-mage-init="<?= $block->escapeHtmlAttr(json_encode($config)) ?>"
-     class="braintree-applepay-minicart <?= $block->escapeHtmlAttr($block->getExtraClassname()) ?>">
+<div id="<?= $escaper->escapeHtmlAttr($id) ?>"
+     data-mage-init="<?= $escaper->escapeHtmlAttr(json_encode($config)) ?>"
+     class="braintree-applepay-minicart <?= $escaper->escapeHtmlAttr($block->getExtraClassname()) ?>">
 </div>

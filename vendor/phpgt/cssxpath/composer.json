@@ -10,8 +10,8 @@
 	"require-dev": {
 		"ext-dom": "*",
 		"ext-libxml": "*",
-		"phpstan/phpstan": "^v1.8",
-		"phpunit/phpunit": "^v9.5"
+		"phpstan/phpstan": "^2.1",
+		"phpunit/phpunit": "^9.6"
 	},
 
 	"license": "MIT",
@@ -27,11 +27,20 @@
 		}
 	},
 
+	"scripts": {
+		"phpunit": "vendor/bin/phpunit --configuration test/phpunit/phpunit.xml",
+		"phpstan": "vendor/bin/phpstan analyse --level 6 src",
+		"test": [
+			"@phpunit",
+			"@phpstan"
+		]
+	},
+
 	"authors": [
 		{
 			"name": "Greg Bowler",
 			"homepage": "https://www.g105b.com",
-			"email": "greg.bowler@g105b.com",
+			"email": "greg@g105b.com",
 			"role": "Developer"
 		}
 	],

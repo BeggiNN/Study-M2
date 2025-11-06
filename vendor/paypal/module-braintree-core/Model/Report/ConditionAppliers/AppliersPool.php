@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Report\ConditionAppliers;
 
 use InvalidArgumentException;
@@ -12,7 +13,7 @@ class AppliersPool
     /**
      * @var ApplierInterface[]
      */
-    private $appliersPool = [];
+    private array $appliersPool = [];
 
     /**
      * AppliersPool constructor.
@@ -25,26 +26,26 @@ class AppliersPool
     }
 
     /**
-     * Check appliers's types
+     * Check appliers types
      *
-     * @return bool
+     * @return void
      */
-    private function checkAppliers(): bool
+    private function checkAppliers(): void
     {
         foreach ($this->appliersPool as $applier) {
             if (!($applier instanceof ApplierInterface)) {
                 throw new InvalidArgumentException('Report filter applier must implement ApplierInterface');
             }
         }
-        return true;
     }
 
     /**
      * Get condition applier for filter
+     *
      * @param object $filter
      * @return null|ApplierInterface
      */
-    public function getApplier($filter)
+    public function getApplier(object $filter): ?ApplierInterface
     {
         if (is_object($filter)) {
             $filterClass = get_class($filter);

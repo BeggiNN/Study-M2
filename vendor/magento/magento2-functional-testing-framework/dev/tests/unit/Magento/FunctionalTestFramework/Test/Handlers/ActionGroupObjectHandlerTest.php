@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2019 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Test\Handlers;
@@ -101,7 +102,7 @@ class ActionGroupObjectHandlerTest extends MagentoTestCase
     {
         $actionGroupObjectHandlerProperty = new ReflectionProperty(ActionGroupObjectHandler::class, 'instance');
         $actionGroupObjectHandlerProperty->setAccessible(true);
-        $actionGroupObjectHandlerProperty->setValue(null);
+        $actionGroupObjectHandlerProperty->setValue(null, null);
 
         $mockOperationParser = $this->createMock(ActionGroupDataParser::class);
         $mockOperationParser
@@ -131,7 +132,7 @@ class ActionGroupObjectHandlerTest extends MagentoTestCase
 
         $property = new ReflectionProperty(ObjectManager::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($mockObjectManagerInstance);
+        $property->setValue(null, $mockObjectManagerInstance);
     }
 
     /**
@@ -143,10 +144,10 @@ class ActionGroupObjectHandlerTest extends MagentoTestCase
 
         $actionGroupObjectHandlerProperty = new ReflectionProperty(ActionGroupObjectHandler::class, 'instance');
         $actionGroupObjectHandlerProperty->setAccessible(true);
-        $actionGroupObjectHandlerProperty->setValue(null);
+        $actionGroupObjectHandlerProperty->setValue(null, null);
 
         $objectManagerProperty = new ReflectionProperty(ObjectManager::class, 'instance');
         $objectManagerProperty->setAccessible(true);
-        $objectManagerProperty->setValue(null);
+        $objectManagerProperty->setValue(null, null);
     }
 }

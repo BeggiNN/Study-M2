@@ -1,29 +1,32 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Helper;
 
 use PayPal\Braintree\Helper\CcType;
 use PayPal\Braintree\Model\Adminhtml\Source\CcType as CcTypeSource;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class CcTypeTest extends \PHPUnit\Framework\TestCase
 {
-
     /**
      * @var ObjectManager
      */
-    private $objectManager;
+    private ObjectManager $objectManager;
 
     /**
-     * @var \PayPal\Braintree\Helper\CcType
+     * @var CcType
      */
-    private $helper;
+    private CcType $helper;
 
-    /** @var \PayPal\Braintree\Model\Adminhtml\Source\CcType|\PHPUnit\Framework\MockObject\MockObject */
-    private $ccTypeSource;
+    /**
+     * @var CcTypeSource|MockObject
+     */
+    private CcTypeSource|MockObject $ccTypeSource;
 
     protected function setUp(): void
     {
@@ -31,7 +34,7 @@ class CcTypeTest extends \PHPUnit\Framework\TestCase
 
         $this->ccTypeSource = $this->getMockBuilder(CcTypeSource::class)
             ->disableOriginalConstructor()
-            ->setMethods(['toOptionArray'])
+            ->onlyMethods(['toOptionArray'])
             ->getMock();
 
         $this->helper = $this->objectManager->getObject(CcType::class, [
@@ -39,9 +42,6 @@ class CcTypeTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    /**
-     * @covers \PayPal\Braintree\Helper\CcType::getCcTypes
-     */
     public function testGetCcTypes()
     {
         $this->ccTypeSource->expects(static::once())

@@ -1,15 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Http\Client;
 
 use Braintree\Result\Successful;
+use Magento\Payment\Gateway\Http\ClientException;
+use Magento\Payment\Gateway\Http\ConverterException;
 use PayPal\Braintree\Gateway\Http\Client\TransactionSubmitForSettlement;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
 use Magento\Payment\Gateway\Http\TransferInterface;
 use Magento\Payment\Model\Method\Logger;
+use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Log\LoggerInterface;
 
@@ -35,11 +39,11 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
         $criticalLoggerMock = $this->getMockForAbstractClass(LoggerInterface::class);
         $this->logger = $this->getMockBuilder(Logger::class)
             ->disableOriginalConstructor()
-            ->setMethods(['debug'])
+            ->onlyMethods(['debug'])
             ->getMock();
         $this->adapter = $this->getMockBuilder(BraintreeAdapter::class)
             ->disableOriginalConstructor()
-            ->setMethods(['submitForSettlement'])
+            ->onlyMethods(['submitForSettlement'])
             ->getMock();
 
         $this->client = new TransactionSubmitForSettlement(
@@ -51,11 +55,13 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @covers \PayPal\Braintree\Gateway\Http\Client\TransactionSubmitForSettlement::placeRequest
+     * @throws ConverterException
+     * @throws Exception
      */
     public function testPlaceRequestWithException()
     {
         $this->markTestSkipped('Skip this test');
-        $this->expectException(\Magento\Payment\Gateway\Http\ClientException::class);
+        $this->expectException(ClientException::class);
         $this->expectExceptionMessage('Transaction has been declined');
 
         $exception = new \Exception('Transaction has been declined');
@@ -87,8 +93,9 @@ class TransactionSubmitForSettlementTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @return TransferInterface|MockObject
+     * @throws Exception
      */
-    private function getTransferObjectMock()
+    private function getTransferObjectMock(): MockObject|TransferInterface
     {
         $mock = $this->createMock(TransferInterface::class);
         $mock->expects($this->once())

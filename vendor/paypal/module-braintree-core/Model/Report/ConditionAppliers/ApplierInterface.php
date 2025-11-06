@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Report\ConditionAppliers;
 
 /**
@@ -10,11 +11,11 @@ namespace PayPal\Braintree\Model\Report\ConditionAppliers;
  */
 interface ApplierInterface
 {
-    const EQ = 'eq';
-    const QTEQ = 'gteq';
-    const LTEQ = 'lteq';
-    const IN = 'in';
-    const LIKE = 'like';
+    public const EQ = 'eq';
+    public const QTEQ = 'gteq';
+    public const LTEQ = 'lteq';
+    public const IN = 'in';
+    public const LIKE = 'like';
 
     /**
      * Apply filter condition
@@ -24,5 +25,5 @@ interface ApplierInterface
      * @param mixed $value
      * @return bool
      */
-    public function apply($field, $condition, $value): bool;
+    public function apply(object $field, string $condition, mixed $value): bool;
 }

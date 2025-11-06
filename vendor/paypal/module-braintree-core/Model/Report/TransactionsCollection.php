@@ -1,23 +1,25 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Report;
 
 use Braintree\ResourceCollection;
+use Magento\Framework\Api\Search\SearchCriteriaInterface;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
 use PayPal\Braintree\Model\Report\Row\TransactionMap;
 use Magento\Framework\Api\Search\AggregationInterface;
 use Magento\Framework\Api\Search\DocumentInterface;
 use Magento\Framework\Api\Search\SearchResultInterface;
-use Magento\Framework\Api\SearchCriteriaInterface;
+use Magento\Framework\Api\SearchCriteriaInterface as BaseSearchCriteriaInterface;
 use Magento\Framework\Data\Collection;
 use Magento\Framework\Data\Collection\EntityFactoryInterface;
 
 class TransactionsCollection extends Collection implements SearchResultInterface
 {
-    const TRANSACTION_MAXIMUM_COUNT = 100;
+    public const TRANSACTION_MAXIMUM_COUNT = 100;
 
     /**
      * Item object class name
@@ -29,22 +31,22 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     /**
      * @var array
      */
-    private $filtersList = [];
+    private array $filtersList = [];
 
     /**
      * @var FilterMapper
      */
-    private $filterMapper;
+    private FilterMapper $filterMapper;
 
     /**
      * @var BraintreeAdapter
      */
-    private $braintreeAdapter;
+    private BraintreeAdapter $braintreeAdapter;
 
     /**
-     * @var ResourceCollection | null
+     * @var ResourceCollection|null
      */
-    private $collection;
+    private ?ResourceCollection $collection;
 
     /**
      * @param EntityFactoryInterface $entityFactory
@@ -62,6 +64,8 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     }
 
     /**
+     * Get items
+     *
      * @return array
      */
     public function getItems(): array
@@ -97,9 +101,10 @@ class TransactionsCollection extends Collection implements SearchResultInterface
 
     /**
      * Fetch collection from Braintree
+     *
      * @return ResourceCollection|null
      */
-    protected function fetchIdsCollection()
+    protected function fetchIdsCollection(): ?ResourceCollection
     {
         if (empty($this->filtersList)) {
             return null;
@@ -118,28 +123,32 @@ class TransactionsCollection extends Collection implements SearchResultInterface
      * Set items list.
      *
      * @param DocumentInterface[] $items
-     * @return $this
+     * @return self
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setItems(array $items = null)
+    public function setItems(?array $items = null): TransactionsCollection
     {
         return $this;
     }
 
     /**
-     * @return AggregationInterface
+     * Get aggregations
+     *
+     * @return AggregationInterface|null
      */
-    public function getAggregations()
+    public function getAggregations(): ?AggregationInterface
     {
         return null;
     }
 
     /**
+     * Set aggregations
+     *
      * @param AggregationInterface $aggregations
-     * @return $this
+     * @return self
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setAggregations($aggregations)
+    public function setAggregations($aggregations): TransactionsCollection
     {
         return $this;
     }
@@ -147,9 +156,9 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     /**
      * Get search criteria.
      *
-     * @return \Magento\Framework\Api\Search\SearchCriteriaInterface
+     * @return SearchCriteriaInterface|null
      */
-    public function getSearchCriteria()
+    public function getSearchCriteria(): ?SearchCriteriaInterface
     {
         return null;
     }
@@ -157,11 +166,11 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     /**
      * Set search criteria.
      *
-     * @param SearchCriteriaInterface $searchCriteria
-     * @return $this
+     * @param BaseSearchCriteriaInterface $searchCriteria
+     * @return self
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setSearchCriteria(SearchCriteriaInterface $searchCriteria)
+    public function setSearchCriteria(BaseSearchCriteriaInterface $searchCriteria): TransactionsCollection
     {
         return $this;
     }
@@ -185,7 +194,7 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     public function getPageSize(): int
     {
         $pageSize = parent::getPageSize();
-        return $pageSize ?? static::TRANSACTION_MAXIMUM_COUNT;
+        return $pageSize ?? self::TRANSACTION_MAXIMUM_COUNT;
     }
 
     /**
@@ -195,7 +204,7 @@ class TransactionsCollection extends Collection implements SearchResultInterface
      * @return $this
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function setTotalCount($totalCount)
+    public function setTotalCount($totalCount): TransactionsCollection
     {
         return $this;
     }
@@ -203,7 +212,7 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     /**
      * @inheritdoc
      */
-    public function addFieldToFilter($field, $condition)
+    public function addFieldToFilter($field, $condition): TransactionsCollection
     {
         if (is_array($field)) {
             return $this;
@@ -224,7 +233,7 @@ class TransactionsCollection extends Collection implements SearchResultInterface
      * @param object $filter
      * @return void
      */
-    private function addFilterToList($filter)
+    private function addFilterToList(object $filter): void
     {
         if (null !== $filter) {
             $this->filtersList[] = $filter;
@@ -232,6 +241,8 @@ class TransactionsCollection extends Collection implements SearchResultInterface
     }
 
     /**
+     * Get filters
+     *
      * @return array
      */
     private function getFilters(): array

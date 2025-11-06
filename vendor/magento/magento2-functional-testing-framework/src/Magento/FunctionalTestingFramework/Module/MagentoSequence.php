@@ -1,13 +1,13 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 // @codingStandardsIgnoreFile
 namespace Magento\FunctionalTestingFramework\Module;
 
-use Codeception\Module\Sequence;
+use Magento\FunctionalTestingFramework\Codeception\Module\Sequence;
 use Codeception\Exception\ModuleException;
 
 /**

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Controller\Adminhtml\Virtual;
 
@@ -9,7 +14,7 @@ use Magento\Framework\View\Result\PageFactory;
 
 class Index extends Action
 {
-    const ADMIN_RESOURCE = 'Magento_Sales::create';
+    public const ADMIN_RESOURCE = 'Magento_Sales::create';
 
     /**
      * @var PageFactory $resultPageFactory
@@ -31,6 +36,8 @@ class Index extends Action
     }
 
     /**
+     * Render virtual terminal page
+     *
      * @return Page
      */
     public function execute(): Page

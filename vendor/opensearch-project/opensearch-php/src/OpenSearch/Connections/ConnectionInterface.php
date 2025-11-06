@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,10 +21,14 @@ declare(strict_types=1);
 
 namespace OpenSearch\Connections;
 
-use OpenSearch\Serializers\SerializerInterface;
 use OpenSearch\Transport;
-use Psr\Log\LoggerInterface;
 
+// @phpstan-ignore classConstant.deprecatedInterface
+@trigger_error(ConnectionInterface::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0.', E_USER_DEPRECATED);
+
+/**
+ * @deprecated in 2.4.0 and will be removed in 3.0.0.
+ */
 interface ConnectionInterface
 {
     /**
@@ -75,8 +79,9 @@ interface ConnectionInterface
     public function getLastRequestInfo(): array;
 
     /**
-     * @param  null $body
+     * @param array<string, mixed>|null $params
+     * @param  mixed $body
      * @return mixed
      */
-    public function performRequest(string $method, string $uri, ?array $params = [], $body = null, array $options = [], Transport $transport = null);
+    public function performRequest(string $method, string $uri, ?array $params = [], $body = null, array $options = [], ?Transport $transport = null);
 }

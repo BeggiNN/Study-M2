@@ -94,6 +94,8 @@ class HtmlEntities extends AbstractFilter
     /**
      * Returns the quoteStyle option
      *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
+     *
      * @return int
      */
     public function getQuoteStyle()
@@ -104,7 +106,9 @@ class HtmlEntities extends AbstractFilter
     /**
      * Sets the quoteStyle option
      *
-     * @param  int $quoteStyle
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. Set options during construction instead
+     *
+     * @param int $quoteStyle
      * @return self Provides a fluent interface
      */
     public function setQuoteStyle($quoteStyle)
@@ -116,6 +120,8 @@ class HtmlEntities extends AbstractFilter
     /**
      * Get encoding
      *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
+     *
      * @return string
      */
     public function getEncoding()
@@ -126,7 +132,9 @@ class HtmlEntities extends AbstractFilter
     /**
      * Set encoding
      *
-     * @param  string $value
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. Set options during construction instead
+     *
+     * @param string $value
      * @return self
      */
     public function setEncoding($value)
@@ -137,6 +145,8 @@ class HtmlEntities extends AbstractFilter
 
     /**
      * Returns the charSet option
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
      *
      * Proxies to {@link getEncoding()}
      *
@@ -150,9 +160,11 @@ class HtmlEntities extends AbstractFilter
     /**
      * Sets the charSet option
      *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. Set options during construction instead
+     *
      * Proxies to {@link setEncoding()}
      *
-     * @param  string $charSet
+     * @param string $charSet
      * @return self Provides a fluent interface
      */
     public function setCharSet($charSet)
@@ -162,6 +174,8 @@ class HtmlEntities extends AbstractFilter
 
     /**
      * Returns the doubleQuote option
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement
      *
      * @return bool
      */
@@ -173,7 +187,9 @@ class HtmlEntities extends AbstractFilter
     /**
      * Sets the doubleQuote option
      *
-     * @param  bool $doubleQuote
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. Set options during construction instead
+     *
+     * @param bool $doubleQuote
      * @return self Provides a fluent interface
      */
     public function setDoubleQuote($doubleQuote)

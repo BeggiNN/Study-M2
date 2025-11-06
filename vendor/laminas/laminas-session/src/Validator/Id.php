@@ -9,13 +9,19 @@ use function session_id;
 use function strrpos;
 use function substr;
 
+use const PHP_VERSION_ID;
+
 /**
  * session_id validator
+ *
+ * @final
  */
 class Id implements ValidatorInterface
 {
     /**
      * Session identifier.
+     *
+     * @deprecated This property will be removed in version 3.0
      *
      * @var string
      */
@@ -56,29 +62,31 @@ class Id implements ValidatorInterface
             }
         }
 
-        // Get the session id bits per character INI setting, using 5 if unavailable
-        $hashBitsPerChar = ini_get('session.sid_bits_per_character');
-        $hashBitsPerChar = is_numeric($hashBitsPerChar) ? (int) $hashBitsPerChar : 5;
-
-        switch ($hashBitsPerChar) {
-            case 4:
-                $pattern = '#^[0-9a-f]*$#';
-                break;
-            case 6:
-                $pattern = '#^[0-9a-zA-Z-,]*$#';
-                break;
-            case 5:
-                // intentionally fall-through
-            default:
-                $pattern = '#^[0-9a-v]*$#';
-                break;
+        if (PHP_VERSION_ID >= 80400) {
+            // PHP 8.4 deprecated session.sid_bits_per_character and set it hard to "4".
+            // Old (pre PHP 8.4) session IDs with a higher bitrate are still valid though.
+            $hashBitsPerChar = 6;
+        } else {
+            // Get the session id bits per character INI setting, using 5 if unavailable
+            $hashBitsPerChar = ini_get('session.sid_bits_per_character');
+            $hashBitsPerChar = is_numeric($hashBitsPerChar) ? (int) $hashBitsPerChar : 5;
         }
+
+        $pattern = match ($hashBitsPerChar) {
+            4 => '#^[0-9a-f]*$#',
+            6 => '#^[0-9a-zA-Z-,]*$#',
+            // 5
+            // intentionally fall-through
+            default => '#^[0-9a-v]*$#',
+        };
 
         return (bool) preg_match($pattern, $id);
     }
 
     /**
      * Retrieve token for validating call (session_id)
+     *
+     * @deprecated This method will be removed in version 3.0
      *
      * @return string
      */

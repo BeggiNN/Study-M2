@@ -16,7 +16,8 @@ use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Reflection\Php\PhpParameterReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use Rector\Core\Rector\AbstractRector;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Rector\Symfony\NodeAnalyzer\SymfonyPhpClosureDetector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -35,10 +36,16 @@ final class ServiceArgsToServiceNamedArgRector extends AbstractRector
      * @var \PHPStan\Reflection\ReflectionProvider
      */
     private $reflectionProvider;
-    public function __construct(SymfonyPhpClosureDetector $symfonyPhpClosureDetector, ReflectionProvider $reflectionProvider)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(SymfonyPhpClosureDetector $symfonyPhpClosureDetector, ReflectionProvider $reflectionProvider, ValueResolver $valueResolver)
     {
         $this->symfonyPhpClosureDetector = $symfonyPhpClosureDetector;
         $this->reflectionProvider = $reflectionProvider;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -80,7 +87,7 @@ CODE_SAMPLE
             return null;
         }
         $hasChanged = \false;
-        $this->traverseNodesWithCallable($node->stmts, function (Node $node) use(&$hasChanged) {
+        $this->traverseNodesWithCallable($node->stmts, function (Node $node) use(&$hasChanged) : ?MethodCall {
             if (!$node instanceof MethodCall) {
                 return null;
             }
@@ -150,10 +157,10 @@ CODE_SAMPLE
         }
         return $this->isObjectType($methodCall->var, new ObjectType('Symfony\\Component\\DependencyInjection\\Loader\\Configurator\\ServiceConfigurator'));
     }
-    private function createArgMethodCall(string $parameterName, Expr $expr, ?MethodCall $argMethodCall, MethodCall $node) : MethodCall
+    private function createArgMethodCall(string $parameterName, Expr $expr, ?MethodCall $argMethodCall, MethodCall $methodCall) : MethodCall
     {
         $argArgs = [new Arg(new String_($parameterName)), new Arg($expr)];
-        $callerExpr = $argMethodCall instanceof MethodCall ? $argMethodCall : $node->var;
+        $callerExpr = $argMethodCall instanceof MethodCall ? $argMethodCall : $methodCall->var;
         return new MethodCall($callerExpr, 'arg', $argArgs);
     }
     /**

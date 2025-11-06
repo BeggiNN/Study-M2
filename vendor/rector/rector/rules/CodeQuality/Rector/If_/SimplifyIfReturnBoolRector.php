@@ -5,7 +5,9 @@ namespace Rector\CodeQuality\Rector\If_;
 
 use PhpParser\Node;
 use PhpParser\Node\Expr;
+use PhpParser\Node\Expr\BinaryOp\Equal;
 use PhpParser\Node\Expr\BinaryOp\Identical;
+use PhpParser\Node\Expr\BinaryOp\NotEqual;
 use PhpParser\Node\Expr\BinaryOp\NotIdentical;
 use PhpParser\Node\Expr\BooleanNot;
 use PhpParser\Node\Stmt\Else_;
@@ -13,9 +15,10 @@ use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
 use Rector\BetterPhpDocParser\Comment\CommentsMerger;
 use Rector\CodeQuality\NodeManipulator\ExprBoolCaster;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\Core\PhpParser\Printer\BetterStandardPrinter;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\PhpParser\Printer\BetterStandardPrinter;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -35,14 +38,20 @@ final class SimplifyIfReturnBoolRector extends AbstractRector
     private $exprBoolCaster;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Printer\BetterStandardPrinter
+     * @var \Rector\PhpParser\Printer\BetterStandardPrinter
      */
     private $betterStandardPrinter;
-    public function __construct(CommentsMerger $commentsMerger, ExprBoolCaster $exprBoolCaster, BetterStandardPrinter $betterStandardPrinter)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(CommentsMerger $commentsMerger, ExprBoolCaster $exprBoolCaster, BetterStandardPrinter $betterStandardPrinter, ValueResolver $valueResolver)
     {
         $this->commentsMerger = $commentsMerger;
         $this->exprBoolCaster = $exprBoolCaster;
         $this->betterStandardPrinter = $betterStandardPrinter;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -109,9 +118,6 @@ CODE_SAMPLE
         if ($if->elseifs !== []) {
             return \true;
         }
-        if ($this->isElseSeparatedThenIf($if)) {
-            return \true;
-        }
         if (!$this->isIfWithSingleReturnExpr($if)) {
             return \true;
         }
@@ -133,25 +139,29 @@ CODE_SAMPLE
         if (\strpos($condString, '!=') === \false) {
             return !$this->valueResolver->isTrueOrFalse($return->expr);
         }
-        return !$if->cond instanceof NotIdentical;
+        return !$if->cond instanceof NotIdentical && !$if->cond instanceof NotEqual;
     }
-    private function processReturnTrue(If_ $if, Return_ $nextReturnNode) : Return_
+    private function processReturnTrue(If_ $if, Return_ $nextReturn) : Return_
     {
-        if ($if->cond instanceof BooleanNot && $nextReturnNode->expr instanceof Expr && $this->valueResolver->isTrue($nextReturnNode->expr)) {
+        if ($if->cond instanceof BooleanNot && $nextReturn->expr instanceof Expr && $this->valueResolver->isTrue($nextReturn->expr)) {
             return new Return_($this->exprBoolCaster->boolCastOrNullCompareIfNeeded($if->cond->expr));
         }
         return new Return_($this->exprBoolCaster->boolCastOrNullCompareIfNeeded($if->cond));
     }
-    private function processReturnFalse(If_ $if, Return_ $nextReturnNode) : ?Return_
+    private function processReturnFalse(If_ $if, Return_ $nextReturn) : ?Return_
     {
         if ($if->cond instanceof Identical) {
             $notIdentical = new NotIdentical($if->cond->left, $if->cond->right);
             return new Return_($this->exprBoolCaster->boolCastOrNullCompareIfNeeded($notIdentical));
         }
-        if (!$nextReturnNode->expr instanceof Expr) {
+        if ($if->cond instanceof Equal) {
+            $notIdentical = new NotEqual($if->cond->left, $if->cond->right);
+            return new Return_($this->exprBoolCaster->boolCastOrNullCompareIfNeeded($notIdentical));
+        }
+        if (!$nextReturn->expr instanceof Expr) {
             return null;
         }
-        if (!$this->valueResolver->isTrue($nextReturnNode->expr)) {
+        if (!$this->valueResolver->isTrue($nextReturn->expr)) {
             return null;
         }
         if ($if->cond instanceof BooleanNot) {
@@ -159,26 +169,12 @@ CODE_SAMPLE
         }
         return new Return_($this->exprBoolCaster->boolCastOrNullCompareIfNeeded(new BooleanNot($if->cond)));
     }
-    /**
-     * Matches: "else if"
-     */
-    private function isElseSeparatedThenIf(If_ $if) : bool
-    {
-        if (!$if->else instanceof Else_) {
-            return \false;
-        }
-        if (\count($if->else->stmts) !== 1) {
-            return \false;
-        }
-        $onlyStmt = $if->else->stmts[0];
-        return $onlyStmt instanceof If_;
-    }
     private function isIfWithSingleReturnExpr(If_ $if) : bool
     {
         if (\count($if->stmts) !== 1) {
             return \false;
         }
-        if ($if->elseifs !== []) {
+        if ($if->else instanceof Else_ || $if->elseifs !== []) {
             return \false;
         }
         $ifInnerNode = $if->stmts[0];
@@ -198,6 +194,10 @@ CODE_SAMPLE
             $expr = $return->expr;
             if ($if->cond instanceof NotIdentical && $this->valueResolver->isTrue($expr)) {
                 $if->cond = new Identical($if->cond->left, $if->cond->right);
+                return $this->processReturnTrue($if, $return);
+            }
+            if ($if->cond instanceof NotEqual && $this->valueResolver->isTrue($expr)) {
+                $if->cond = new Equal($if->cond->left, $if->cond->right);
                 return $this->processReturnTrue($if, $return);
             }
             return $this->processReturnFalse($if, $return);

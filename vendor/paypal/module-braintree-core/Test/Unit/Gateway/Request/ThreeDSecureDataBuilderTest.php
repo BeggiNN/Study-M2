@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
 use PayPal\Braintree\Gateway\Config\Config;
@@ -11,38 +12,39 @@ use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Payment\Gateway\Data\Order\OrderAdapter;
 use Magento\Payment\Gateway\Data\Order\AddressAdapter;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var ThreeDSecureDataBuilder
      */
-    private $builder;
+    private ThreeDSecureDataBuilder $builder;
 
     /**
-     * @var Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $configMock;
+    private Config|MockObject $configMock;
 
     /**
-     * @var PaymentDataObjectInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var PaymentDataObjectInterface|MockObject
      */
-    private $paymentDO;
+    private PaymentDataObjectInterface|MockObject $paymentDO;
 
     /**
-     * @var OrderAdapter|\PHPUnit\Framework\MockObject\MockObject
+     * @var OrderAdapter|MockObject
      */
-    private $order;
+    private OrderAdapter|MockObject $order;
 
     /**
-     * @var \Magento\Payment\Gateway\Data\Order\AddressAdapter|\PHPUnit\Framework\MockObject\MockObject
+     * @var AddressAdapter|MockObject
      */
-    private $billingAddress;
+    private AddressAdapter|MockObject $billingAddress;
 
     /**
-     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
+     * @var SubjectReader|MockObject
      */
-    private $subjectReaderMock;
+    private SubjectReader|MockObject $subjectReaderMock;
 
     protected function setUp(): void
     {
@@ -50,14 +52,19 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
 
         $this->paymentDO = $this->getMockBuilder(PaymentDataObjectInterface::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getOrder', 'getPayment'])
+            ->onlyMethods(['getOrder', 'getPayment'])
             ->getMockForAbstractClass();
         $this->paymentDO->expects(static::once())
             ->method('getOrder')
             ->willReturn($this->order);
 
         $this->configMock = $this->getMockBuilder(Config::class)
-            ->setMethods(['isVerify3DSecure', 'is3DSAlwaysRequested', 'getThresholdAmount', 'get3DSecureSpecificCountries'])
+            ->onlyMethods([
+                'isVerify3DSecure',
+                'is3DSAlwaysRequested',
+                'getThresholdAmount',
+                'get3DSecureSpecificCountries'
+            ])
             ->disableOriginalConstructor()
             ->getMock();
         $this->subjectReaderMock = $this->getMockBuilder(SubjectReader::class)
@@ -68,17 +75,25 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param $verify
-     * @param $challengeRequested
-     * @param $thresholdAmount
-     * @param $countryId
+     * Test build
+     *
+     * @param bool $verify
+     * @param bool $challengeRequested
+     * @param float $thresholdAmount
+     * @param string $countryId
      * @param array $countries
      * @param array $expected
      * @covers \PayPal\Braintree\Gateway\Request\ThreeDSecureDataBuilder::build
      * @dataProvider buildDataProvider
      */
-    public function testBuild($verify, $challengeRequested, $thresholdAmount, $countryId, array $countries, array $expected)
-    {
+    public function testBuild(
+        bool $verify,
+        bool $challengeRequested,
+        float $thresholdAmount,
+        string $countryId,
+        array $countries,
+        array $expected
+    ) {
         $this->markTestSkipped('Skip this test');
         $buildSubject = [
             'payment' => $this->paymentDO,
@@ -120,45 +135,87 @@ class ThreeDSecureDataBuilderTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Get list of variations for build test
+     *
      * @return array
      */
-    public function buildDataProvider()
+    public static function buildDataProvider(): array
     {
         return [
-            ['verify' => true, 'challengeRequested' => true, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => [
-                'options' => [
-                    'threeDSecure' => [
-                        'required' => true
+            [
+                'verify' => true,
+                'challengeRequested' => true,
+                'amount' => 20,
+                'countryId' => 'US',
+                'countries' => [],
+                'result' => [
+                    'options' => [
+                        'threeDSecure' => [
+                            'required' => true
+                        ]
                     ]
                 ]
-            ]],
-            ['verify' => true, 'challengeRequested' => true, 'amount' => 0, 'countryId' => 'US', 'countries' => ['US', 'GB'], 'result' => [
-                'options' => [
-                    'threeDSecure' => [
-                        'required' => true
+            ],
+            [
+                'verify' => true,
+                'challengeRequested' => true,
+                'amount' => 0,
+                'countryId' => 'US',
+                'countries' => ['US', 'GB'],
+                'result' => [
+                    'options' => [
+                        'threeDSecure' => [
+                            'required' => true
+                        ]
                     ]
                 ]
-            ]],
-            ['verify' => true, 'challengeRequested' => true, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => false, 'challengeRequested' => false, 'amount' => 40, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => false, 'challengeRequested' => false, 'amount' => 20, 'countryId' => 'US', 'countries' => [], 'result' => []],
-            ['verify' => true, 'challengeRequested' => true, 'amount' => 20, 'countryId' => 'CA', 'countries' => ['US', 'GB'], 'result' => []],
+            ],
+            [
+                'verify' => true,
+                'challengeRequested' => true,
+                'amount' => 40,
+                'countryId' => 'US',
+                'countries' => [],
+                'result' => []],
+            [
+                'verify' => false,
+                'challengeRequested' => false,
+                'amount' => 40,
+                'countryId' => 'US',
+                'countries' => [],
+                'result' => []
+            ],
+            [
+                'verify' => false,
+                'challengeRequested' => false,
+                'amount' => 20,
+                'countryId' => 'US',
+                'countries' => [],
+                'result' => []
+            ],
+            [
+                'verify' => true,
+                'challengeRequested' => true,
+                'amount' => 20,
+                'countryId' => 'CA',
+                'countries' => ['US', 'GB'],
+                'result' => []
+            ]
         ];
     }
 
     /**
      * Create mock object for order adapter
      */
-    private function initOrderMock()
+    private function initOrderMock(): void
     {
         $this->billingAddress = $this->getMockBuilder(AddressAdapter::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getCountryId'])
+            ->onlyMethods(['getCountryId'])
             ->getMock();
 
         $this->order = $this->getMockBuilder(OrderAdapter::class)
             ->disableOriginalConstructor()
-            ->setMethods(['getBillingAddress'])
+            ->onlyMethods(['getBillingAddress'])
             ->getMock();
 
         $this->order->expects(static::any())

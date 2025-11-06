@@ -1,44 +1,50 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Paypal;
 
+use Laminas\Http\Request;
 use Magento\Framework\HTTP\Adapter\Curl;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Cache\Type\Config as Cache;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\AuthenticationException;
-use Zend_Http_Client;
 
 class CreditApi
 {
     /**
      * @var Curl
      */
-    private $curl;
+    private Curl $curl;
 
     /**
      * @var string
      */
-    private $accessToken;
+    private string $accessToken = '';
 
     /**
      * @var ScopeConfigInterface
      */
-    private $scopeConfig;
+    private ScopeConfigInterface $scopeConfig;
 
     /**
      * @var Cache
      */
-    private $cache;
+    private Cache $cache;
 
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * CreditApi constructor.
+     *
      * @param Curl $curl
      * @param ScopeConfigInterface $scopeConfig
      * @param Cache $cacheManager
@@ -57,6 +63,8 @@ class CreditApi
     }
 
     /**
+     * Get authorization
+     *
      * @return string
      * @throws LocalizedException
      */
@@ -97,11 +105,13 @@ class CreditApi
     }
 
     /**
-     * @param $price
+     * Get price options
+     *
+     * @param float $price
      * @return array
      * @throws LocalizedException
      */
-    public function getPriceOptions($price): array
+    public function getPriceOptions(float $price): array
     {
         $body = [
             'financing_country_code' => 'GB',
@@ -140,15 +150,14 @@ class CreditApi
                     $qualifyingOption->credit_financing->enabled === true
                 ) {
                     $options[] = [
-                        'term' => $qualifyingOption->credit_financing->term,
-                        'monthly_payment' => $qualifyingOption->monthly_payment->value,
-                        'instalment_rate' => $qualifyingOption->credit_financing->apr,
-                        'cost_of_purchase' => $qualifyingOption->total_cost->value,
-                        'total_inc_interest' =>
-                            number_format(
-                                $qualifyingOption->total_cost->value + $qualifyingOption->total_interest->value,
-                                2
-                            )
+                        'term' => (int) $qualifyingOption->credit_financing->term,
+                        'monthly_payment' => (float) $qualifyingOption->monthly_payment->value,
+                        'instalment_rate' => (float) $qualifyingOption->credit_financing->apr,
+                        'cost_of_purchase' => (float) $qualifyingOption->total_cost->value,
+                        'total_inc_interest' => (float) number_format(
+                            $qualifyingOption->total_cost->value + $qualifyingOption->total_interest->value,
+                            2
+                        )
                     ];
                 }
             }
@@ -158,6 +167,8 @@ class CreditApi
     }
 
     /**
+     * Get authorization token
+     *
      * @return string
      */
     private function getAuthorizationToken(): string
@@ -166,6 +177,8 @@ class CreditApi
     }
 
     /**
+     * Get authorization url
+     *
      * @return string
      */
     private function getAuthorizationUrl(): string
@@ -175,6 +188,8 @@ class CreditApi
     }
 
     /**
+     * Get calculator url
+     *
      * @return string
      */
     private function getCalcUrl(): string
@@ -184,20 +199,22 @@ class CreditApi
     }
 
     /**
-     * @param $url
-     * @param $body
+     * Credit API Request
+     *
+     * @param string $url
+     * @param string $body
      * @param array $headers
      * @param array $configuration
-     * @return mixed|string
+     * @return mixed
      * @throws LocalizedException
      */
-    private function request($url, $body, $headers = [], $configuration = [])
+    private function request(string $url, string $body, array $headers = [], array $configuration = []): mixed
     {
         $configuration['header'] = false;
 
-        $this->curl->setConfig($configuration);
+        $this->curl->setOptions($configuration);
         $this->curl->write(
-            Zend_Http_Client::POST,
+            Request::METHOD_POST,
             $url,
             '1.1',
             $headers,

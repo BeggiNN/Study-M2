@@ -36,6 +36,8 @@ use function strtolower;
  * <code>
  * $container = $services->get('MySessionContainer');
  * </code>
+ *
+ * @final
  */
 class ContainerAbstractServiceFactory implements AbstractFactoryInterface
 {
@@ -74,6 +76,7 @@ class ContainerAbstractServiceFactory implements AbstractFactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Can we create an instance of the given service? (v2 usage)
      *
      * @param string $name
@@ -98,6 +101,7 @@ class ContainerAbstractServiceFactory implements AbstractFactoryInterface
     }
 
     /**
+     * @deprecated This method will be removed in version 3.0
      * Create and return a named container (v2 usage).
      *
      * @param string $name

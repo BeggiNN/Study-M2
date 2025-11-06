@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\DataTransport\Auth;
@@ -56,7 +56,7 @@ class WebApiAuth
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.NPathComplexity)
      */
-    public static function getAdminToken($username = null, $password = null)
+    public static function getAdminToken(?string $username = null, ?string $password = null)
     {
         $login = $username ?? getenv('MAGENTO_ADMIN_USERNAME');
         try {

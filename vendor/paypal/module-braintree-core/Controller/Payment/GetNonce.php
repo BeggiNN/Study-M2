@@ -1,11 +1,13 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Controller\Payment;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\ResponseInterface;
 use Magento\Framework\Controller\Result\Json;
 use PayPal\Braintree\Gateway\Command\GetPaymentNonceCommand;
@@ -17,7 +19,7 @@ use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\Webapi\Exception;
 use Psr\Log\LoggerInterface;
 
-class GetNonce extends Action implements HttpGetActionInterface
+class GetNonce extends Action implements ActionInterface, HttpGetActionInterface
 {
     /**
      * @var LoggerInterface

@@ -28,11 +28,12 @@
             <actionGroup ref="AdminAssignCategoryToProductAndSaveActionGroup" stepKey="assignCategoryToProduct">
                 <argument name="categoryName" value="$category.name$"/>
             </actionGroup>
-            <comment userInput="BIC workaround" stepKey="reindex"/>
             <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex1">
                 <argument name="indices" value=""/>
             </actionGroup>
-            <magentoCLI command="cache:flush" stepKey="flushCache"/>
+            <actionGroup ref="CliCacheFlushActionGroup" stepKey="flushCache">
+                <argument name="tags" value=""/>
+            </actionGroup>
         </before>
         <after>
             <!--Clean up test data.-->

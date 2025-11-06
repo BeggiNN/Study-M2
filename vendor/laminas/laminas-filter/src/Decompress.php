@@ -9,6 +9,9 @@ use function is_string;
 /**
  * Decompresses a given string
  *
+ * @deprecated Since 2.40.0. This filter will be removed in 3.0 and replaced with `DecompressString` and
+ *              `DecompressArchive`
+ *
  * @final
  */
 class Decompress extends Compress

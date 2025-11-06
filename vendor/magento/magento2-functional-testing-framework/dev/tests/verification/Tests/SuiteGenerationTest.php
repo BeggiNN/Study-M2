@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace tests\verification\Tests;
@@ -493,7 +493,7 @@ class SuiteGenerationTest extends MftfTestCase
 
         $property = new \ReflectionProperty(DirSetupUtil::class, "DIR_CONTEXT");
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
     }
 
     /**

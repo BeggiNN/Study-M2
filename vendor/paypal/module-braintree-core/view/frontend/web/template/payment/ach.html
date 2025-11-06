@@ -1,10 +1,16 @@
+<!--
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
 <!-- ACH Direct Debit -->
 <div class="payment-method" data-bind="css: {'_active': (getCode() == isChecked())}" id="payment-method-braintree-ach">
     <div class="payment-method-title field choice">
         <input type="radio"
                name="payment[method]"
                class="radio"
-               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()" />
+               data-bind="attr: {'id': getCode()}, value: getCode(), checked: isChecked, click: selectPaymentMethod, visible: isRadioButtonVisible()">
         <label class="label" data-bind="attr: {'for': getCode()}">
             <span text="getTitle()"></span>
         </label>
@@ -30,13 +36,12 @@
                                 </label>
                                 <div class="control">
                                     <input
-                                            class="input-text"
-                                            data-bind="value: routingNumber"
-                                            data-validate="{'required-number':true, minlength:8, maxlength:9}"
-                                            name="payment[routing_number]"
-                                            placeholder="011000015"
-                                            type="number"
-                                    />
+                                        class="input-text"
+                                        data-bind="value: routingNumber"
+                                        data-validate="{'required-number':true, minlength:8, maxlength:9}"
+                                        name="payment[routing_number]"
+                                        placeholder="011000015"
+                                        type="number">
                                 </div>
                             </div>
                             <div class="field required number">
@@ -45,13 +50,12 @@
                                 </label>
                                 <div class="control">
                                     <input
-                                            class="input-text"
-                                            data-bind="value: accountNumber"
-                                            data-validate="{'required-number':true, minlength:4, maxlength:17}"
-                                            name="payment[account_number]"
-                                            placeholder="1000000000"
-                                            type="number"
-                                    />
+                                        class="input-text"
+                                        data-bind="value: accountNumber"
+                                        data-validate="{'required-number':true, minlength:4, maxlength:17}"
+                                        name="payment[account_number]"
+                                        placeholder="1000000000"
+                                        type="number">
                                 </div>
                             </div>
                         </div>
@@ -102,8 +106,7 @@
                                            data-validate="{'required':true,'letters-only':true}"
                                            name="payment[first_name]"
                                            placeholder="Joe"
-                                           type="text"
-                                    />
+                                           type="text">
                                 </div>
                             </div>
                             <div class="field required">
@@ -116,8 +119,7 @@
                                            data-validate="{'required':true,'letters-only':true}"
                                            name="payment[last_name]"
                                            placeholder="Bloggs"
-                                           type="text"
-                                    />
+                                           type="text">
                                 </div>
                             </div>
                         </div>
@@ -135,8 +137,7 @@
                                data-bind="attr: { id: getCode() + '_business_name' }, value: businessName"
                                data-validate="{'required':true}"
                                type="text"
-                               name="payment[business_name]"
-                        />
+                               name="payment[business_name]">
                     </div>
                 </div>
                 <!-- /ko -->
@@ -145,15 +146,29 @@
                     <label class="label">
                         <span data-bind="i18n: 'Proof of Authorization'"></span>
                     </label>
-                    <input
-                            class="checkbox"
-                            data-bind="checked: hasAuthorization"
-                            name="payment[authorization_proof]"
-                            type="checkbox"
-                    />
-                    <p id="braintree-ach-mandate">By clicking "Pay with ACH", I authorize Braintree, a service of PayPal,
-                        on behalf of <span data-bind="text: getStoreName() "></span> (i) to verify my bank account information
-                        using bank information and consumer reports and (ii) to debit my bank account.</p>
+                    <input class="checkbox"
+                           data-bind="checked: hasAuthorization"
+                           name="payment[authorization_proof]"
+                           type="checkbox">
+                    <p id="braintree-ach-mandate" data-bind="hidden: isVaultActive()">By clicking <span data-bind="i18n: 'Pay with ACH'"></span>, I authorize Braintree, a service of PayPal,
+                        on behalf of <span data-bind="text: getStoreName()"></span> to verify my bank account information
+                        using bank information and consumer reports and I authorize <span data-bind="text: getStoreName()"></span>
+                        to initiate an ACH/electronic debit to my checking/savings account,
+                        Depository Name: <span data-bind="text: getAccountHolderName()"></span>, Routing Number: <span data-bind="text: getRoutingNumber()"></span> and Account Number: <span data-bind="text: getAccountNumber()"></span>,
+                        in the amount of $<span data-bind="text: getGrandTotal()"></span> on <span data-bind="text: getCurrentDate()"></span>.
+                        I agree the ACH transactions I authorize comply with all applicable laws.
+                    </p>
+                    <p id="braintree-ach-mandate-vault" data-bind="visible: isVaultActive()">By clicking <span data-bind="i18n: 'Pay with ACH'"></span>, I authorize Braintree, a service of PayPal,
+                        on behalf of <span data-bind="text: getStoreName()"></span> to verify my bank account information
+                        using bank information and consumer reports and I authorize <span data-bind="text: getStoreName()"></span>
+                        to initiate an ACH/electronic debit to my checking/savings account,
+                        Depository Name: <span data-bind="text: getAccountHolderName()"></span>, Routing Number: <span data-bind="text: getRoutingNumber()"></span> and Account Number: <span data-bind="text: getAccountNumber()"></span>,
+                        that will be stored on file, and debited on or after the due date.
+                        I agree the ACH transactions I authorize comply with all applicable laws.
+                        <br>
+                        I understand that this authorization will remain in full force and effect
+                        until I notify <span data-bind="text: getStoreName()"></span> that I wish to revoke this authorization.
+                    </p>
                 </div>
             </fieldset>
         </form>
@@ -163,6 +178,29 @@
             <!-- ko template: getTemplate() --><!-- /ko -->
             <!--/ko-->
         </div>
+
+        <!-- ko if: (isVaultEnabled()) -->
+        <div class="field choice">
+            <input type="checkbox"
+                   name="vault[is_enabled]"
+                   class="checkbox"
+                   data-bind="attr: {'id': getVaultCheckboxId() }, checked: vaultEnabler.isActivePaymentTokenEnabler">
+            <label class="label" data-bind="attr: {'for': getVaultCheckboxId() }">
+                <span><!-- ko i18n: 'Save for later use.'--><!-- /ko --></span>
+            </label>
+            <div class="field-tooltip toggle">
+                <span class="field-tooltip-action action-vault"
+                      tabindex="0"
+                      data-toggle="dropdown"
+                      data-bind="attr: {title: $t('What is this?')}, mageInit: {'dropdown':{'activeClass': '_active'}}">
+                    <span translate="'What is this?'"></span>
+                </span>
+                <div class="field-tooltip-content"
+                     data-target="dropdown"
+                     translate="'We store you payment information securely on Braintree servers via SSL.'"></div>
+            </div>
+        </div>
+        <!-- /ko -->
 
         <div class="actions-toolbar">
             <div class="primary">

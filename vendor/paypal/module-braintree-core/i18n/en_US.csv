@@ -3,7 +3,9 @@ Country,Country
 "Add Rule","Add Rule"
 Month,Month
 Year,Year
-"Stored Card","Stored Card"
+"Stored Card","Stored Card",
+"Stored Cards (Google Pay)","Stored Cards (Google Pay)
+"Stored Cards (Apple Pay)","Stored Cards (Apple Pay)
 "Credit Card Type","Credit Card Type"
 "Credit Card Number","Credit Card Number"
 "Credit card successfully added","Credit card successfully added"
@@ -175,3 +177,13 @@ Debug,Debug
 "Error initializing Venmo: %1","Error initializing Venmo: %1"
 "Pay with Venmo","Pay with Venmo"
 "fundingSource","Funding Source"
+"Account Number Last 4 digits","Account Number Last 4 digits"
+"Bank Routing Number","Bank Routing Number"
+"Pay with ACH","Pay with ACH"
+"Are you sure you want to delete this ACH Direct Debit account number ending in: %1?","Are you sure you want to delete this ACH Direct Debit account number ending in: %1?"
+"%1 is required","%1 is required"
+"Invalid %1","Invalid %1
+"%1 can not be more than 255 characters","%1 can not be more than 255 characters"
+"Invalid Customer","Invalid Customer"
+"Payment method %1 cannot be vaulted","Payment method %1 cannot be vaulted"
+"Failed to save Payment Details to vault","Failed to save Payment Details to vault"

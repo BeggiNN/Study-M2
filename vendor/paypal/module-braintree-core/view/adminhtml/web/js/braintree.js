@@ -3,7 +3,6 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 define([
     'jquery',
     'uiComponent',
@@ -113,6 +112,7 @@ define([
          */
         initBraintree: function () {
             var self = this;
+
             this.scriptLoaded(true);
 
             self.disableEventListeners();
@@ -125,7 +125,7 @@ define([
                 }, function (clientErr, clientInstance) {
                     if (clientErr) {
                         console.error('Error!', clientErr);
-                        return self.error(response.clientErr);
+                        return self.error(clientErr);
                     }
 
                     hostedFields.create({
@@ -142,8 +142,8 @@ define([
                         self.enableEventListeners();
 
                         $('body').trigger('processStop');
-                    }.bind(this));
-                }.bind(this));
+                    });
+                });
             } catch (e) {
                 $('body').trigger('processStop');
                 self.error(e.message);
@@ -272,47 +272,52 @@ define([
                 if (tokenizeErr) {
                     $('body').trigger('processStop');
                     switch (tokenizeErr.code) {
-                        case 'HOSTED_FIELDS_FIELDS_EMPTY':
-                            // occurs when none of the fields are filled in
-                            this.error($t('Please enter a card number, expiration date and CVV'));
-                            break;
-                        case 'HOSTED_FIELDS_FIELDS_INVALID':
-                            // occurs when certain fields do not pass client side validation
-                            this.error($t('Please correct the problems with the Credit Card fields.'));
-                            console.error('Some fields are invalid:', tokenizeErr.details.invalidFieldKeys);
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_FAIL_ON_DUPLICATE':
-                            // occurs when:
-                            //   * the client token used for client authorization was generated
-                            //     with a customer ID and the fail on duplicate payment method
-                            //     option is set to true
-                            //   * the card being tokenized has previously been vaulted (with any customer)
+                    case 'HOSTED_FIELDS_FIELDS_EMPTY':
+                        // occurs when none of the fields are filled in
+                        this.error($t('Please enter a card number, expiration date and CVV'));
+                        break;
+                    case 'HOSTED_FIELDS_FIELDS_INVALID':
+                        // occurs when certain fields do not pass client side validation
+                        this.error($t('Please correct the problems with the Credit Card fields.'));
+                        console.error('Some fields are invalid:', tokenizeErr.details.invalidFieldKeys);
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_FAIL_ON_DUPLICATE':
+                        // occurs when:
+                        //   * the client token used for client authorization was generated
+                        //     with a customer ID and the fail on duplicate payment method
+                        //     option is set to true
+                        //   * the card being tokenized has previously been vaulted (with any customer)
+                        // eslint-disable-next-line
                             // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.fail_on_duplicate_payment_method
+                        // eslint-disable-next-line
                             this.error($t('The payment method used, already exists in the user\'s vault. Please use the vault option instead.'));
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_CVV_VERIFICATION_FAILED':
-                            // occurs when:
-                            //   * the client token used for client authorization was generated
-                            //     with a customer ID and the verify card option is set to true
-                            //     and you have credit card verification turned on in the Braintree
-                            //     control panel
-                            //   * the cvv does not pass verfication (https://developers.braintreepayments.com/reference/general/testing/#avs-and-cvv/cid-responses)
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_CVV_VERIFICATION_FAILED':
+                        // occurs when:
+                        //   * the client token used for client authorization was generated
+                        //     with a customer ID and the verify card option is set to true
+                        //     and you have credit card verification turned on in the Braintree
+                        //     control panel
+                        //   * the cvv does not pass verfication
+                        /* eslint-disable */
+                            // (https://developers.braintreepayments.com/reference/general/testing/#avs-and-cvv/cid-responses)
                             // See: https://developers.braintreepayments.com/reference/request/client-token/generate/#options.verify_card
-                            this.error($t('CVV did not pass verification'));
-                            break;
-                        case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
-                            // occurs for any other tokenization error on the server
-                            this.error($t('There was an issue tokenizing the card. Please check the card is valid.'));
-                            console.error('Tokenization failed server side. Is the card valid?');
-                            break;
-                        case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
-                            // occurs when the Braintree gateway cannot be contacted
-                            this.error($t('There was an error connecting to Braintree. Please try again.'));
-                            break;
-                        default:
-                            this.error($t('There was an issue processing the payment. Please try again.'));
-                            console.error('Braintree error', tokenizeErr);
-                            break;
+                            /* eslint-enable */
+                        this.error($t('CVV did not pass verification'));
+                        break;
+                    case 'HOSTED_FIELDS_FAILED_TOKENIZATION':
+                        // occurs for any other tokenization error on the server
+                        this.error($t('There was an issue tokenizing the card. Please check the card is valid.'));
+                        console.error('Tokenization failed server side. Is the card valid?');
+                        break;
+                    case 'HOSTED_FIELDS_TOKENIZATION_NETWORK_ERROR':
+                        // occurs when the Braintree gateway cannot be contacted
+                        this.error($t('There was an error connecting to Braintree. Please try again.'));
+                        break;
+                    default:
+                        this.error($t('There was an issue processing the payment. Please try again.'));
+                        console.error('Braintree error', tokenizeErr);
+                        break;
                     }
                 } else {
                     this.setPaymentDetails(payload.nonce);

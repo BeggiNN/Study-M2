@@ -1,20 +1,23 @@
 <?php
 namespace Gt\Dom;
 
-use DOMDocument;
+use Gt\PropFunc\MagicProp;
 
-/**
- * Provides access to special properties and methods not present by default
- * on a regular document.
- */
 class XMLDocument extends Document {
-	use LiveProperty, ParentNode;
+	use MagicProp;
 
-	public function __construct($document) {
-		parent::__construct($document);
+	public function __construct(
+		string $xml = "<?xml ?>",
+		string $characterSet = "UTF-8",
+	) {
+		parent::__construct(
+			$characterSet,
+			"application/xml",
+		);
 
-		if(!$document instanceof DOMDocument) {
-			$this->loadXML($document);
+		$this->loadXML($xml, LIBXML_SCHEMA_CREATE | LIBXML_COMPACT);
+		if(is_null($this->documentElement)) {
+			$this->appendChild($this->createElement("xml"));
 		}
 	}
 }

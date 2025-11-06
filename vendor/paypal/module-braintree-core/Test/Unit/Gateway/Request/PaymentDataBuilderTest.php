@@ -1,10 +1,12 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
+use InvalidArgumentException;
 use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
@@ -12,45 +14,50 @@ use PayPal\Braintree\Observer\DataAssignObserver;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Sales\Model\Order\Payment;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class PaymentDataBuilderTest extends \PHPUnit\Framework\TestCase
 {
-    const PAYMENT_METHOD_NONCE = 'nonce';
-    const MERCHANT_ACCOUNT_ID = '245345';
+    private const PAYMENT_METHOD_NONCE = 'nonce';
+    private const MERCHANT_ACCOUNT_ID = '245345';
 
     /**
      * @var PaymentDataBuilder
      */
-    private $builder;
+    private PaymentDataBuilder $builder;
 
     /**
-     * @var Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $configMock;
+    private Config|MockObject $configMock;
 
     /**
-     * @var Payment|\PHPUnit\Framework\MockObject\MockObject
+     * @var Payment|MockObject
      */
-    private $paymentMock;
+    private Payment|MockObject $paymentMock;
 
     /**
-     * @var \PHPUnit\Framework\MockObject\MockObject
+     * @var PaymentDataObjectInterface|MockObject
      */
-    private $paymentDO;
+    private PaymentDataObjectInterface|MockObject $paymentDO;
 
     /**
-     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
+     * @var SubjectReader|MockObject
      */
-    private $subjectReaderMock;
+    private MockObject|SubjectReader $subjectReaderMock;
 
     /**
-     * @var OrderAdapterInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var OrderAdapterInterface|MockObject
      */
-    private $orderMock;
+    private OrderAdapterInterface|MockObject $orderMock;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->paymentDO = $this->createMock(PaymentDataObjectInterface::class);
@@ -73,14 +80,14 @@ class PaymentDataBuilderTest extends \PHPUnit\Framework\TestCase
     public function testBuildReadPaymentException()
     {
         $this->markTestSkipped('Skip this test');
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $buildSubject = [];
 
         $this->subjectReaderMock->expects(self::once())
             ->method('readPayment')
             ->with($buildSubject)
-            ->willThrowException(new \InvalidArgumentException());
+            ->willThrowException(new InvalidArgumentException());
 
         $this->builder->build($buildSubject);
     }
@@ -90,7 +97,7 @@ class PaymentDataBuilderTest extends \PHPUnit\Framework\TestCase
     public function testBuildReadAmountException()
     {
         $this->markTestSkipped('Skip this test');
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $buildSubject = [
             'payment' => $this->paymentDO,
@@ -104,7 +111,7 @@ class PaymentDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->subjectReaderMock->expects(self::once())
             ->method('readAmount')
             ->with($buildSubject)
-            ->willThrowException(new \InvalidArgumentException());
+            ->willThrowException(new InvalidArgumentException());
 
         $this->builder->build($buildSubject);
     }

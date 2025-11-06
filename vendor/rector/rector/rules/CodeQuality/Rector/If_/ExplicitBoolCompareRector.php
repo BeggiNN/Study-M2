@@ -6,6 +6,7 @@ namespace Rector\CodeQuality\Rector\If_;
 use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Array_;
+use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\BinaryOp;
 use PhpParser\Node\Expr\BinaryOp\BooleanAnd;
 use PhpParser\Node\Expr\BinaryOp\BooleanOr;
@@ -20,18 +21,19 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\DNumber;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\ElseIf_;
+use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
+use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
-use Rector\Core\Rector\AbstractRector;
 use Rector\NodeTypeResolver\TypeAnalyzer\ArrayTypeAnalyzer;
 use Rector\NodeTypeResolver\TypeAnalyzer\StringTypeAnalyzer;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://www.reddit.com/r/PHP/comments/aqk01p/is_there_a_situation_in_which_if_countarray_0/
- * @changelog https://3v4l.org/UCd1b
- *
  * @see \Rector\Tests\CodeQuality\Rector\If_\ExplicitBoolCompareRector\ExplicitBoolCompareRectorTest
  */
 final class ExplicitBoolCompareRector extends AbstractRector
@@ -46,10 +48,16 @@ final class ExplicitBoolCompareRector extends AbstractRector
      * @var \Rector\NodeTypeResolver\TypeAnalyzer\ArrayTypeAnalyzer
      */
     private $arrayTypeAnalyzer;
-    public function __construct(StringTypeAnalyzer $stringTypeAnalyzer, ArrayTypeAnalyzer $arrayTypeAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(StringTypeAnalyzer $stringTypeAnalyzer, ArrayTypeAnalyzer $arrayTypeAnalyzer, ValueResolver $valueResolver)
     {
         $this->stringTypeAnalyzer = $stringTypeAnalyzer;
         $this->arrayTypeAnalyzer = $arrayTypeAnalyzer;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -86,8 +94,9 @@ CODE_SAMPLE
     }
     /**
      * @param If_|ElseIf_|Ternary $node
+     * @return null|Stmt[]|Node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactor(Node $node)
     {
         // skip short ternary
         if ($node instanceof Ternary && !$node->if instanceof Expr) {
@@ -103,13 +112,20 @@ CODE_SAMPLE
         if ($conditionNode instanceof Bool_) {
             return null;
         }
-        $conditionStaticType = $this->getType($conditionNode);
-        if ($conditionStaticType->isBoolean()->yes()) {
+        $conditionStaticType = $this->nodeTypeResolver->getNativeType($conditionNode);
+        if ($conditionStaticType instanceof MixedType || $conditionStaticType->isBoolean()->yes()) {
             return null;
         }
         $binaryOp = $this->resolveNewConditionNode($conditionNode, $isNegated);
         if (!$binaryOp instanceof BinaryOp) {
             return null;
+        }
+        if ($node instanceof If_ && $node->cond instanceof Assign && $binaryOp->left instanceof NotIdentical && $binaryOp->right instanceof NotIdentical) {
+            $expression = new Expression($node->cond);
+            $binaryOp->left->left = $node->cond->var;
+            $binaryOp->right->left = $node->cond->var;
+            $node->cond = $binaryOp;
+            return [$expression, $node];
         }
         $node->cond = $binaryOp;
         return $node;

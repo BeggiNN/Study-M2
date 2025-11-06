@@ -167,7 +167,7 @@ class InjectTemplateListener extends AbstractListenerAggregate
         }
 
         if ((10 < strlen($controller))
-            && ('Controller' == substr($controller, -10))
+            && (str_ends_with($controller, 'Controller'))
         ) {
             $controller = substr($controller, 0, -10);
         }

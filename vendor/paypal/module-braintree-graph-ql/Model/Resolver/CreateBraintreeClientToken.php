@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 declare(strict_types=1);
 
@@ -23,12 +23,12 @@ class CreateBraintreeClientToken implements ResolverInterface
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var BraintreeAdapterFactory
      */
-    private $adapterFactory;
+    private BraintreeAdapterFactory $adapterFactory;
 
     /**
      * @param Config $config
@@ -49,8 +49,8 @@ class CreateBraintreeClientToken implements ResolverInterface
         Field $field,
         $context,
         ResolveInfo $info,
-        array $value = null,
-        array $args = null
+        ?array $value = null,
+        ?array $args = null
     ) {
         $storeId = (int) $context->getExtensionAttributes()->getStore()->getId();
 

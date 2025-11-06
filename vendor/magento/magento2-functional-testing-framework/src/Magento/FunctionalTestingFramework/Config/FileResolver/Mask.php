@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Config\FileResolver;
@@ -28,7 +28,7 @@ class Mask implements FileResolverInterface
      *
      * @param ModuleResolver|null $moduleResolver
      */
-    public function __construct(ModuleResolver $moduleResolver = null)
+    public function __construct(?ModuleResolver $moduleResolver = null)
     {
         if ($moduleResolver) {
             $this->moduleResolver = $moduleResolver;

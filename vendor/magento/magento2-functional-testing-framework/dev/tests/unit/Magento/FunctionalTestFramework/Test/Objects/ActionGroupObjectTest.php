@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Test\Objects;
@@ -229,7 +230,7 @@ class ActionGroupObjectTest extends MagentoTestCase
         // bypass the private constructor
         $property = new ReflectionProperty(SectionObjectHandler::class, 'INSTANCE');
         $property->setAccessible(true);
-        $property->setValue($sectionInstance);
+        $property->setValue(null, $sectionInstance);
 
         $actionGroupUnderTest = (new ActionGroupObjectBuilder())
             ->withActionObjects(
@@ -283,7 +284,7 @@ class ActionGroupObjectTest extends MagentoTestCase
         // bypass the private constructor
         $property = new ReflectionProperty(SectionObjectHandler::class, 'INSTANCE');
         $property->setAccessible(true);
-        $property->setValue($sectionInstance);
+        $property->setValue(null, $sectionInstance);
 
         $actionGroupUnderTest = (new ActionGroupObjectBuilder())
             ->withActionObjects(
@@ -456,7 +457,7 @@ class ActionGroupObjectTest extends MagentoTestCase
         // bypass the private constructor
         $property = new ReflectionProperty(DataObjectHandler::class, 'INSTANCE');
         $property->setAccessible(true);
-        $property->setValue($instance);
+        $property->setValue(null, $instance);
     }
 
     /**

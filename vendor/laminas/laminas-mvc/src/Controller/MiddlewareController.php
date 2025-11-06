@@ -30,8 +30,8 @@ use Psr\Http\Message\ServerRequestInterface;
 final class MiddlewareController extends AbstractController
 {
     public function __construct(
-        private MiddlewarePipe $pipe,
-        private ResponseInterface $responsePrototype,
+        private readonly MiddlewarePipe $pipe,
+        private readonly ResponseInterface $responsePrototype,
         EventManagerInterface $eventManager,
         MvcEvent $event
     ) {

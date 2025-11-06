@@ -7,12 +7,11 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\FuncCall;
 use PhpParser\Node\Name;
 use PhpParser\Node\Name\FullyQualified;
-use Rector\Core\Contract\Rector\ConfigurableRectorInterface;
-use Rector\Core\Rector\AbstractRector;
-use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\Contract\Rector\ConfigurableRectorInterface;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\ConfiguredCodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
-use RectorPrefix202308\Webmozart\Assert\Assert;
+use RectorPrefix202411\Webmozart\Assert\Assert;
 /**
  * @see \Rector\Tests\Renaming\Rector\FuncCall\RenameFunctionRector\RenameFunctionRectorTest
  */
@@ -38,13 +37,12 @@ final class RenameFunctionRector extends AbstractRector implements ConfigurableR
      */
     public function refactor(Node $node) : ?Node
     {
-        // not to refactor here
-        $isVirtual = (bool) $node->name->getAttribute(AttributeKey::VIRTUAL_NODE);
-        if ($isVirtual) {
+        $nodeName = $this->getName($node);
+        if ($nodeName === null) {
             return null;
         }
         foreach ($this->oldFunctionToNewFunction as $oldFunction => $newFunction) {
-            if (!$this->isName($node, $oldFunction)) {
+            if (!$this->nodeNameResolver->isStringName($nodeName, $oldFunction)) {
                 continue;
             }
             $node->name = $this->createName($newFunction);

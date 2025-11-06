@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 /**
-  * Copyright © Magento, Inc. All rights reserved.
-  * See COPYING.txt for license details.
+  * Copyright 2022 Adobe
+  * All Rights Reserved.
   */
 -->
 <tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -16,9 +16,6 @@
             <severity value="CRITICAL"/>
             <group value="admin_ims"/>
             <testCaseId value="CABPI-102"/>
-            <skip>
-                <issueId value="AC-3153">Skipped</issueId>
-            </skip>
         </annotations>
         <before>
             <actionGroup ref="AdminEnableAdobeImsActionGroup" stepKey="enableAdminAdobeImsModule" />

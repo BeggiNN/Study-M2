@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Report;
 
 use PayPal\Braintree\Model\Adapter\BraintreeSearchAdapter;
@@ -13,17 +14,17 @@ class FilterMapper
     /**
      * @var array
      */
-    private $searchFieldsToFiltersMap = [];
+    private array $searchFieldsToFiltersMap = [];
 
     /**
      * @var AppliersPool
      */
-    private $appliersPool;
+    private AppliersPool $appliersPool;
 
     /**
      * @var BraintreeSearchAdapter
      */
-    private $braintreeSearchAdapter;
+    private BraintreeSearchAdapter $braintreeSearchAdapter;
 
     /**
      * @param AppliersPool $appliersPool
@@ -43,7 +44,7 @@ class FilterMapper
      *
      * @return void
      */
-    private function initFieldsToFiltersMap()
+    private function initFieldsToFiltersMap(): void
     {
         $this->searchFieldsToFiltersMap = [
             'id' => $this->braintreeSearchAdapter->id(),
@@ -62,11 +63,12 @@ class FilterMapper
 
     /**
      * Get filter with applied conditions
+     *
      * @param string $field
      * @param array $conditionMap
      * @return null|object
      */
-    public function getFilter($field, array $conditionMap)
+    public function getFilter(string $field, array $conditionMap): ?object
     {
         if (!isset($this->searchFieldsToFiltersMap[$field])) {
             return null;
@@ -87,7 +89,7 @@ class FilterMapper
      * @param array $conditionMap
      * @return bool
      */
-    private function applyConditions($fieldFilter, array $conditionMap): bool
+    private function applyConditions(object $fieldFilter, array $conditionMap): bool
     {
         $applier = $this->appliersPool->getApplier($fieldFilter);
 

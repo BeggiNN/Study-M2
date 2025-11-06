@@ -1,72 +1,73 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Cron;
 
-use PayPal\Braintree\Api\Data\CreditPriceDataInterface;
+use Exception;
+use PayPal\Braintree\Api\CreditPriceRepositoryInterface;
+use PayPal\Braintree\Api\Data\CreditPriceDataInterfaceFactory;
 use PayPal\Braintree\Gateway\Config\PayPalCredit\Config as PayPalCreditConfig;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\Exception\AuthenticationException;
 use Magento\Framework\Exception\LocalizedException;
+use PayPal\Braintree\Model\Paypal\CreditApi;
 use Psr\Log\LoggerInterface;
 
 class CreditPrice
 {
     /**
-     * @var \PayPal\Braintree\Api\CreditPriceRepositoryInterface
+     * @var CreditPriceRepositoryInterface
      */
-    private $creditPriceRepository;
-
-    /**
-     * @var \Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    private $scopeConfig;
+    private CreditPriceRepositoryInterface $creditPriceRepository;
 
     /**
      * @var ProductCollectionFactory
      */
-    private $productCollection;
+    private ProductCollectionFactory $productCollection;
 
     /**
-     * @var \PayPal\Braintree\Api\Data\CreditPriceDataInterfaceFactory
+     * @var CreditPriceDataInterfaceFactory
      */
-    private $creditPriceFactory;
+    private CreditPriceDataInterfaceFactory $creditPriceFactory;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
-     * @var \PayPal\Braintree\Model\Paypal\CreditApi
+     * @var CreditApi
      */
-    private $creditApi;
+    private CreditApi $creditApi;
 
     /**
      * @var PayPalCreditConfig
      */
-    private $config;
+    private PayPalCreditConfig $config;
 
     /**
      * CreditPrice constructor.
-     * @param \PayPal\Braintree\Api\CreditPriceRepositoryInterface $creditPriceRepository
-     * @param \PayPal\Braintree\Api\Data\CreditPriceDataInterfaceFactory $creditPriceDataInterfaceFactory
-     * @param \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-     * @param \PayPal\Braintree\Model\Paypal\CreditApi $creditApi
+     *
+     * @param CreditPriceRepositoryInterface $creditPriceRepository
+     * @param CreditPriceDataInterfaceFactory $creditPriceDataInterfaceFactory
+     * @param CreditApi $creditApi
      * @param ProductCollectionFactory $productCollection
      * @param LoggerInterface $logger
      * @param PayPalCreditConfig $config
      */
     public function __construct(
-        \PayPal\Braintree\Api\CreditPriceRepositoryInterface $creditPriceRepository,
-        \PayPal\Braintree\Api\Data\CreditPriceDataInterfaceFactory $creditPriceDataInterfaceFactory,
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
-        \PayPal\Braintree\Model\Paypal\CreditApi $creditApi,
+        CreditPriceRepositoryInterface $creditPriceRepository,
+        CreditPriceDataInterfaceFactory $creditPriceDataInterfaceFactory,
+        CreditApi $creditApi,
         ProductCollectionFactory $productCollection,
         LoggerInterface $logger,
         PayPalCreditConfig $config
     ) {
         $this->creditPriceRepository = $creditPriceRepository;
-        $this->scopeConfig = $scopeConfig;
         $this->productCollection = $productCollection;
         $this->logger = $logger;
         $this->creditPriceFactory = $creditPriceDataInterfaceFactory;
@@ -75,17 +76,18 @@ class CreditPrice
     }
 
     /**
+     * Calculate credit price
+     *
      * @return $this
-     * @throws \Exception
+     * @throws AuthenticationException
      */
-    public function execute()
+    public function execute(): static
     {
         if (!$this->config->isCalculatorEnabled()) {
             return $this;
         }
 
         // Retrieve paginated collection of product and their price
-        /** @var \Magento\Catalog\Model\ResourceModel\Product\Collection $collection */
         $collection = $this->productCollection->create();
         $collection->addAttributeToSelect('price')
             ->setPageSize(100);
@@ -100,16 +102,15 @@ class CreditPrice
 
             foreach ($collection as $product) {
                 try {
-                    // Delete by product_id
-                    $this->creditPriceRepository->deleteByProductId($product->getId());
+                    // Delete by Product ID
+                    $this->creditPriceRepository->deleteByProductId((int)$product->getId());
 
                     // Retrieve data from PayPal
-                    $priceOptions = $this->creditApi->getPriceOptions($product->getFinalPrice());
+                    $priceOptions = $this->creditApi->getPriceOptions((float)$product->getFinalPrice());
                     foreach ($priceOptions as $priceOption) {
                         // Populate model
-                        /** @var $model \PayPal\Braintree\Api\Data\CreditPriceDataInterface */
                         $model = $this->creditPriceFactory->create();
-                        $model->setProductId($product->getId());
+                        $model->setProductId((int)$product->getId());
                         $model->setTerm($priceOption['term']);
                         $model->setMonthlyPayment($priceOption['monthly_payment']);
                         $model->setInstalmentRate($priceOption['instalment_rate']);
@@ -123,7 +124,7 @@ class CreditPrice
                     throw $e;
                 } catch (LocalizedException $e) {
                     $this->logger->critical($e->getMessage());
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $connection->rollBack();
                     $this->logger->critical($e->getMessage());
                     return $this;

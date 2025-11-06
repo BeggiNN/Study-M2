@@ -1,6 +1,14 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Model\ApplePay\Ui;
 
+use Magento\Framework\Exception\LocalizedException;
+use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
 use PayPal\Braintree\Model\ApplePay\Config;
 use Magento\Checkout\Model\ConfigProviderInterface;
@@ -10,68 +18,85 @@ use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Asset\Repository;
 use Magento\Store\Model\ScopeInterface;
-
+use Magento\Tax\Helper\Data as TaxHelper;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const METHOD_CODE = 'braintree_applepay';
-
-    const METHOD_KEY_ACTIVE = 'payment/braintree_applepay/active';
+    public const METHOD_CODE = 'braintree_applepay';
+    public const METHOD_VAULT_CODE = 'braintree_applepay_vault';
+    private const METHOD_KEY_ACTIVE = 'payment/braintree_applepay/active';
 
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * @var BraintreeAdapter
      */
-    private $adapter;
+    private BraintreeAdapter $adapter;
 
     /**
      * @var Repository
      */
-    private $assetRepo;
+    private Repository $assetRepo;
 
     /**
-     * @var \PayPal\Braintree\Gateway\Config\Config
+     * @var BraintreeConfig
      */
-    private $braintreeConfig;
+    private BraintreeConfig $braintreeConfig;
 
     /**
      * @var string
      */
-    private $clientToken = '';
+    private string $clientToken = '';
 
     /**
      * @var ScopeConfigInterface $scopeConfig
      */
-    private $scopeConfig;
+    private ScopeConfigInterface $scopeConfig;
+
+    /**
+     * @var TaxHelper
+     */
+    private TaxHelper $taxHelper;
+
+    /**
+     * @var array
+     */
+    private array $icon = [];
 
     /**
      * ConfigProvider constructor.
+     *
      * @param Config $config
      * @param BraintreeAdapter $adapter
      * @param Repository $assetRepo
-     * @param \PayPal\Braintree\Gateway\Config\Config $braintreeConfig
+     * @param BraintreeConfig $braintreeConfig
      * @param ScopeConfigInterface $scopeConfig
+     * @param TaxHelper $taxHelper
      */
     public function __construct(
         Config $config,
         BraintreeAdapter $adapter,
         Repository $assetRepo,
-        \PayPal\Braintree\Gateway\Config\Config $braintreeConfig,
-        ScopeConfigInterface $scopeConfig
+        BraintreeConfig $braintreeConfig,
+        ScopeConfigInterface $scopeConfig,
+        TaxHelper $taxHelper
     ) {
         $this->config = $config;
         $this->adapter = $adapter;
         $this->assetRepo = $assetRepo;
         $this->braintreeConfig = $braintreeConfig;
         $this->scopeConfig = $scopeConfig;
+        $this->taxHelper = $taxHelper;
     }
 
     /**
-     * @inheritDoc
+     * Retrieve assoc array of checkout configuration
+     *
+     * @return array
+     * @throws LocalizedException
      */
     public function getConfig(): array
     {
@@ -81,10 +106,12 @@ class ConfigProvider implements ConfigProviderInterface
 
         return [
             'payment' => [
-                'braintree_applepay' => [
+                self::METHOD_CODE => [
                     'clientToken' => $this->getClientToken(),
                     'merchantName' => $this->getMerchantName(),
-                    'paymentMarkSrc' => $this->getPaymentMarkSrc()
+                    'paymentMarkSrc' => $this->getPaymentMarkSrc(),
+                    'priceIncludesTax' => $this->taxHelper->priceIncludesTax(),
+                    'vaultCode' => self::METHOD_VAULT_CODE
                 ]
             ]
         ];
@@ -110,7 +137,7 @@ class ConfigProvider implements ConfigProviderInterface
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getClientToken()
+    public function getClientToken(): ?string
     {
         if (empty($this->clientToken)) {
             $params = [];
@@ -138,10 +165,38 @@ class ConfigProvider implements ConfigProviderInterface
 
     /**
      * Get the url to the payment mark image
-     * @return mixed
+     *
+     * @return string
      */
-    public function getPaymentMarkSrc()
+    public function getPaymentMarkSrc(): string
     {
-        return $this->assetRepo->getUrl('PayPal_Braintree::images/applepaymark.png');
+        return $this->assetRepo->getUrl('PayPal_Braintree::images/applepaymark.svg');
+    }
+
+    /**
+     * Get icons for available payment methods
+     *
+     * @return array
+     * @throws LocalizedException
+     */
+    public function getIcon(): array
+    {
+        if (!empty($this->icon)) {
+            return $this->icon;
+        }
+
+        $asset = $this->assetRepo->createAsset(
+            'PayPal_Braintree::images/applepaymark.svg',
+            ['_secure' => true]
+        );
+
+        $this->icon = [
+            'url' => $asset->getUrl(),
+            'width' => 47,
+            'height' => 30,
+            'title' => __('Apple Pay'),
+        ];
+
+        return $this->icon;
     }
 }

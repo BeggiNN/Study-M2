@@ -14,9 +14,10 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Return_;
 use Rector\CodeQuality\NodeAnalyzer\VariableDimFetchAssignResolver;
 use Rector\CodeQuality\ValueObject\KeyAndExpr;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -29,9 +30,15 @@ final class InlineArrayReturnAssignRector extends AbstractRector
      * @var \Rector\CodeQuality\NodeAnalyzer\VariableDimFetchAssignResolver
      */
     private $variableDimFetchAssignResolver;
-    public function __construct(VariableDimFetchAssignResolver $variableDimFetchAssignResolver)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(VariableDimFetchAssignResolver $variableDimFetchAssignResolver, ValueResolver $valueResolver)
     {
         $this->variableDimFetchAssignResolver = $variableDimFetchAssignResolver;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -145,6 +152,7 @@ CODE_SAMPLE
     {
         \end($stmts);
         $lastKey = \key($stmts);
+        \reset($stmts);
         foreach ($stmts as $key => $stmt) {
             if ($key === $lastKey) {
                 // skip last item

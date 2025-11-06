@@ -11,9 +11,9 @@ use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Identifier;
 use PHPStan\Type\StringType;
-use Rector\Core\Rector\AbstractRector;
 use Rector\PHPUnit\NodeAnalyzer\TestsNodeAnalyzer;
 use Rector\PHPUnit\ValueObject\FunctionNameWithAssertMethods;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -64,7 +64,7 @@ final class AssertTrueFalseToSpecificMethodRector extends AbstractRector
         if (!$firstArgumentValue instanceof FuncCall && !$firstArgumentValue instanceof Empty_) {
             return null;
         }
-        $firstArgumentName = $this->getName($firstArgumentValue);
+        $firstArgumentName = $this->resolveFirstArgument($firstArgumentValue);
         if ($firstArgumentName === null || !\array_key_exists($firstArgumentName, self::FUNCTION_NAME_WITH_ASSERT_METHOD_NAMES)) {
             return null;
         }
@@ -87,6 +87,13 @@ final class AssertTrueFalseToSpecificMethodRector extends AbstractRector
         $this->renameMethod($node, $functionNameWithAssertMethods);
         $this->moveFunctionArgumentsUp($node);
         return $node;
+    }
+    /**
+     * @param \PhpParser\Node\Expr\FuncCall|\PhpParser\Node\Expr\Empty_ $firstArgumentValue
+     */
+    private function resolveFirstArgument($firstArgumentValue) : ?string
+    {
+        return $firstArgumentValue instanceof Empty_ ? 'empty' : $this->getName($firstArgumentValue);
     }
     /**
      * @param \PhpParser\Node\Expr\MethodCall|\PhpParser\Node\Expr\StaticCall $node

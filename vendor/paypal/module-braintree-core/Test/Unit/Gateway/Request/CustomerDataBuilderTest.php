@@ -1,38 +1,45 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
+use InvalidArgumentException;
 use PayPal\Braintree\Gateway\Request\CustomerDataBuilder;
 use Magento\Payment\Gateway\Data\PaymentDataObjectInterface;
 use Magento\Payment\Gateway\Data\OrderAdapterInterface;
 use Magento\Payment\Gateway\Data\AddressAdapterInterface;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
+use PHPUnit\Framework\MockObject\Exception;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var PaymentDataObjectInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var PaymentDataObjectInterface|MockObject
      */
-    private $paymentDOMock;
+    private PaymentDataObjectInterface|MockObject $paymentDOMock;
 
     /**
-     * @var OrderAdapterInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var OrderAdapterInterface|MockObject
      */
-    private $orderMock;
+    private OrderAdapterInterface|MockObject $orderMock;
 
     /**
      * @var CustomerDataBuilder
      */
-    private $builder;
+    private CustomerDataBuilder $builder;
 
     /**
-     * @var SubjectReader|\PHPUnit\Framework\MockObject\MockObject
+     * @var SubjectReader|MockObject
      */
-    private $subjectReaderMock;
+    private MockObject|SubjectReader $subjectReaderMock;
 
+    /**
+     * @throws Exception
+     */
     protected function setUp(): void
     {
         $this->paymentDOMock = $this->createMock(PaymentDataObjectInterface::class);
@@ -49,7 +56,7 @@ class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
     public function testBuildReadPaymentException()
     {
         $this->markTestSkipped('Skip this test');
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
 
         $buildSubject = [
             'payment' => null,
@@ -58,7 +65,7 @@ class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->subjectReaderMock->expects(self::once())
             ->method('readPayment')
             ->with($buildSubject)
-            ->willThrowException(new \InvalidArgumentException());
+            ->willThrowException(new InvalidArgumentException());
 
         $this->builder->build($buildSubject);
     }
@@ -68,8 +75,9 @@ class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
      * @param array $expectedResult
      *
      * @dataProvider dataProviderBuild
+     * @throws Exception
      */
-    public function testBuild($billingData, $expectedResult)
+    public function testBuild(array $billingData, array $expectedResult)
     {
         $billingMock = $this->getBillingMock($billingData);
 
@@ -95,7 +103,7 @@ class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
     /**
      * @return array
      */
-    public function dataProviderBuild()
+    public static function dataProviderBuild(): array
     {
         return [
             [
@@ -121,9 +129,10 @@ class CustomerDataBuilderTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @param array $billingData
-     * @return AddressAdapterInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @return AddressAdapterInterface|MockObject
+     * @throws Exception
      */
-    private function getBillingMock($billingData)
+    private function getBillingMock(array $billingData): AddressAdapterInterface|MockObject
     {
         $addressMock = $this->createMock(AddressAdapterInterface::class);
 

@@ -18,10 +18,11 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
 use Rector\CodeQuality\TypeResolver\AssignVariableTypeResolver;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\Core\NodeManipulator\IfManipulator;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\DeadCode\PhpDoc\TagRemover\VarTagRemover;
+use Rector\NodeManipulator\IfManipulator;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Rector\StaticTypeMapper\ValueObject\Type\FullyQualifiedObjectType;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
@@ -32,7 +33,7 @@ final class SimplifyIfNullableReturnRector extends AbstractRector
 {
     /**
      * @readonly
-     * @var \Rector\Core\NodeManipulator\IfManipulator
+     * @var \Rector\NodeManipulator\IfManipulator
      */
     private $ifManipulator;
     /**
@@ -45,11 +46,17 @@ final class SimplifyIfNullableReturnRector extends AbstractRector
      * @var \Rector\DeadCode\PhpDoc\TagRemover\VarTagRemover
      */
     private $varTagRemover;
-    public function __construct(IfManipulator $ifManipulator, AssignVariableTypeResolver $assignVariableTypeResolver, VarTagRemover $varTagRemover)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(IfManipulator $ifManipulator, AssignVariableTypeResolver $assignVariableTypeResolver, VarTagRemover $varTagRemover, ValueResolver $valueResolver)
     {
         $this->ifManipulator = $ifManipulator;
         $this->assignVariableTypeResolver = $assignVariableTypeResolver;
         $this->varTagRemover = $varTagRemover;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -58,13 +65,15 @@ class SomeClass
 {
     public function run()
     {
-        /** @var \stdClass|null $value */
-        $value = $this->foo->bar();
+        $value = $this->get();
         if (! $value instanceof \stdClass) {
             return null;
         }
 
         return $value;
+    }
+
+    public function get(): ?stdClass {
     }
 }
 CODE_SAMPLE
@@ -73,7 +82,10 @@ class SomeClass
 {
     public function run()
     {
-        return $this->foo->bar();
+        return $this->get();
+    }
+
+    public function get(): ?stdClass {
     }
 }
 CODE_SAMPLE

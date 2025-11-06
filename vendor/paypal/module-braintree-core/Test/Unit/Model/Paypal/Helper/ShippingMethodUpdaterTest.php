@@ -1,39 +1,39 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Model\Paypal\Helper;
 
 use Magento\Quote\Model\Quote;
 use Magento\Quote\Model\Quote\Address;
 use Magento\Quote\Api\CartRepositoryInterface;
-use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Model\Paypal\Helper\ShippingMethodUpdater;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @see \PayPal\Braintree\Model\Paypal\Helper\ShippingMethodUpdater
+ * @see ShippingMethodUpdater
  */
 class ShippingMethodUpdaterTest extends \PHPUnit\Framework\TestCase
 {
     const TEST_SHIPPING_METHOD = 'test-shipping-method';
-
     const TEST_EMAIL = 'test@test.loc';
 
     /**
-     * @var CartRepositoryInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var CartRepositoryInterface|MockObject
      */
-    private $quoteRepositoryMock;
+    private CartRepositoryInterface|MockObject $quoteRepositoryMock;
 
     /**
-     * @var Address|\PHPUnit\Framework\MockObject\MockObject
+     * @var Address|MockObject
      */
-    private $shippingAddressMock;
+    private Address|MockObject $shippingAddressMock;
 
     /**
      * @var ShippingMethodUpdater
      */
-    private $shippingMethodUpdater;
+    private ShippingMethodUpdater $shippingMethodUpdater;
 
     protected function setUp(): void
     {
@@ -41,14 +41,13 @@ class ShippingMethodUpdaterTest extends \PHPUnit\Framework\TestCase
             ->getMockForAbstractClass();
 
         $this->shippingAddressMock = $this->getMockBuilder(Address::class)
-            ->setMethods(
-                [
-                    'setShouldIgnoreValidation',
-                    'getShippingMethod',
-                    'setShippingMethod',
-                    'setCollectShippingRates'
-                ]
-            )->disableOriginalConstructor()
+            ->onlyMethods([
+                'getShippingMethod'
+            ])->addMethods([
+                'setShouldIgnoreValidation',
+                'setShippingMethod',
+                'setCollectShippingRates'
+            ])->disableOriginalConstructor()
             ->getMock();
 
         $this->shippingMethodUpdater = new ShippingMethodUpdater(
@@ -106,9 +105,9 @@ class ShippingMethodUpdaterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param \PHPUnit\Framework\MockObject\MockObject $quoteMock
+     * @param MockObject $quoteMock
      */
-    private function disabledQuoteAddressValidationStep(\PHPUnit\Framework\MockObject\MockObject $quoteMock)
+    private function disabledQuoteAddressValidationStep(MockObject $quoteMock)
     {
         $billingAddressMock = $this->getBillingAddressMock($quoteMock);
 
@@ -131,14 +130,14 @@ class ShippingMethodUpdaterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @param \PHPUnit\Framework\MockObject\MockObject $quoteMock
-     * @return Address|\PHPUnit\Framework\MockObject\MockObject
+     * @param MockObject $quoteMock
+     * @return Address|MockObject
      */
-    private function getBillingAddressMock(\PHPUnit\Framework\MockObject\MockObject $quoteMock)
+    private function getBillingAddressMock(MockObject $quoteMock): MockObject|Address
     {
         if (!isset($this->billingAddressMock)) {
             $this->billingAddressMock = $this->getMockBuilder(Address::class)
-                ->setMethods(['setShouldIgnoreValidation', 'getEmail', 'setSameAsBilling'])
+                ->onlyMethods(['setShouldIgnoreValidation', 'getEmail', 'setSameAsBilling'])
                 ->disableOriginalConstructor()
                 ->getMock();
         }
@@ -151,19 +150,17 @@ class ShippingMethodUpdaterTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Quote|\PHPUnit\Framework\MockObject\MockObject
+     * @return Quote|MockObject
      */
-    private function getQuoteMock()
+    private function getQuoteMock(): MockObject|Quote
     {
         return $this->getMockBuilder(Quote::class)
-            ->setMethods(
-                [
-                    'collectTotals',
-                    'getBillingAddress',
-                    'getShippingAddress',
-                    'getIsVirtual'
-                ]
-            )->disableOriginalConstructor()
+            ->onlyMethods([
+                'collectTotals',
+                'getBillingAddress',
+                'getShippingAddress',
+                'getIsVirtual'
+            ])->disableOriginalConstructor()
             ->getMock();
     }
 }

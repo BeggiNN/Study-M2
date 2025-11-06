@@ -1,56 +1,55 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\GooglePay;
 
-use PayPal\Braintree\Api\Data\AuthDataInterfaceFactory;
-use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\UrlInterface;
+use PayPal\Braintree\Model\GooglePay\Ui\ConfigProvider;
+use PayPal\Braintree\Model\Ui\ThreeDeeSecure\ConfigProvider as ThreeDeeSecureConfigProvider;
 
 class Auth
 {
     /**
-     * @var AuthDataInterfaceFactory
-     */
-    private $authData;
-
-    /**
-     * @var Ui\ConfigProvider
-     */
-    private $configProvider;
-
-    /**
      * @var UrlInterface
      */
-    private $url;
+    private UrlInterface $url;
 
     /**
-     * @var CustomerSession
+     * @var ConfigProvider
      */
-    private $customerSession;
+    private ConfigProvider $configProvider;
+
+    /**
+     * @var ThreeDeeSecureConfigProvider
+     */
+    private ThreeDeeSecureConfigProvider $threeDeeSecureConfigProvider;
 
     /**
      * Auth constructor
      *
-     * @param AuthDataInterfaceFactory $authData
-     * @param Ui\ConfigProvider $configProvider
      * @param UrlInterface $url
-     * @param CustomerSession $customerSession
+     * @param ConfigProvider $configProvider
+     * @param ThreeDeeSecureConfigProvider $threeDeeSecureConfigProvider
      */
     public function __construct(
-        AuthDataInterfaceFactory $authData,
-        Ui\ConfigProvider $configProvider,
         UrlInterface $url,
-        CustomerSession $customerSession
+        ConfigProvider $configProvider,
+        ThreeDeeSecureConfigProvider $threeDeeSecureConfigProvider
     ) {
-        $this->authData = $authData;
-        $this->configProvider = $configProvider;
         $this->url = $url;
-        $this->customerSession = $customerSession;
+        $this->configProvider = $configProvider;
+        $this->threeDeeSecureConfigProvider = $threeDeeSecureConfigProvider;
     }
 
     /**
+     * Get client token
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -61,6 +60,8 @@ class Auth
     }
 
     /**
+     * Get environment
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -71,6 +72,8 @@ class Auth
     }
 
     /**
+     * Get Google Pay merchant id
+     *
      * @return string
      */
     public function getMerchantId(): string
@@ -79,6 +82,8 @@ class Auth
     }
 
     /**
+     * Get action success
+     *
      * @return string
      */
     public function getActionSuccess(): string
@@ -87,6 +92,8 @@ class Auth
     }
 
     /**
+     * Get available card types
+     *
      * @return array
      */
     public function getAvailableCardTypes(): array
@@ -95,10 +102,70 @@ class Auth
     }
 
     /**
+     * Get Btn color
+     *
      * @return int
      */
     public function getBtnColor(): int
     {
         return $this->configProvider->getBtnColor();
+    }
+
+    /**
+     * Is 3DS enabled
+     *
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function is3DSecureEnabled(): bool
+    {
+        return $this->threeDeeSecureConfigProvider->isAvailable() && $this->threeDeeSecureConfigProvider->isEnabled();
+    }
+
+    /**
+     * Is 3DS always requested
+     *
+     * @return bool
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function is3DSecureAlwaysRequested(): bool
+    {
+        return $this->threeDeeSecureConfigProvider->isChallengeAlwaysRequested();
+    }
+
+    /**
+     * Get 3DS threshold amount
+     *
+     * @return float
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function get3DSecureThresholdAmount(): float
+    {
+        return $this->threeDeeSecureConfigProvider->getThresholdAmount();
+    }
+
+    /**
+     * Get 3DS specific countries
+     *
+     * @return array
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function get3DSecureSpecificCountries(): array
+    {
+        return $this->threeDeeSecureConfigProvider->get3DSecureSpecificCountries();
+    }
+
+    /**
+     * Get Customer's IP Address
+     *
+     * @return string
+     */
+    public function getIpAddress(): string
+    {
+        return $this->threeDeeSecureConfigProvider->getIpAddress();
     }
 }

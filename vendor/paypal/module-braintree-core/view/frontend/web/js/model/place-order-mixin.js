@@ -30,8 +30,13 @@ define([
                 });
                 //Trigger ReCaptcha validation
                 recaptchaRegistry.triggers['recaptcha-checkout-braintree']();
-                //remove listener so that place order action is only triggered by the 'Place Order' button
-                recaptchaRegistry.removeListener('recaptcha-checkout-braintree');
+
+                if (!recaptchaRegistry._isInvisibleType.hasOwnProperty('recaptcha-checkout-braintree') ||
+                    recaptchaRegistry._isInvisibleType['recaptcha-checkout-braintree'] === false
+                ) {
+                    //remove listener so that place order action is only triggered by the 'Place Order' button
+                    recaptchaRegistry.removeListener('recaptcha-checkout-braintree');
+                }
                 return recaptchaDeferred;
             }
 

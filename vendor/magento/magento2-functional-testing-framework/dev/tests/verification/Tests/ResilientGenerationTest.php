@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 
 namespace tests\verification\Tests;
@@ -76,19 +76,19 @@ class ResilientGenerationTest extends MftfTestCase
 
         $property = new \ReflectionProperty(SuiteGenerator::class, "instance");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $property = new \ReflectionProperty(DirSetupUtil::class, "DIR_CONTEXT");
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = new \ReflectionProperty(SuiteObjectHandler::class, "instance");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $property = new \ReflectionProperty(TestObjectHandler::class, "testObjectHandler");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
     }
 
     /**
@@ -261,19 +261,19 @@ class ResilientGenerationTest extends MftfTestCase
 
         $property = new \ReflectionProperty(SuiteGenerator::class, "instance");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $property = new \ReflectionProperty(DirSetupUtil::class, "DIR_CONTEXT");
         $property->setAccessible(true);
-        $property->setValue([]);
+        $property->setValue(null, []);
 
         $property = new \ReflectionProperty(SuiteObjectHandler::class, "instance");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
 
         $property = new \ReflectionProperty(TestObjectHandler::class, "testObjectHandler");
         $property->setAccessible(true);
-        $property->setValue(null);
+        $property->setValue(null, null);
     }
 
     /**

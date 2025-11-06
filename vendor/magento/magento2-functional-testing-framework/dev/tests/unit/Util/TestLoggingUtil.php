@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Util;
@@ -12,6 +13,7 @@ use Magento\FunctionalTestingFramework\Util\Logger\MftfLogger;
 use Monolog\Handler\TestHandler;
 use PHPUnit\Framework\TestCase;
 use ReflectionProperty;
+use ReflectionClass;
 
 class TestLoggingUtil extends TestCase
 {
@@ -30,7 +32,7 @@ class TestLoggingUtil extends TestCase
      */
     private function __construct()
     {
-        parent::__construct(null, [], '');
+        parent::__construct('', [], '');
     }
 
     /**
@@ -64,7 +66,7 @@ class TestLoggingUtil extends TestCase
 
         $property = new ReflectionProperty(LoggingUtil::class, 'instance');
         $property->setAccessible(true);
-        $property->setValue($mockLoggingUtil);
+        $property->setValue(null, $mockLoggingUtil);
     }
 
     /**
@@ -122,8 +124,7 @@ class TestLoggingUtil extends TestCase
      */
     public function clearMockLoggingUtil(): void
     {
-        $property = new ReflectionProperty(LoggingUtil::class, 'instance');
-        $property->setAccessible(true);
-        $property->setValue(null);
+        $reflectionClass = new ReflectionClass(LoggingUtil::class);
+        $reflectionClass->setStaticPropertyValue('instance', null);
     }
 }

@@ -1,12 +1,11 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Gateway\Response;
 
-use Braintree\ThreeDSecureInfo;
-use Braintree\Transaction;
 use Magento\Payment\Gateway\Helper\ContextHelper;
 use Magento\Payment\Gateway\Response\HandlerInterface;
 use Magento\Sales\Api\Data\OrderPaymentInterface;
@@ -29,10 +28,10 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
     /**
      * @var SubjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
 
     /**
-     * ThreeDSecureDetailsHandler Constructor
+     * Constructor
      *
      * @param SubjectReader $subjectReader
      */
@@ -51,9 +50,7 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
         $payment = $paymentDO->getPayment();
         ContextHelper::assertOrderPayment($payment);
 
-        /** @var Transaction $transaction */
         $transaction = $this->subjectReader->readTransaction($response);
-
         if ($payment->hasAdditionalInformation(self::LIABILITY_SHIFTED)) {
             // remove 3d secure details for reorder
             $payment->unsAdditionalInformation(self::LIABILITY_SHIFTED);
@@ -64,7 +61,6 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
             return;
         }
 
-        /** @var ThreeDSecureInfo $info */
         $info = $transaction->threeDSecureInfo;
         $payment->setAdditionalInformation(self::LIABILITY_SHIFTED, $info->liabilityShifted ? 'Yes' : 'No');
         $shiftPossible = $info->liabilityShiftPossible ? 'Yes' : 'No';
@@ -79,10 +75,10 @@ class ThreeDSecureDetailsHandler implements HandlerInterface
     /**
      * Get Eci Flag information
      *
-     * @param string $eciFlagValue
-     * @return mixed|string
+     * @param string|null $eciFlagValue
+     * @return string
      */
-    public function getEciFlagInformation(string $eciFlagValue)
+    public function getEciFlagInformation(?string $eciFlagValue = null): string
     {
         if ($eciFlagValue !== null && array_key_exists($eciFlagValue, self::ECI_ACCEPTED_VALUES)) {
             return self::ECI_ACCEPTED_VALUES[$eciFlagValue];

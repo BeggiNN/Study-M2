@@ -4,54 +4,64 @@ declare (strict_types=1);
 namespace Rector\TypeDeclaration\Rector\ClassMethod;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\BinaryOp;
-use PhpParser\Node\Expr\BinaryOp\BitwiseAnd;
-use PhpParser\Node\Expr\BinaryOp\BitwiseOr;
-use PhpParser\Node\Expr\BinaryOp\Minus;
-use PhpParser\Node\Expr\BinaryOp\Mod;
-use PhpParser\Node\Expr\BinaryOp\Mul;
-use PhpParser\Node\Expr\BinaryOp\Plus;
-use PhpParser\Node\Expr\BinaryOp\ShiftLeft;
-use PhpParser\Node\Expr\BinaryOp\ShiftRight;
-use PhpParser\Node\Expr\Closure;
-use PhpParser\Node\Expr\PostDec;
-use PhpParser\Node\Expr\PostInc;
-use PhpParser\Node\Expr\PreDec;
-use PhpParser\Node\Expr\PreInc;
+use PhpParser\Node\Expr\UnaryMinus;
 use PhpParser\Node\Identifier;
+use PhpParser\Node\Scalar\DNumber;
+use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Stmt\ClassMethod;
 use PhpParser\Node\Stmt\Function_;
-use PhpParser\Node\Stmt\Return_;
-use PHPStan\Type\FloatType;
-use PHPStan\Type\IntegerType;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\PhpVersionFeature;
+use PHPStan\Analyser\Scope;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Rector\AbstractScopeAwareRector;
+use Rector\TypeDeclaration\NodeAnalyzer\ReturnAnalyzer;
+use Rector\ValueObject\PhpVersionFeature;
+use Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnTypeOverrideGuard;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\NumericReturnTypeFromStrictScalarReturnsRector\NumericReturnTypeFromStrictScalarReturnsRectorTest
  */
-final class NumericReturnTypeFromStrictScalarReturnsRector extends AbstractRector implements MinPhpVersionInterface
+final class NumericReturnTypeFromStrictScalarReturnsRector extends AbstractScopeAwareRector implements MinPhpVersionInterface
 {
+    /**
+     * @readonly
+     * @var \Rector\VendorLocker\NodeVendorLocker\ClassMethodReturnTypeOverrideGuard
+     */
+    private $classMethodReturnTypeOverrideGuard;
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    /**
+     * @readonly
+     * @var \Rector\TypeDeclaration\NodeAnalyzer\ReturnAnalyzer
+     */
+    private $returnAnalyzer;
+    public function __construct(ClassMethodReturnTypeOverrideGuard $classMethodReturnTypeOverrideGuard, BetterNodeFinder $betterNodeFinder, ReturnAnalyzer $returnAnalyzer)
+    {
+        $this->classMethodReturnTypeOverrideGuard = $classMethodReturnTypeOverrideGuard;
+        $this->betterNodeFinder = $betterNodeFinder;
+        $this->returnAnalyzer = $returnAnalyzer;
+    }
     public function getRuleDefinition() : RuleDefinition
     {
-        return new RuleDefinition('Change numeric return type based on strict returns type operations', [new CodeSample(<<<'CODE_SAMPLE'
+        return new RuleDefinition('Add int/float return type based on strict scalar returns type', [new CodeSample(<<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function resolve(int $first, int $second)
+    public function getNumber()
     {
-        return $first - $second;
+        return 200;
     }
 }
 CODE_SAMPLE
 , <<<'CODE_SAMPLE'
 class SomeClass
 {
-    public function resolve(int $first, int $second): int
+    public function getNumber(): int
     {
-        return $first - $second;
+        return 200;
     }
 }
 CODE_SAMPLE
@@ -62,34 +72,41 @@ CODE_SAMPLE
      */
     public function getNodeTypes() : array
     {
-        return [ClassMethod::class, Function_::class, Closure::class];
+        return [ClassMethod::class, Function_::class];
     }
     /**
-     * @param ClassMethod|Function_|Closure $node
+     * @param ClassMethod|Function_ $node
      */
-    public function refactor(Node $node) : ?Node
+    public function refactorWithScope(Node $node, Scope $scope) : ?Node
     {
-        if ($node->returnType instanceof Node) {
+        if ($this->shouldSkip($node, $scope)) {
             return null;
         }
-        if ($node->stmts === null) {
+        $returns = $this->betterNodeFinder->findReturnsScoped($node);
+        if (!$this->returnAnalyzer->hasOnlyReturnWithExpr($node, $returns)) {
             return null;
         }
-        $return = $this->matchRootReturnWithExpr($node);
-        if (!$return instanceof Return_) {
-            return null;
-        }
-        if ($return->expr instanceof PreInc || $return->expr instanceof PostInc || $return->expr instanceof PostDec || $return->expr instanceof PreDec) {
-            $exprType = $this->nodeTypeResolver->getNativeType($return->expr);
-            if ($exprType instanceof IntegerType) {
-                $node->returnType = new Identifier('int');
-                return $node;
+        $isAlwaysInt = \true;
+        $isAlwaysFloat = \true;
+        foreach ($returns as $return) {
+            $expr = $return->expr;
+            if ($expr instanceof UnaryMinus) {
+                $expr = $expr->expr;
             }
-            return null;
+            if (!$expr instanceof DNumber) {
+                $isAlwaysFloat = \false;
+            }
+            if (!$expr instanceof LNumber) {
+                $isAlwaysInt = \false;
+            }
         }
-        // @see https://chat.openai.com/share/a9e4fb74-5366-4c4c-9998-d6caeb8b5acc
-        if ($return->expr instanceof Minus || $return->expr instanceof Plus || $return->expr instanceof Mul || $return->expr instanceof Mod || $return->expr instanceof BitwiseAnd || $return->expr instanceof ShiftRight || $return->expr instanceof ShiftLeft || $return->expr instanceof BitwiseOr) {
-            return $this->refactorBinaryOp($return->expr, $node);
+        if ($isAlwaysFloat) {
+            $node->returnType = new Identifier('float');
+            return $node;
+        }
+        if ($isAlwaysInt) {
+            $node->returnType = new Identifier('int');
+            return $node;
         }
         return null;
     }
@@ -98,50 +115,21 @@ CODE_SAMPLE
         return PhpVersionFeature::SCALAR_TYPES;
     }
     /**
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
+     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_ $functionLike
      */
-    private function matchRootReturnWithExpr($functionLike) : ?Return_
+    private function shouldSkip($functionLike, Scope $scope) : bool
     {
-        if ($functionLike->stmts === null) {
-            return null;
+        // type is already known, skip
+        if ($functionLike->returnType instanceof Node) {
+            return \true;
         }
-        foreach ($functionLike->stmts as $stmt) {
-            if (!$stmt instanceof Return_) {
-                continue;
-            }
-            if (!$stmt->expr instanceof Expr) {
-                return null;
-            }
-            return $stmt;
+        // empty, nothing to ifnd
+        if ($functionLike->stmts === null || $functionLike->stmts === []) {
+            return \true;
         }
-        return null;
-    }
-    /**
-     * @param \PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Expr\Closure $functionLike
-     * @return null|\PhpParser\Node\Stmt\Function_|\PhpParser\Node\Stmt\ClassMethod|\PhpParser\Node\Expr\Closure
-     */
-    private function refactorBinaryOp(BinaryOp $binaryOp, $functionLike)
-    {
-        $leftType = $this->nodeTypeResolver->getNativeType($binaryOp->left);
-        $rightType = $this->nodeTypeResolver->getNativeType($binaryOp->right);
-        if ($leftType instanceof IntegerType && $rightType instanceof IntegerType) {
-            $functionLike->returnType = new Identifier('int');
-            return $functionLike;
+        if (!$functionLike instanceof ClassMethod) {
+            return \false;
         }
-        if ($leftType instanceof FloatType && $rightType instanceof FloatType) {
-            $functionLike->returnType = new Identifier('float');
-            return $functionLike;
-        }
-        if ($binaryOp instanceof Mul) {
-            if ($leftType instanceof FloatType && $rightType instanceof IntegerType) {
-                $functionLike->returnType = new Identifier('float');
-                return $functionLike;
-            }
-            if ($leftType instanceof IntegerType && $rightType instanceof FloatType) {
-                $functionLike->returnType = new Identifier('float');
-                return $functionLike;
-            }
-        }
-        return null;
+        return $this->classMethodReturnTypeOverrideGuard->shouldSkipClassMethod($functionLike, $scope);
     }
 }

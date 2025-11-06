@@ -1,8 +1,13 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Ach\Ui;
 
+use PayPal\Braintree\Gateway\Config\Ach\Config;
 use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
@@ -14,34 +19,38 @@ use Magento\Store\Model\ScopeInterface;
 
 class ConfigProvider implements ConfigProviderInterface
 {
-    const METHOD_CODE = 'braintree_ach_direct_debit';
-
-    const CONFIG_MERCHANT_COUNTRY = 'paypal/general/merchant_country';
-
-    const CONFIG_STORE_NAME = 'general/store_information/name';
-
-    const CONFIG_STORE_URL = 'web/unsecure/base_url';
-
-    const ALLOWED_MERCHANT_COUNTRIES = ['US'];
-
-    const METHOD_KEY_ACTIVE = 'payment/braintree_ach_direct_debit/active';
+    public const METHOD_CODE = 'braintree_ach_direct_debit';
+    public const METHOD_VAULT_CODE = 'braintree_ach_direct_debit_vault';
+    public const CONFIG_MERCHANT_COUNTRY = 'paypal/general/merchant_country';
+    public const CONFIG_STORE_NAME = 'general/store_information/name';
+    public const CONFIG_STORE_URL = 'web/unsecure/base_url';
+    public const ALLOWED_MERCHANT_COUNTRIES = ['US'];
+    public const METHOD_KEY_ACTIVE = 'payment/braintree_ach_direct_debit/active';
 
     /**
      * @var BraintreeAdapter $adapter
      */
-    private $adapter;
+    private BraintreeAdapter $adapter;
+
     /**
      * @var BraintreeConfig $braintreeConfig
      */
-    private $braintreeConfig;
+    private BraintreeConfig $braintreeConfig;
+
     /**
      * @var ScopeConfigInterface $scopeConfig
      */
-    private $scopeConfig;
+    private ScopeConfigInterface $scopeConfig;
+
+    /**
+     * @var Config
+     */
+    private Config $config;
+
     /**
      * @var string $clientToken
      */
-    private $clientToken = '';
+    private string $clientToken = '';
 
     /**
      * ConfigProvider constructor.
@@ -49,15 +58,18 @@ class ConfigProvider implements ConfigProviderInterface
      * @param BraintreeAdapter $adapter
      * @param BraintreeConfig $braintreeConfig
      * @param ScopeConfigInterface $scopeConfig
+     * @param Config $config
      */
     public function __construct(
         BraintreeAdapter $adapter,
         BraintreeConfig $braintreeConfig,
-        ScopeConfigInterface $scopeConfig
+        ScopeConfigInterface $scopeConfig,
+        Config $config
     ) {
         $this->adapter = $adapter;
         $this->braintreeConfig = $braintreeConfig;
         $this->scopeConfig = $scopeConfig;
+        $this->config = $config;
     }
 
     /**
@@ -78,7 +90,9 @@ class ConfigProvider implements ConfigProviderInterface
                 self::METHOD_CODE => [
                     'isActive' => $this->isActive(),
                     'clientToken' => $this->getClientToken(),
-                    'storeName' => $this->getStoreName()
+                    'storeName' => $this->getStoreName(),
+                    'paymentIcon' => $this->config->getAchIcon(),
+                    'vaultCode' => self::METHOD_VAULT_CODE,
                 ]
             ]
         ];
@@ -99,6 +113,7 @@ class ConfigProvider implements ConfigProviderInterface
 
     /**
      * ACH is for the US only.
+     *
      * Logic based on Merchant Country Location config option.
      *
      * @return bool
@@ -114,6 +129,8 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get client token
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -135,6 +152,8 @@ class ConfigProvider implements ConfigProviderInterface
     }
 
     /**
+     * Get store name
+     *
      * @return string
      */
     public function getStoreName(): string

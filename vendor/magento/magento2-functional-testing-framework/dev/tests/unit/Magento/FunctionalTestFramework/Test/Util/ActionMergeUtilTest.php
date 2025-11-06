@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 declare(strict_types=1);
 
 namespace tests\unit\Magento\FunctionalTestFramework\Test\Util;
@@ -107,7 +108,7 @@ class ActionMergeUtilTest extends MagentoTestCase
         $dataFieldName = 'myfield';
         $dataFieldValue = 'myValue';
         $userInputKey = "userInput";
-        $userInputValue = "{{" . "${dataObjectName}.${dataFieldName}}}";
+        $userInputValue = "{{" . "{$dataObjectName}.{$dataFieldName}}}";
         $actionName = "myAction";
         $actionType = "myCustomType";
 
@@ -284,7 +285,7 @@ class ActionMergeUtilTest extends MagentoTestCase
     {
         $this->expectException(TestReferenceException::class);
         $this->expectExceptionMessage(
-            'You cannot reference secret data outside of the fillField, magentoCLI and createData actions'
+            'You cannot reference secret data outside of the fillField, magentoCLI, seeInField and createData actions'
         );
 
         $actionObjectOne = new ActionObject(
@@ -306,5 +307,32 @@ class ActionMergeUtilTest extends MagentoTestCase
     public static function tearDownAfterClass(): void
     {
         TestLoggingUtil::getInstance()->clearMockLoggingUtil();
+    }
+
+    /**
+     * Verify that a <seeInField> action is replaced by <seeInSecretField> when secret _CREDS are referenced.
+     *
+     * @return void
+     * @throws TestReferenceException
+     * @throws XmlException
+     */
+    public function testValidSeeInSecretFieldFunction(): void
+    {
+        $actionObjectOne = new ActionObject(
+            'actionKey1',
+            'seeInField',
+            ['userInput' => '{{_CREDS.username}}', 'requiredCredentials' => 'username']
+        );
+        $actionObject = [$actionObjectOne];
+
+        $actionMergeUtil = new ActionMergeUtil('actionMergeUtilTest', 'TestCase');
+        $result = $actionMergeUtil->resolveActionSteps($actionObject);
+
+        $expectedValue = new ActionObject(
+            'actionKey1',
+            'seeInSecretField',
+            ['userInput' => '{{_CREDS.username}}','requiredCredentials' => 'username']
+        );
+        $this->assertEquals($expectedValue, $result['actionKey1']);
     }
 }

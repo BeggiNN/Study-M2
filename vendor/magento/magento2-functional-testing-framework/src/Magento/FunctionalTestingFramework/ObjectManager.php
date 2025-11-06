@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework;
@@ -39,8 +39,8 @@ class ObjectManager extends \Magento\FunctionalTestingFramework\ObjectManager\Ob
      * @param array                              $sharedInstances
      */
     public function __construct(
-        \Magento\FunctionalTestingFramework\ObjectManager\Factory $factory = null,
-        \Magento\FunctionalTestingFramework\ObjectManager\ConfigInterface $config = null,
+        ?\Magento\FunctionalTestingFramework\ObjectManager\Factory $factory = null,
+        ?\Magento\FunctionalTestingFramework\ObjectManager\ConfigInterface $config = null,
         array $sharedInstances = []
     ) {
         parent::__construct($factory, $config, $sharedInstances);

@@ -48,19 +48,22 @@ use const PHP_EOL;
  *     source: string|null,
  * }
  * @extends AbstractStandalone<int, ObjectShape>
+ * @final
  */
 class HeadScript extends AbstractStandalone
 {
     /**
-     * Script type constants
-     *
-     * @const string
+     * @deprecated Since 2.40.0 This constant will be removed in 3.0
      */
-    public const FILE   = 'FILE';
+    public const FILE = 'FILE';
+
+    /**
+     * @deprecated Since 2.40.0 This constant will be removed in 3.0
+     */
     public const SCRIPT = 'SCRIPT';
 
     /**
-     * @internal
+     * @deprecated Since 2.40.0 This constant will be removed in 3.0
      */
     public const DEFAULT_SCRIPT_TYPE = 'text/javascript';
 
@@ -358,11 +361,11 @@ class HeadScript extends AbstractStandalone
     /**
      * Create data item containing all necessary components of script
      *
-     * @internal This method will become private in version 3.0
+     * @deprecated Since 2.40.0. This method will bew removed in 3.0
      *
      * @param  string $type       Type of data
      * @param  array<string, mixed> $attributes Attributes of data
-     * @param  string $content    Content of data
+     * @param string $content                   Content of data
      * @return ObjectShape
      */
     public function createData($type, array $attributes, $content = null)
@@ -420,10 +423,10 @@ class HeadScript extends AbstractStandalone
     /**
      * Create script HTML
      *
-     * @internal This method will become private in version 3.0
+     * @deprecated Since 2.40.0. This method will become private in version 3.0
      *
      * @param ObjectShape $item Item to convert
-     * @param string $indent String to add before the item
+     * @param string $indent      String to add before the item
      * @param string $escapeStart Starting sequence
      * @param string $escapeEnd Ending sequence
      * @return string
@@ -500,9 +503,11 @@ class HeadScript extends AbstractStandalone
     /**
      * Override append
      *
+     * @deprecated Since 2.40.0. This method will no longer be accessible in 3.0
+     *
      * @param ObjectShape $value Append script or file
-     * @throws Exception\InvalidArgumentException
      * @return AbstractContainer
+     * @throws Exception\InvalidArgumentException
      */
     public function append($value)
     {
@@ -519,9 +524,11 @@ class HeadScript extends AbstractStandalone
     /**
      * Override prepend
      *
+     * @deprecated Since 2.40.0. This method will no longer be accessible in 3.0
+     *
      * @param ObjectShape $value Prepend script or file
-     * @throws Exception\InvalidArgumentException
      * @return AbstractContainer
+     * @throws Exception\InvalidArgumentException
      */
     public function prepend($value)
     {
@@ -538,9 +545,11 @@ class HeadScript extends AbstractStandalone
     /**
      * Override set
      *
+     * @deprecated Since 2.40.0. This method will no longer be accessible in 3.0
+     *
      * @param ObjectShape $value Set script or file
-     * @throws Exception\InvalidArgumentException
      * @return void
+     * @throws Exception\InvalidArgumentException
      */
     public function set($value)
     {
@@ -555,6 +564,8 @@ class HeadScript extends AbstractStandalone
 
     /**
      * Override offsetSet
+     *
+     * @deprecated Since 2.40.0. The feature of allowing insertion at any index will be removed in version 3.0
      *
      * @param int $offset Set script of file offset
      * @param ObjectShape $value
@@ -576,7 +587,9 @@ class HeadScript extends AbstractStandalone
     /**
      * Set flag indicating if arbitrary attributes are allowed
      *
-     * @param  bool $flag Set flag
+     * @deprecated Since 2.40.0. This method will not be necessary because the helper will no longer validate attributes
+     *
+     * @param bool $flag Set flag
      * @return $this
      */
     public function setAllowArbitraryAttributes($flag)
@@ -587,6 +600,8 @@ class HeadScript extends AbstractStandalone
 
     /**
      * Are arbitrary attributes allowed?
+     *
+     * @deprecated Since 2.40.0. This method will not be necessary because the helper will no longer validate attributes
      *
      * @return bool
      */

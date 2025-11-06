@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2018 Adobe
+ * All Rights Reserved.
  */
 
 require_once __DIR__ . '/../../../../app/bootstrap.php';
@@ -46,10 +46,6 @@ if (!empty($_POST['token']) && !empty($_POST['command'])) {
                 $idleTimeout = true;
             }
 
-            if (checkForFilePath($output)) {
-                $output = "CLI output suppressed, filepath detected in output.";
-            }
-
             $exitCode = $process->getExitCode();
 
             if ($process->isSuccessful() || $idleTimeout) {
@@ -57,7 +53,9 @@ if (!empty($_POST['token']) && !empty($_POST['command'])) {
             } else {
                 http_response_code(500);
             }
-            echo $output;
+
+            // Suppress file paths from output
+            echo suppressFilePaths($output);
         } else {
             http_response_code(403);
             echo "Given command not found valid in Magento CLI Command list.";
@@ -98,7 +96,7 @@ function escapeCommand($command)
  */
 function validateCommand($magentoBinary, $command)
 {
-    exec($magentoBinary . ' list --no-ansi', $commandList);
+    exec($magentoBinary . ' list', $commandList);
     // Trim list of commands after first whitespace
     $commandList = array_map("trimAfterWhitespace", $commandList);
     return in_array(trimAfterWhitespace($command), $commandList);
@@ -115,11 +113,21 @@ function trimAfterWhitespace($string)
 }
 
 /**
- * Detects file path in string.
+ * Suppress file paths in string.
  * @param string $string
- * @return boolean
+ * @return string
  */
-function checkForFilePath($string)
+function suppressFilePaths(string $string): string
 {
-    return preg_match('/\/[\S]+\//', $string);
+    // Match file paths on both *nix and Windows system
+    $filePathPattern = '~(?:[A-Za-z]:[\\\/]|\\\\|\/)\S+~';
+    $replacement = '[suppressed_path]';
+
+    preg_match_all($filePathPattern, $string, $matches);
+    if (!empty($matches)) {
+        foreach ($matches[0] as $match) {
+            $string = str_replace($match, $replacement, $string);
+        }
+    }
+    return $string;
 }

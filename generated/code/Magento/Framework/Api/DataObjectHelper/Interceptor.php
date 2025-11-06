@@ -40,4 +40,13 @@ class Interceptor extends \Magento\Framework\Api\DataObjectHelper implements \Ma
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'getCustomAttributeValueByType');
         return $pluginInfo ? $this->___callPlugins('getCustomAttributeValueByType', func_get_args(), $pluginInfo) : parent::getCustomAttributeValueByType($attributeValues, $type);
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function setCustomAttributes(mixed $dataObject, array $data, array $attributeKeys) : array
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, 'setCustomAttributes');
+        return $pluginInfo ? $this->___callPlugins('setCustomAttributes', func_get_args(), $pluginInfo) : parent::setCustomAttributes($dataObject, $data, $attributeKeys);
+    }
 }

@@ -69,7 +69,17 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -114,7 +124,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getHelperSet()
+    public function getHelperSet() : ?\Symfony\Component\Console\Helper\HelperSet
     {
         return $this->_getSubject()->getHelperSet();
     }
@@ -122,7 +132,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getApplication()
+    public function getApplication() : ?\Symfony\Component\Console\Application
     {
         return $this->_getSubject()->getApplication();
     }
@@ -138,7 +148,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function run(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output)
+    public function run(\Symfony\Component\Console\Input\InputInterface $input, \Symfony\Component\Console\Output\OutputInterface $output) : int
     {
         return $this->_getSubject()->run($input, $output);
     }
@@ -154,7 +164,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setCode(callable $code)
+    public function setCode(callable $code) : static
     {
         return $this->_getSubject()->setCode($code);
     }
@@ -162,15 +172,15 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function mergeApplicationDefinition(bool $mergeArgs = true)
+    public function mergeApplicationDefinition(bool $mergeArgs = true) : void
     {
-        return $this->_getSubject()->mergeApplicationDefinition($mergeArgs);
+        $this->_getSubject()->mergeApplicationDefinition($mergeArgs);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setDefinition($definition)
+    public function setDefinition(\Symfony\Component\Console\Input\InputDefinition|array $definition) : static
     {
         return $this->_getSubject()->setDefinition($definition);
     }
@@ -178,7 +188,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getDefinition()
+    public function getDefinition() : \Symfony\Component\Console\Input\InputDefinition
     {
         return $this->_getSubject()->getDefinition();
     }
@@ -186,7 +196,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getNativeDefinition()
+    public function getNativeDefinition() : \Symfony\Component\Console\Input\InputDefinition
     {
         return $this->_getSubject()->getNativeDefinition();
     }
@@ -194,7 +204,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function addArgument(string $name, ?int $mode = null, string $description = '', $default = null)
+    public function addArgument(string $name, ?int $mode = null, string $description = '', mixed $default = null) : static
     {
         return $this->_getSubject()->addArgument($name, $mode, $description, $default);
     }
@@ -202,7 +212,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function addOption(string $name, $shortcut = null, ?int $mode = null, string $description = '', $default = null)
+    public function addOption(string $name, string|array|null $shortcut = null, ?int $mode = null, string $description = '', mixed $default = null) : static
     {
         return $this->_getSubject()->addOption($name, $shortcut, $mode, $description, $default);
     }
@@ -210,7 +220,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setName(string $name)
+    public function setName(string $name) : static
     {
         return $this->_getSubject()->setName($name);
     }
@@ -218,7 +228,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setProcessTitle(string $title)
+    public function setProcessTitle(string $title) : static
     {
         return $this->_getSubject()->setProcessTitle($title);
     }
@@ -226,7 +236,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getName()
+    public function getName() : ?string
     {
         return $this->_getSubject()->getName();
     }
@@ -234,7 +244,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setHidden(bool $hidden)
+    public function setHidden(bool $hidden = true) : static
     {
         return $this->_getSubject()->setHidden($hidden);
     }
@@ -242,7 +252,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function isHidden()
+    public function isHidden() : bool
     {
         return $this->_getSubject()->isHidden();
     }
@@ -250,7 +260,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setDescription(string $description)
+    public function setDescription(string $description) : static
     {
         return $this->_getSubject()->setDescription($description);
     }
@@ -258,7 +268,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getDescription()
+    public function getDescription() : string
     {
         return $this->_getSubject()->getDescription();
     }
@@ -266,7 +276,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setHelp(string $help)
+    public function setHelp(string $help) : static
     {
         return $this->_getSubject()->setHelp($help);
     }
@@ -274,7 +284,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getHelp()
+    public function getHelp() : string
     {
         return $this->_getSubject()->getHelp();
     }
@@ -282,7 +292,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getProcessedHelp()
+    public function getProcessedHelp() : string
     {
         return $this->_getSubject()->getProcessedHelp();
     }
@@ -290,7 +300,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function setAliases(iterable $aliases)
+    public function setAliases(iterable $aliases) : static
     {
         return $this->_getSubject()->setAliases($aliases);
     }
@@ -298,7 +308,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getAliases()
+    public function getAliases() : array
     {
         return $this->_getSubject()->getAliases();
     }
@@ -306,7 +316,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getSynopsis(bool $short = false)
+    public function getSynopsis(bool $short = false) : string
     {
         return $this->_getSubject()->getSynopsis($short);
     }
@@ -314,7 +324,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function addUsage(string $usage)
+    public function addUsage(string $usage) : static
     {
         return $this->_getSubject()->addUsage($usage);
     }
@@ -322,7 +332,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getUsages()
+    public function getUsages() : array
     {
         return $this->_getSubject()->getUsages();
     }
@@ -330,7 +340,7 @@ class Proxy extends \Magento\MessageQueue\Console\RestartConsumerCommand impleme
     /**
      * {@inheritdoc}
      */
-    public function getHelper(string $name)
+    public function getHelper(string $name) : mixed
     {
         return $this->_getSubject()->getHelper($name);
     }

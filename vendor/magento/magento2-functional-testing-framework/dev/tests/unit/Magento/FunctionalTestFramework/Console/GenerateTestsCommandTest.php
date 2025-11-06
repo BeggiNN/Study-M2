@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2021 Adobe
+ * All Rights Reserved.
  */
+
 namespace tests\unit\Magento\FunctionalTestFramework\Console;
 
 use PHPUnit\Framework\TestCase;
@@ -41,7 +42,7 @@ class GenerateTestsCommandTest extends TestCase
      *
      * @return array
      */
-    public function configParallelOptions(): array
+    public static function configParallelOptions(): array
     {
         return [
             [null, null, ['parallelByTime', 600000]],   /* #0 */

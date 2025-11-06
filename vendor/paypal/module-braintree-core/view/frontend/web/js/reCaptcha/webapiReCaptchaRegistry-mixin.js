@@ -10,10 +10,10 @@ define([], function () {
         /**
          * {@inheritDoc}
          */
-       originalFunction.addListener = function (id , func) {
+        originalFunction.addListener = function (id , func) {
             this._listeners[id] = func;
-       };
+        };
 
-       return originalFunction;
+        return originalFunction;
     };
 });

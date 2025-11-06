@@ -18,7 +18,6 @@
             <testCaseId value="MC-13212"/>
             <group value="checkout"/>
             <group value="cloud_smoke"/>
-            <group value="guest_checkout"/>
         </annotations>
         <before>
             <!-- Create simple product -->

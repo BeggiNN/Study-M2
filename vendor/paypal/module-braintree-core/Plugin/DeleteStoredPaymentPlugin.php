@@ -1,19 +1,13 @@
 <?php
 /**
- *   _____                    _____
- *  / ____|                  / ____|
- * | |  __  ___ _ __   ___  | |     ___  _ __ ___  _ __ ___   ___ _ __ ___ ___
- * | | |_ |/ _ \ '_ \ / _ \ | |    / _ \| '_ ` _ \| '_ ` _ \ / _ \ '__/ __/ _ \
- * | |__| |  __/ | | |  __/ | |___| (_) | | | | | | | | | | |  __/ | | (_|  __/
- *  \_____|\___|_| |_|\___|  \_____\___/|_| |_| |_|_| |_| |_|\___|_|  \___\___|
- *
- * User: paulcanning
- * Date: 2019-05-02
- * Time: 13:05
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Plugin;
 
+use Exception;
 use PayPal\Braintree\Model\Adapter\BraintreeAdapter;
 use Magento\Vault\Api\Data\PaymentTokenInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
@@ -21,15 +15,24 @@ use Psr\Log\LoggerInterface;
 
 class DeleteStoredPaymentPlugin
 {
+    private const BT_PAYMENT_METHOD_CODES = [
+        'braintree',
+        'braintree_paypal',
+        'braintree_applepay',
+        'braintree_googlepay',
+        'braintree_venmo',
+        'braintree_ach_direct_debit'
+    ];
+
     /**
      * @var BraintreeAdapter
      */
-    private $braintreeAdapter;
+    private BraintreeAdapter $braintreeAdapter;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * DeleteStoredPaymentPlugin constructor
@@ -46,16 +49,24 @@ class DeleteStoredPaymentPlugin
     }
 
     /**
+     * Delete the payment method token from the Braintree before deleting it from Magento
+     *
      * @param PaymentTokenRepositoryInterface $subject
      * @param PaymentTokenInterface $paymentToken
-     * @return bool|null
+     * @return null
      */
-    public function beforeDelete(PaymentTokenRepositoryInterface $subject, PaymentTokenInterface $paymentToken)
-    {
+    public function beforeDelete(
+        PaymentTokenRepositoryInterface $subject,
+        PaymentTokenInterface $paymentToken
+    ) {
         try {
+            if (!in_array($paymentToken->getPaymentMethodCode(), self::BT_PAYMENT_METHOD_CODES)) {
+                return null;
+            }
+
             $token = $paymentToken->getGatewayToken();
             $this->braintreeAdapter->deletePaymentMethod($token);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->logger->error($e->getMessage());
         }
 

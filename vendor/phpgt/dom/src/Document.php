@@ -2,311 +2,365 @@
 namespace Gt\Dom;
 
 use DOMAttr;
+use DOMCdataSection;
 use DOMCharacterData;
 use DOMComment;
 use DOMDocument;
 use DOMDocumentFragment;
 use DOMDocumentType;
 use DOMElement;
+use DOMEntity;
+use DOMEntityReference;
+use DOMException;
 use DOMNode;
+use DOMNotation;
+use DOMProcessingInstruction;
 use DOMText;
+use Gt\Dom\Exception\HTMLDocumentDoesNotSupportCDATASectionException;
+use Gt\Dom\Exception\InvalidCharacterException;
+use Gt\Dom\Exception\NotSupportedException;
 use Psr\Http\Message\StreamInterface;
-use RuntimeException;
+use Stringable;
 
 /**
- * Represents any web page loaded in the browser and serves as an entry point
- * into the web page's content, the DOM tree (including elements such as
- * <body> or <table>).
+ * @property-read ?Element $documentElement Returns the Element that is a direct child of the document. For HTML documents, this is normally the HTMLHtmlElement object representing the document's <html> element.
+ * @property-read DocumentType $doctype Returns the Document Type Definition (DTD) of the current document.
  *
- * @property-read DocumentType $doctype;
- * @property-read Element $documentElement
- * @property-read Document $ownerDocument
- *
- * @method Attr createAttribute(string $name)
- * @method Comment createComment(string $data)
+ * @method Element importNode(Node|Element $node, bool $deep = false)
  * @method DocumentFragment createDocumentFragment()
- * @method Element createElement(string $name)
- * @method Element createTextNode(string $content)
- * @method ?Element getElementById(string $id)
+ * @method Text createTextNode(string $data)
  */
-class Document extends DOMDocument implements StreamInterface {
-	use LiveProperty, ParentNode;
+abstract class Document extends DOMDocument implements Stringable, StreamInterface {
+	use DocumentStream;
+	use ParentNode;
+	use RegisteredNodeClass;
 
-	/** @var resource */
-	protected $stream;
-	/** @var ?int number of bytes filled */
-	protected $streamFilled;
+	const NODE_CLASS_LOOKUP = [
+		DOMDocument::class => self::class,
+		DOMAttr::class => Attr::class,
+		DOMCdataSection::class => CdataSection::class,
+		DOMCharacterData::class => CharacterData::class,
+		DOMComment::class => Comment::class,
+		DOMDocumentFragment::class => DocumentFragment::class,
+		DOMDocumentType::class => DocumentType::class,
+		DOMElement::class => Element::class,
+		DOMEntity::class => Entity::class,
+		DOMEntityReference::class => EntityReference::class,
+		DOMNode::class => Node::class,
+		DOMNotation::class => Notation::class,
+		DOMText::class => Text::class,
+		DOMProcessingInstruction::class => ProcessingInstruction::class,
+	];
+	const DOCTYPE = "<!doctype html>";
 
-	public function __construct($document = null) {
+	public function __construct(
+		public readonly string $characterSet,
+		public readonly string $contentType,
+	) {
+		parent::__construct("1.0", $this->characterSet);
+		$this->encoding = $this->characterSet;
+		$this->substituteEntities = true;
+		$this->registerNodeClasses();
 		libxml_use_internal_errors(true);
-		parent::__construct("1.0", "utf-8");
-		$this->registerNodeClass(DOMNode::class, Node::class);
-		$this->registerNodeClass(DOMElement::class, Element::class);
-		$this->registerNodeClass(DOMAttr::class, Attr::class);
-		$this->registerNodeClass(DOMDocumentFragment::class, DocumentFragment::class);
-		$this->registerNodeClass(DOMDocumentType::class, DocumentType::class);
-		$this->registerNodeClass(DOMCharacterData::class, CharacterData::class);
-		$this->registerNodeClass(DOMText::class, Text::class);
-		$this->registerNodeClass(DOMComment::class, Comment::class);
-
-		if($document instanceof DOMDocument) {
-			$node = $this->importNode($document->documentElement, true);
-			$this->appendChild($node);
-
-			return;
-		}
-
-		$this->stream = fopen("php://memory", "r+");
 	}
 
-	protected function getRootDocument():DOMDocument {
-		return $this;
-	}
-
-	public function __toString() {
-		return $this->saveHTML();
-	}
-
-	public function saveHTML(DOMNode $node = null):string {
-		if(is_null($this->streamFilled)) {
-			$this->fillStream();
+	public function __toString():string {
+		if(get_class($this) === HTMLDocument::class) {
+			$string = self::DOCTYPE . "\n";
+			$string .= $this->saveHTML($this->documentElement);
 		}
 		else {
-			fseek($this->stream, $this->streamFilled);
+			$string = $this->saveXML();
 		}
 
-		return parent::saveHTML($node);
+		return trim($string) . "\n";
 	}
 
 	/**
-	 * Closes the stream and any underlying resources.
+	 * The Document.createAttribute() method creates a new attribute node,
+	 * and returns it. The object created a node implementing the Attr
+	 * interface. The DOM does not enforce what sort of attributes can be
+	 * added to a particular element in this manner.
 	 *
-	 * @return void
+	 * @param string $localName name is a string containing the name of the
+	 * attribute.
+	 * @return Attr A Attr node.
+	 * @throws InvalidCharacterException if the parameter contains invalid
+	 * characters for XML attribute
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createAttribute
 	 */
-	public function close():void {
-		$this->stream = null;
+	public function createAttribute(string $localName = ""):Attr {
+		/** @var Attr $attr */
+		$attr = parent::createAttribute($localName);
+		return $attr;
 	}
 
 	/**
-	 * Separates any underlying resources from the stream.
+	 * Currently undocumented at MDN. Please see W3C spec instead.
+	 * @link https://dom.spec.whatwg.org/#dom-document-createattributens
 	 *
-	 * After the stream has been detached, the stream is in an unusable state.
-	 *
-	 * @return resource|null Underlying PHP stream, if any
+	 * @param ?string $namespace
+	 * @param string $qualifiedName
+	 * @return Attr
 	 */
-	public function detach() {
-		$this->fillStream();
-		$stream = $this->stream;
-		$this->stream = null;
-		return $stream;
+	public function createAttributeNS(
+		?string $namespace,
+		string $qualifiedName
+	):Attr {
+		/** @var Attr $attr */
+		$attr = parent::createAttributeNS($namespace, $qualifiedName);
+		return $attr;
 	}
 
 	/**
-	 * Get the size of the stream if known.
+	 * Creates a new CDATA section node, and returns it.
+	 * This will only work with XML, not HTML documents (as HTML documents
+	 * do not support CDATA sections); attempting it on an HTML document
+	 * will throw NotSupportedException.
 	 *
-	 * @return int|null Returns the size in bytes if known, or null if unknown.
+	 * @param string $data data is a string containing the data to be added
+	 * to the CDATA Section.
+	 * @return CdataSection a CDATA Section node.
+	 * @throws NotSupportedException
+	 * @throws InvalidCharacterException if one tries to submit the
+	 * closing CDATA sequence ("]]>") as part of the data, so unescaped
+	 * user-provided data cannot be safely used without this method getting
+	 * this exception (createTextNode() can often be used in its place).
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createCDATASection
 	 */
-	public function getSize() {
-		$this->fillStream();
-		return $this->streamFilled;
-	}
-
-	/**
-	 * Returns the current position of the file read/write pointer
-	 *
-	 * @return int Position of the file pointer
-	 * @throws RuntimeException on error.
-	 */
-	public function tell():int {
-		$tell = null;
-
-		if(!is_null($this->stream)) {
-			$tell = ftell($this->stream);
+	public function createCDATASection(string $data):CdataSection {
+		if($this instanceof HTMLDocument) {
+			throw new HTMLDocumentDoesNotSupportCDATASectionException();
 		}
 
-		$this->fillStream();
-
-		if(!is_null($tell)) {
-			fseek($this->stream, $tell);
+		$closingTag = "]]>";
+		if(strstr($data, $closingTag)) {
+			throw new InvalidCharacterException($closingTag);
 		}
 
-		return $tell;
+		/** @var CdataSection $cdata */
+		$cdata = parent::createCDATASection($data);
+		return $cdata;
 	}
 
 	/**
-	 * Returns true if the stream is at the end of the stream.
+	 * In an HTML document, the document.createElement() method creates the
+	 * HTML element specified by tagName, or an HTMLUnknownElement if
+	 * tagName isn't recognized.
 	 *
-	 * @return bool
+	 * @param string $localName A string that specifies the type of element
+	 * to be created. The nodeName of the created element is initialized
+	 * with the value of tagName. Don't use qualified names (like "html:a")
+	 * with this method. When called on an HTML document, createElement()
+	 * converts tagName to lower case before creating the element.
+	 * @param string $value The value of the element. By default, an empty
+	 * element will be created. You can also set the value later with
+	 * DOMElement->nodeValue.
+	 * @return Element The new Element.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement
 	 */
-	public function eof() {
-		$this->fillStream();
-		return feof($this->stream);
-	}
-
-	/**
-	 * Returns whether or not the stream is seekable.
-	 *
-	 * @return bool
-	 */
-	public function isSeekable() {
-		$this->fillStream();
-		return $this->getMetadata("seekable");
-	}
-
-	/**
-	 * Seek to a position in the stream.
-	 *
-	 * @link http://www.php.net/manual/en/function.fseek.php
-	 * @param int $offset Stream offset
-	 * @param int $whence Specifies how the cursor position will be calculated
-	 *     based on the seek offset. Valid values are identical to the built-in
-	 *     PHP $whence values for `fseek()`.  SEEK_SET: Set position equal to
-	 *     offset bytes SEEK_CUR: Set position to current location plus offset
-	 *     SEEK_END: Set position to end-of-stream plus offset.
-	 * @throws RuntimeException on failure.
-	 */
-	public function seek($offset, $whence = SEEK_SET):void {
-		$this->fillStream();
-		$result = fseek($this->stream, $offset, $whence);
-
-		if($result === -1) {
-			throw new RuntimeException("Error seeking Document Stream");
+	public function createElement(string $localName, string $value = ""):Element {
+		$localName = strtolower($localName);
+		try {
+			/** @var Element $element */
+			$element = parent::createElement($localName, $value);
+			return $element;
+		}
+		catch(DOMException $exception) {
+			throw new InvalidCharacterException();
 		}
 	}
 
 	/**
-	 * Seek to the beginning of the stream.
+	 * Creates an element with the specified namespace URI and
+	 * qualified name.
 	 *
-	 * If the stream is not seekable, this method will raise an exception;
-	 * otherwise, it will perform a seek(0).
+	 * To create an element without specifying a namespace URI, use
+	 * the createElement() method.
 	 *
-	 * @throws RuntimeException on failure.
-	 * @link http://www.php.net/manual/en/function.fseek.php
-	 * @see seek()
+	 * @param string $namespace A string that specifies the namespace URI
+	 * to associate with the element. The namespaceURI property of the
+	 * created element is initialized with the value of namespaceURI.
+	 * @param string $qualifiedName A string that specifies the type of
+	 * element to be created. The nodeName property of the created element
+	 * is initialized with the value of qualifiedName.
+	 * @param string $value The value of the element. By default, an empty
+	 * element will be created. You can also set the value later with
+	 * DOMElement->nodeValue.
+	 * @return Element The new Element.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createElementNS
 	 */
-	public function rewind():void {
-		$this->fillStream();
-		$this->seek(0);
+	public function createElementNS(?string $namespace = "", string $qualifiedName = "", string $value = ""):Element {
+		/** @var Element $element */
+		$element = parent::createElementNS($namespace, $qualifiedName, $value);
+		return $element;
 	}
 
 	/**
-	 * Returns whether or not the stream is writable.
+	 * Returns a new NodeIterator object.
 	 *
-	 * @return bool
+	 * @param Node $root The root node at which to begin the NodeIterator's
+	 * traversal.
+	 * @param int $whatToShow Is an optional unsigned long representing a
+	 * bitmask created by combining the constant properties of NodeFilter.
+	 * It is a convenient way of filtering for certain types of node.
+	 * It defaults to 0xFFFFFFFF representing the SHOW_ALL constant.
+	 * @param NodeFilter|callable|null $filter An object implementing the
+	 * NodeFilter interface. Its acceptNode() method will be called for each
+	 * node in the subtree based at root which is accepted as included by
+	 * the whatToShow flag to determine whether or not to include it in the
+	 * list of iterable nodes (a simple callback function may also be used
+	 * instead). The method should return one of NodeFilter.FILTER_ACCEPT,
+	 * NodeFilter.FILTER_REJECT, or NodeFilter.FILTER_SKIP.
+	 * @return NodeIterator
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createNodeIterator
 	 */
-	public function isWritable():bool {
-		$this->fillStream();
-		$mode = $this->getMetadata("mode");
-		$writable = false;
-
-		if(strstr($mode, "w") || strstr($mode, "+") || strstr($mode, "a")) {
-			$writable = true;
-		}
-
-		return $writable;
+	public function createNodeIterator(
+		Node|Element $root,
+		int $whatToShow = NodeFilter::SHOW_ALL,
+		NodeFilter|callable|null $filter = null
+	):NodeIterator {
+		return NodeIteratorFactory::create($root, $whatToShow, $filter);
 	}
 
 	/**
-	 * Write data to the stream.
+	 * createProcessingInstruction() generates a new processing instruction
+	 * node and returns it.
 	 *
-	 * @param string $string The string that is to be written.
-	 * @return int Returns the number of bytes written to the stream.
-	 * @throws RuntimeException on failure.
+	 * The new node usually will be inserted into an XML document in order
+	 * to accomplish anything with it, such as with node.insertBefore.
+	 *
+	 * @param string $target a string containing the first part of the
+	 * processing instruction (i.e., <?target … ?>)
+	 * @param null|string $data a string containing any information the
+	 * processing instruction should carry, after the target. The data is
+	 * up to you, but it can't contain ?>, since that closes the processing
+	 * instruction.
+	 * @return ProcessingInstruction the resulting ProcessingInstruction
+	 * node.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createProcessingInstruction
 	 */
-	public function write($string):int {
-		$this->fillStream();
-		$this->loadHTML($this->getContents() . $string);
-		$bytesWritten = fwrite($this->stream, $string);
-		return $bytesWritten;
+	public function createProcessingInstruction(
+		string $target,
+		?string $data = null
+	):ProcessingInstruction {
+		$closingTag = "?>";
+		if(strstr($data, $closingTag)) {
+			throw new InvalidCharacterException($closingTag);
+		}
+
+		/** @var ProcessingInstruction $procInstruction */
+		$procInstruction = parent::createProcessingInstruction($target, $data);
+		return $procInstruction;
 	}
 
 	/**
-	 * Returns whether or not the stream is readable.
+	 * The Document.createTreeWalker() creator method returns a newly
+	 * created TreeWalker object.
 	 *
-	 * @return bool
+	 * @param Node $root A root Node of this TreeWalker traversal. Typically
+	 * this will be an element owned by the document.
+	 * @param int $whatToShow A unsigned long representing a bitmask
+	 * created by combining the constant properties of NodeFilter. It is a
+	 * convenient way of filtering for certain types of node. It defaults
+	 * to 0xFFFFFFFF representing the SHOW_ALL constant.
+	 * @param NodeFilter|callable|null $filter A NodeFilter, that is an
+	 * object with a method acceptNode, which is called by the TreeWalker
+	 * to determine whether or not to accept a node that has passed the
+	 * whatToShow check. Alternatively pass the callable that represents
+	 * `acceptNode` function.
+	 * @return TreeWalker A new TreeWalker object.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/createTreeWalker
 	 */
-	public function isReadable():bool {
-		$this->fillStream();
-		$mode = $this->getMetadata("mode");
-		$readable = false;
-
-		if(strstr($mode, "r")
-			|| strstr($mode, "+")) {
-			$readable = true;
-		}
-
-		return $readable;
+	public function createTreeWalker(
+		Node|Element $root,
+		int $whatToShow = NodeFilter::SHOW_ALL,
+		NodeFilter|callable|null $filter = null
+	):TreeWalker {
+		return TreeWalkerFactory::create($root, $whatToShow, $filter);
 	}
 
 	/**
-	 * Read data from the stream.
+	 * Returns an XPathResult based on an XPath expression.
 	 *
-	 * @param int $length Read up to $length bytes from the object and return
-	 *     them. Fewer than $length bytes may be returned if underlying stream
-	 *     call returns fewer bytes.
-	 * @return string Returns the data read from the stream, or an empty string
-	 *     if no bytes are available.
-	 * @throws RuntimeException if an error occurs.
+	 * @param string $xpathExpression is a string representing the XPath to
+	 * be evaluated.
+	 * @param null|Node|Element $contextNode Leave null to default to $this node
+	 * @return XPathResult
 	 */
-	public function read($length):string {
-		$this->fillStream();
-		$bytesRead = fread($this->stream, $length);
+	public function evaluate(
+		string $xpathExpression,
+		null|Node|Element $contextNode = null
+	):XPathResult {
+		if(!$contextNode) {
+			$contextNode = $this->documentElement;
+		}
 
-		return $bytesRead;
+		return XPathResultFactory::create(
+			$xpathExpression,
+			$this,
+			$contextNode,
+		);
 	}
 
 	/**
-	 * Returns the remaining contents in a string
+	 * The Document method getElementById() returns an Element object
+	 * representing the element whose id property matches the specified
+	 * string. Since element IDs are required to be unique if specified,
+	 * they're a useful way to get access to a specific element quickly.
 	 *
-	 * @return string
-	 * @throws RuntimeException if unable to read or an error occurs while
-	 *     reading.
+	 * If you need to get access to an element which doesn't have an ID,
+	 * you can use querySelector() to find the element using any selector.
+	 *
+	 * @param string $elementId The ID of the element to locate. The ID is
+	 * case-sensitive string which is unique within the document; only one
+	 * element may have any given ID.
+	 * @return ?Element An Element object describing the DOM element object
+	 * matching the specified ID, or null if no matching element was found
+	 * in the document.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/getElementById
 	 */
-	public function getContents():string {
-		$this->fillStream();
+	public function getElementById(string $elementId):?Element {
+		/** @var ?Element $element */
+		$element = parent::getElementById($elementId);
 
-		if(!is_resource($this->stream)) {
-			throw new RuntimeException("Stream is not available");
+		if(is_null($element)) {
+// Known limitation in XML documents: IDs are not always registered.
+// Try using XPath instead.
+			$element = $this->evaluate("//*[@id='$elementId']")->current();
 		}
 
-		$string = stream_get_contents($this->stream);
-		return $string;
+		return $element;
 	}
 
 	/**
-	 * Get stream metadata as an associative array or retrieve a specific key.
-	 *
-	 * The keys returned are identical to the keys returned from PHP's
-	 * stream_get_meta_data() function.
-	 *
-	 * @link http://php.net/manual/en/function.stream-get-meta-data.php
-	 * @param string $key Specific metadata to retrieve.
-	 * @return array|mixed|null Returns an associative array if no key is
-	 *     provided. Returns a specific key value if a key is provided and the
-	 *     value is found, or null if the key is not found.
+	 * @see Node::isEqualNode()
 	 */
-	public function getMetadata($key = null) {
-		$this->fillStream();
-		$metaData = stream_get_meta_data($this->stream);
-
-		if(is_null($key)) {
-			return $metaData;
-		}
-
-		return $metaData[$key] ?? null;
+	public function isEqualNode(
+		null|Node|Element|Document|DocumentType|Attr|ProcessingInstruction|DOMNode $otherNode
+	):bool {
+		return $this->documentElement->isEqualNode($otherNode);
 	}
 
-	private function fillStream():void {
-		if(!is_null($this->streamFilled)) {
-			return;
-		}
+	/**
+	 * Writes a string of text followed by a newline character to a
+	 * document.
+	 *
+	 * @param string $line line is string containing a line of text.
+	 * @return int The number of bytes written.
+	 * @link https://developer.mozilla.org/en-US/docs/Web/API/Document/writeln
+	 * @noinspection PhpMissingParamTypeInspection
+	 */
+	public function writeln($line):int {
+		return $this->write($line . PHP_EOL);
+	}
 
-		if(!is_resource($this->stream)) {
-			throw new RuntimeException("Stream is closed");
+	private function registerNodeClasses():void {
+		foreach(self::NODE_CLASS_LOOKUP as $nativeClass => $gtClass) {
+			if ($gtClass === self::class) {
+				$gtClass = static::class;
+			}
+			$this->registerNodeClass($nativeClass, $gtClass);
 		}
-
-		$this->streamFilled = 0;
-		$this->streamFilled = fwrite($this->stream, $this->__toString());
-		fseek($this->stream, 0);
 	}
 }

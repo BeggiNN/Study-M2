@@ -1,11 +1,13 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Gateway\Request;
 
 use Magento\Framework\Exception\LocalizedException;
+use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
 use Magento\Payment\Gateway\Request\BuilderInterface;
 use Magento\Payment\Helper\Formatter;
@@ -19,16 +21,25 @@ class CaptureDataBuilder implements BuilderInterface
     /**
      * @var SubjectReader
      */
-    private $subjectReader;
+    private SubjectReader $subjectReader;
+
+    /**
+     * @var Config
+     */
+    private Config $config;
 
     /**
      * Constructor
      *
      * @param SubjectReader $subjectReader
+     * @param Config $config
      */
-    public function __construct(SubjectReader $subjectReader)
-    {
+    public function __construct(
+        SubjectReader $subjectReader,
+        Config $config
+    ) {
         $this->subjectReader = $subjectReader;
+        $this->config = $config;
     }
 
     /**
@@ -50,7 +61,9 @@ class CaptureDataBuilder implements BuilderInterface
         return [
             self::TRANSACTION_ID => $transactionId,
             PaymentDataBuilder::AMOUNT => $this->formatPrice($this->subjectReader->readAmount($buildSubject)),
-            PaymentDataBuilder::ORDER_ID => $paymentDO->getOrder()->getOrderIncrementId()
+            PaymentDataBuilder::ORDER_ID => $paymentDO->getOrder()->getOrderIncrementId(),
+            PaymentDataBuilder::MERCHANT_ACCOUNT_ID => $this->config
+                ->getMerchantAccountId((int) $paymentDO->getOrder()->getStoreId())
         ];
     }
 }

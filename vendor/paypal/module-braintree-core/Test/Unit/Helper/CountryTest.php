@@ -1,31 +1,33 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Helper;
 
 use PayPal\Braintree\Helper\Country;
 use Magento\Directory\Model\ResourceModel\Country\CollectionFactory;
 use Magento\Directory\Model\ResourceModel\Country\Collection;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
+use PHPUnit\Framework\MockObject\MockObject;
 
 class CountryTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \Magento\Directory\Model\ResourceModel\Country\Collection|\PHPUnit\Framework\MockObject\MockObject
+     * @var Collection|MockObject
      */
-    private $collection;
+    private MockObject|Collection $collection;
 
     /**
-     * @var \PayPal\Braintree\Helper\Country
+     * @var Country
      */
-    private $helper;
+    private Country $helper;
 
     /**
-     * @var \Magento\Framework\TestFramework\Unit\Helper\ObjectManager
+     * @var ObjectManager
      */
-    private $objectManager;
+    private ObjectManager $objectManager;
 
     protected function setUp(): void
     {
@@ -38,9 +40,6 @@ class CountryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    /**
-     * @covers \PayPal\Braintree\Helper\Country::getCountries
-     */
     public function testGetCountries()
     {
         $this->collection->expects(static::once())
@@ -60,12 +59,14 @@ class CountryTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Create mock for country collection factory
+     *
+     * @return CollectionFactory|MockObject
      */
-    protected function getCollectionFactoryMock()
+    protected function getCollectionFactoryMock(): CollectionFactory|MockObject
     {
         $this->collection = $this->getMockBuilder(Collection::class)
             ->disableOriginalConstructor()
-            ->setMethods(['addFieldToFilter', 'loadData', 'toOptionArray', '__wakeup'])
+            ->onlyMethods(['addFieldToFilter', 'loadData', 'toOptionArray', '__wakeup'])
             ->getMock();
 
         $this->collection->expects(static::any())
@@ -78,7 +79,7 @@ class CountryTest extends \PHPUnit\Framework\TestCase
 
         $collectionFactory = $this->getMockBuilder(CollectionFactory::class)
             ->disableOriginalConstructor()
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->getMock();
 
         $collectionFactory->expects(static::once())

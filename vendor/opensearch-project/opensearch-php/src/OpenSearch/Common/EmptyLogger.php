@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -24,18 +24,23 @@ namespace OpenSearch\Common;
 use Psr\Log\AbstractLogger;
 use Psr\Log\LoggerInterface;
 
+// @phpstan-ignore classConstant.deprecatedClass
+@trigger_error(EmptyLogger::class . ' is deprecated in 2.4.0 and will be removed in 3.0.0. Use Psr\Log\NullLogger instead', E_USER_DEPRECATED);
+
 /**
  * Class EmptyLogger
  *
  * Logger that doesn't do anything.  Similar to Monolog's NullHandler,
  * but avoids the overhead of partially loading Monolog
+ *
+ * @deprecated in 2.4.0 and will be removed in 3.0.0. Use Psr\Log\NullLogger instead.
  */
 class EmptyLogger extends AbstractLogger implements LoggerInterface
 {
     /**
      * {@inheritDoc}
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         return;
     }

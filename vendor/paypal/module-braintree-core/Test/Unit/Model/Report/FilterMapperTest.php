@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Model\Report;
 
 use Braintree\RangeNode;
@@ -20,17 +21,17 @@ use PHPUnit\Framework\MockObject\MockObject;
 class FilterMapperTest extends TestCase
 {
     /**
-     * @var BraintreeSearchAdapter|PHPUnit\Framework\MockObject\MockObject
+     * @var BraintreeSearchAdapter|MockObject
      */
     private $braintreeSearchAdapterMock;
 
     /**
-     * @var AppliersPool|PHPUnit\Framework\MockObject\MockObject
+     * @var AppliersPool|MockObject
      */
     private $appliersPoolMock;
 
     /**
-     * @var ApplierInterface|PHPUnit\Framework\MockObject\MockObject
+     * @var ApplierInterface|MockObject
      */
     private $applierMock;
 
@@ -54,17 +55,17 @@ class FilterMapperTest extends TestCase
         ];
 
         $this->braintreeSearchAdapterMock = $this->getMockBuilder(BraintreeSearchAdapter::class)
-            ->setMethods($methods)
+            ->onlyMethods($methods)
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->appliersPoolMock = $this->getMockBuilder(AppliersPool::class)
-            ->setMethods(['getApplier'])
+            ->onlyMethods(['getApplier'])
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->applierMock = $this->getMockBuilder(ApplierInterface::class)
-            ->setMethods(['apply'])
+            ->onlyMethods(['apply'])
             ->disableOriginalConstructor()
             ->getMockForAbstractClass();
     }

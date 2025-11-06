@@ -1,12 +1,18 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Controller\Paypal;
 
 use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
+use Magento\Framework\App\ResponseInterface;
+use Magento\Framework\Controller\Result\Json;
+use Magento\Framework\Exception\LocalizedException;
 use PayPal\Braintree\Model\Paypal\CreditApi;
 use Magento\Framework\App\Action\Action;
 use Magento\Framework\App\Action\Context;
@@ -14,12 +20,12 @@ use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Controller\ResultInterface;
 use Magento\Framework\Webapi\Exception;
 
-class Cart extends Action implements HttpGetActionInterface, HttpPostActionInterface
+class Cart extends Action implements ActionInterface, HttpGetActionInterface, HttpPostActionInterface
 {
     /**
      * @var CreditApi
      */
-    private $creditApi;
+    private CreditApi $creditApi;
 
     /**
      * Cart constructor.
@@ -37,17 +43,17 @@ class Cart extends Action implements HttpGetActionInterface, HttpPostActionInter
     /**
      * @inheritdoc
      */
-    public function execute()
+    public function execute(): Json|ResultInterface|ResponseInterface
     {
         $response = $this->resultFactory->create(ResultFactory::TYPE_JSON);
-        $amount = number_format($this->getRequest()->getParam('amount', 0), 2, '.', '');
+        $amount = number_format((float)$this->getRequest()->getParam('amount', 0), 2, '.', '');
 
         if (!$amount || $amount <= 0) {
             return $this->processBadRequest($response);
         }
 
         try {
-            $results = $this->creditApi->getPriceOptions($amount);
+            $results = $this->creditApi->getPriceOptions((float)$amount);
             $options = [];
             foreach ($results as $priceOption) {
                 $options[] = [
@@ -65,8 +71,8 @@ class Cart extends Action implements HttpGetActionInterface, HttpPostActionInter
             });
 
             $response->setData($options);
-        } catch (\Exception $e) {
-            return $this->processBadRequest($response);
+        } catch (LocalizedException|Exception $exception) {
+            return $this->processBadRequest($response, $exception);
         }
 
         return $response;
@@ -76,12 +82,23 @@ class Cart extends Action implements HttpGetActionInterface, HttpPostActionInter
      * Return response for bad request
      *
      * @param ResultInterface $response
+     * @param LocalizedException|Exception|null $exception
      * @return ResultInterface
      */
-    private function processBadRequest(ResultInterface $response): ResultInterface
-    {
+    private function processBadRequest(
+        ResultInterface $response,
+        ?Exception $exception = null
+    ): ResultInterface {
         $response->setHttpResponseCode(Exception::HTTP_BAD_REQUEST);
-        $response->setData(['message' => __('No Credit Options available')]);
+        if ($exception === null || empty($exception->getMessage())) {
+            $response->setData([
+                'message' => __('No Credit Options available')
+            ]);
+        } else {
+            $response->setData([
+                'message' => __($exception->getMessage())
+            ]);
+        }
 
         return $response;
     }

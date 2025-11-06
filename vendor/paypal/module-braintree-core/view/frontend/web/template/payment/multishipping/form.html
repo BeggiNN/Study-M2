@@ -18,12 +18,17 @@
                     </label>
                     <div class="control braintree-card-control">
                         <!-- ko if: !selectedCardType() -->
-                        <img data-bind="attr: {'src': getIcons('NONE').url}" class="braintree-credit-card-selected">
+                        <img data-bind="attr: {
+                            'src': getIcons('NONE').url,
+                            'alt': 'NONE'
+                        }" class="braintree-credit-card-selected">
                         <!--/ko-->
                         <!-- ko if: selectedCardType() -->
-                        <img data-bind="attr: {'src': getIcons(selectedCardType()).url}" class="braintree-credit-card-selected">
+                        <img data-bind="attr: {
+                            'src': getIcons(selectedCardType()).url,
+                            'alt': getIcons(selectedCardType()).alt
+                        }" class="braintree-credit-card-selected">
                         <!--/ko-->
-
 
                         <div data-bind="attr: {id: getCode() + '_cc_number'}" class="hosted-control"></div>
                         <div class="hosted-error"><!-- ko i18n: 'Please, enter valid Credit Card Number'--><!-- /ko --></div>
@@ -34,7 +39,8 @@
                             <li class="item">
                                 <!--ko if: $parent.getIcons(item) -->
                                 <img data-bind="attr: {
-                                    'src': $parent.getIcons(item).url
+                                    'src': $parent.getIcons(item).url,
+                                    'alt': $parent.getIcons(item).alt
                                 }">
                                 <!--/ko-->
                             </li>
@@ -87,7 +93,7 @@
                 </div>
                 <!-- /ko -->
             </fieldset>
-            <input type="submit" id="braintree_submit"  style="display:none" />
+            <input type="submit" id="braintree_submit" style="display:none" />
         </form>
 
         <div class="actions-toolbar no-display">

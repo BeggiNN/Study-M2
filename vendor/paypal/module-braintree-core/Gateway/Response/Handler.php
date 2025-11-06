@@ -1,72 +1,78 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Response;
 
 use Magento\Framework\App\ObjectManager;
+use Magento\Framework\Intl\DateTimeFactory;
 use Magento\Framework\Serialize\Serializer\Json;
 use Magento\Payment\Model\InfoInterface;
 use Magento\Sales\Api\Data\OrderPaymentExtensionInterface;
 use Magento\Sales\Api\Data\OrderPaymentExtensionInterfaceFactory;
-use Magento\Vault\Api\Data\PaymentTokenInterfaceFactory;
+use Magento\Vault\Api\Data\PaymentTokenFactoryInterface;
 use PayPal\Braintree\Gateway\Config\Config;
 use PayPal\Braintree\Gateway\Helper\SubjectReader;
-use RuntimeException;
 
 class Handler
 {
     /**
-     * @var PaymentTokenInterfaceFactory
+     * @var PaymentTokenFactoryInterface
      */
-    public $paymentTokenFactory;
+    public PaymentTokenFactoryInterface $paymentTokenFactory;
 
     /**
      * @var OrderPaymentExtensionInterfaceFactory
      */
-    public $paymentExtensionFactory;
+    public OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory;
 
     /**
      * @var SubjectReader
      */
-    public $subjectReader;
+    public SubjectReader $subjectReader;
 
     /**
      * @var Config
      */
-    public $config;
+    public Config $config;
 
     /**
      * @var Json
      */
-    public $serializer;
+    public mixed $serializer;
+
+    /**
+     * @var DateTimeFactory
+     */
+    public DateTimeFactory $dateTimeFactory;
 
     /**
      * VaultDetailsHandler constructor.
      *
-     * @param PaymentTokenInterfaceFactory $paymentTokenFactory
+     * @param PaymentTokenFactoryInterface $paymentTokenFactory
      * @param OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory
      * @param Config $config
      * @param SubjectReader $subjectReader
+     * @param DateTimeFactory $dateTime
      * @param Json|null $serializer
-     * @throws RuntimeException
      */
     public function __construct(
-        PaymentTokenInterfaceFactory $paymentTokenFactory,
+        PaymentTokenFactoryInterface $paymentTokenFactory,
         OrderPaymentExtensionInterfaceFactory $paymentExtensionFactory,
         Config $config,
         SubjectReader $subjectReader,
-        Json $serializer = null
+        DateTimeFactory $dateTime,
+        ?Json $serializer = null
     ) {
         $this->paymentTokenFactory = $paymentTokenFactory;
         $this->paymentExtensionFactory = $paymentExtensionFactory;
         $this->config = $config;
         $this->subjectReader = $subjectReader;
-        $this->serializer = $serializer ?: ObjectManager::getInstance()
-            ->get(Json::class);
+        $this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
+        $this->dateTimeFactory = $dateTime;
     }
 
     /**
@@ -75,7 +81,7 @@ class Handler
      * @param array $details
      * @return string
      */
-    public function convertDetailsToJSON($details): string
+    public function convertDetailsToJSON(array $details): string
     {
         $json = $this->serializer->serialize($details);
         return $json ?: '{}';

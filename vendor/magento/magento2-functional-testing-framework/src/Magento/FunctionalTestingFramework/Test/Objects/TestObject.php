@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Test\Objects;
@@ -337,7 +337,7 @@ class TestObject
      */
     public function getCustomData()
     {
-        return $this->customData;
+        return null;
     }
 
     /**

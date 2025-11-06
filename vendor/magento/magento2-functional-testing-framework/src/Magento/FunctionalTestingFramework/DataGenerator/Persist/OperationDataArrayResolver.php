@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\DataGenerator\Persist;
@@ -46,7 +46,7 @@ class OperationDataArrayResolver
      *
      * @param array $dependentEntities
      */
-    public function __construct($dependentEntities = null)
+    public function __construct(?array $dependentEntities = null)
     {
         if ($dependentEntities !== null) {
             foreach ($dependentEntities as $entity) {

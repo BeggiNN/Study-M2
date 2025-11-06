@@ -16,9 +16,9 @@ use Laminas\View\HelperPluginManager;
  * Navigation\HelperInterface. Additionally, it registers a number of default
  * helpers.
  *
- * @template InstanceType of HelperInterface|AbstractHelper
+ * @deprecated This class has been moved to the `Laminas\Navigation` component and will be removed in 3.0
+ *
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
- * @extends HelperPluginManager<InstanceType>
  */
 class PluginManager extends HelperPluginManager
 {
@@ -69,7 +69,6 @@ class PluginManager extends HelperPluginManager
 
     /**
      * @param ContainerInterface $configOrContainerInstance
-     * @param array $v3config
      * @psalm-param ServiceManagerConfiguration $v3config
      */
     public function __construct($configOrContainerInstance = null, array $v3config = [])

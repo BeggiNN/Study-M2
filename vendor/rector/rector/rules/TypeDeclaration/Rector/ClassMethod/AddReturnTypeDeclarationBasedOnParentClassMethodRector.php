@@ -7,21 +7,21 @@ use PhpParser\Node;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
 use PHPStan\Reflection\MethodReflection;
+use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Type\MixedType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use Rector\Core\Php\PhpVersionProvider;
-use Rector\Core\PhpParser\AstResolver;
-use Rector\Core\Rector\AbstractRector;
-use Rector\Core\ValueObject\MethodName;
-use Rector\Core\ValueObject\PhpVersionFeature;
+use Rector\Php\PhpVersionProvider;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
+use Rector\Rector\AbstractRector;
+use Rector\StaticTypeMapper\StaticTypeMapper;
+use Rector\ValueObject\MethodName;
+use Rector\ValueObject\PhpVersionFeature;
 use Rector\VendorLocker\ParentClassMethodTypeOverrideGuard;
 use Rector\VersionBonding\Contract\MinPhpVersionInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
- * @changelog https://wiki.php.net/rfc/lsp_errors
  * @see \Rector\Tests\TypeDeclaration\Rector\ClassMethod\AddReturnTypeDeclarationBasedOnParentClassMethodRector\AddReturnTypeDeclarationBasedOnParentClassMethodRectorTest
  */
 final class AddReturnTypeDeclarationBasedOnParentClassMethodRector extends AbstractRector implements MinPhpVersionInterface
@@ -33,19 +33,19 @@ final class AddReturnTypeDeclarationBasedOnParentClassMethodRector extends Abstr
     private $parentClassMethodTypeOverrideGuard;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\AstResolver
-     */
-    private $astResolver;
-    /**
-     * @readonly
-     * @var \Rector\Core\Php\PhpVersionProvider
+     * @var \Rector\Php\PhpVersionProvider
      */
     private $phpVersionProvider;
-    public function __construct(ParentClassMethodTypeOverrideGuard $parentClassMethodTypeOverrideGuard, AstResolver $astResolver, PhpVersionProvider $phpVersionProvider)
+    /**
+     * @readonly
+     * @var \Rector\StaticTypeMapper\StaticTypeMapper
+     */
+    private $staticTypeMapper;
+    public function __construct(ParentClassMethodTypeOverrideGuard $parentClassMethodTypeOverrideGuard, PhpVersionProvider $phpVersionProvider, StaticTypeMapper $staticTypeMapper)
     {
         $this->parentClassMethodTypeOverrideGuard = $parentClassMethodTypeOverrideGuard;
-        $this->astResolver = $astResolver;
         $this->phpVersionProvider = $phpVersionProvider;
+        $this->staticTypeMapper = $staticTypeMapper;
     }
     public function provideMinPhpVersion() : int
     {
@@ -118,28 +118,32 @@ CODE_SAMPLE
     private function getReturnTypeRecursive(ClassMethod $classMethod) : ?Type
     {
         $returnType = $classMethod->getReturnType();
-        if ($returnType === null) {
-            $parentMethodReflection = $this->parentClassMethodTypeOverrideGuard->getParentClassMethod($classMethod);
-            if (!$parentMethodReflection instanceof MethodReflection) {
-                return null;
-            }
-            $parentClassMethod = $this->astResolver->resolveClassMethodFromMethodReflection($parentMethodReflection);
-            if (!$parentClassMethod instanceof ClassMethod) {
-                return null;
-            }
-            if ($parentClassMethod->isPrivate()) {
-                return null;
-            }
-            return $this->getReturnTypeRecursive($parentClassMethod);
+        if ($returnType instanceof Node) {
+            return $this->staticTypeMapper->mapPhpParserNodePHPStanType($returnType);
         }
-        return $this->staticTypeMapper->mapPhpParserNodePHPStanType($returnType);
+        $parentMethodReflection = $this->parentClassMethodTypeOverrideGuard->getParentClassMethod($classMethod);
+        while ($parentMethodReflection instanceof MethodReflection) {
+            if ($parentMethodReflection->isPrivate()) {
+                return null;
+            }
+            $parameterAcceptor = ParametersAcceptorSelector::combineAcceptors($parentMethodReflection->getVariants());
+            $parentReturnType = $parameterAcceptor->getNativeReturnType();
+            if (!$parentReturnType instanceof MixedType) {
+                return $parentReturnType;
+            }
+            if ($parentReturnType->isExplicitMixed()) {
+                return $parentReturnType;
+            }
+            $parentMethodReflection = $this->parentClassMethodTypeOverrideGuard->getParentClassMethod($parentMethodReflection);
+        }
+        return null;
     }
     private function processClassMethodReturnType(Class_ $class, ClassMethod $classMethod, Type $parentType) : ?ClassMethod
     {
         if ($parentType instanceof MixedType) {
             $className = (string) $this->nodeNameResolver->getName($class);
             $currentObjectType = new ObjectType($className);
-            if (!$parentType->equals($currentObjectType) && $classMethod->returnType !== null) {
+            if (!$parentType->equals($currentObjectType) && $classMethod->returnType instanceof Node) {
                 return null;
             }
         }

@@ -17,8 +17,9 @@ use PhpParser\Node\Stmt\Return_;
 use PhpParser\NodeTraverser;
 use PHPStan\Type\IntegerType;
 use PHPStan\Type\ObjectType;
-use Rector\Core\NodeAnalyzer\TerminatedNodeAnalyzer;
-use Rector\Core\Rector\AbstractRector;
+use Rector\NodeAnalyzer\TerminatedNodeAnalyzer;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -29,16 +30,22 @@ final class ConsoleExecuteReturnIntRector extends AbstractRector
 {
     /**
      * @readonly
-     * @var \Rector\Core\NodeAnalyzer\TerminatedNodeAnalyzer
+     * @var \Rector\NodeAnalyzer\TerminatedNodeAnalyzer
      */
     private $terminatedNodeAnalyzer;
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
     /**
      * @var bool
      */
     private $hasChanged = \false;
-    public function __construct(TerminatedNodeAnalyzer $terminatedNodeAnalyzer)
+    public function __construct(TerminatedNodeAnalyzer $terminatedNodeAnalyzer, ValueResolver $valueResolver)
     {
         $this->terminatedNodeAnalyzer = $terminatedNodeAnalyzer;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -127,6 +134,9 @@ CODE_SAMPLE
     }
     private function isReturnIntegerType(?Expr $expr) : bool
     {
+        if ($expr instanceof Int_) {
+            return \true;
+        }
         if ($expr instanceof Expr) {
             $returnedType = $this->getType($expr);
             if ($returnedType instanceof IntegerType) {
@@ -153,6 +163,7 @@ CODE_SAMPLE
         $stmts = (array) $classMethod->stmts;
         \end($stmts);
         $lastKey = \key($stmts);
+        \reset($stmts);
         $return = new Return_(new LNumber(0));
         if ($lastKey !== null && (isset($classMethod->stmts[$lastKey]) && $this->terminatedNodeAnalyzer->isAlwaysTerminated($classMethod, $classMethod->stmts[$lastKey], $return))) {
             return;

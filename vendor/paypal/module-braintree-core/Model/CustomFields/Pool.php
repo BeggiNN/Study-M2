@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\CustomFields;
 
@@ -9,23 +14,25 @@ class Pool
     /**
      * @var array
      */
-    protected $fieldsPool;
+    protected array $fieldsPool;
 
     /**
      * CustomFieldsDataBuilder constructor.
      * @param array $fields
      */
-    public function __construct($fields = [])
+    public function __construct(array $fields = [])
     {
         $this->fieldsPool = $fields;
         $this->checkFields();
     }
 
     /**
-     * @param $buildSubject
+     * Get fields
+     *
+     * @param array $buildSubject
      * @return array
      */
-    public function getFields($buildSubject): array
+    public function getFields(array $buildSubject): array
     {
         $result = [];
 
@@ -38,6 +45,8 @@ class Pool
     }
 
     /**
+     * Check fields
+     *
      * @return bool
      */
     protected function checkFields(): bool

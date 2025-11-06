@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\CustomFields;
 
@@ -21,5 +26,5 @@ interface CustomFieldInterface
      * @see \PayPal\Braintree\Gateway\Helper\SubjectReader
      * @return mixed
      */
-    public function getValue($buildSubject);
+    public function getValue(array $buildSubject);
 }

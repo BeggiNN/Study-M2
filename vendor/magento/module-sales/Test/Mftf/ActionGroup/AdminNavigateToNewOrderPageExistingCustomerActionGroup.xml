@@ -7,7 +7,7 @@
 -->
 
 <actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-              xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+        xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
     <actionGroup name="AdminNavigateToNewOrderPageExistingCustomerActionGroup">
         <annotations>
             <description>Goes to the Admin Orders grid page. Clicks on 'Create New Order'. Filters the grid for the provided Customer. Clicks on the Customer. Validates that the Page Title is present and correct.</description>

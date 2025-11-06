@@ -1,38 +1,53 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Controller\GooglePay;
 
 use Exception;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
+use Magento\Framework\App\Action\HttpGetActionInterface;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
-use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Quote\Api\Data\CartInterface;
 use PayPal\Braintree\Model\GooglePay\Config;
 use PayPal\Braintree\Model\GooglePay\Helper\QuoteUpdater;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\View\Result\Page;
+use PayPal\Braintree\Observer\DataAssignObserver;
+use PayPal\Braintree\Observer\GooglePay\DataAssignObserver as GooglePayDataAssignObserver;
 
-class Review extends AbstractAction implements HttpPostActionInterface
+/**
+ * Google Pay review order block
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
+class Review extends AbstractAction implements ActionInterface, HttpGetActionInterface, HttpPostActionInterface
 {
+    /**
+     * Request constants
+     */
+    private const REQUEST_NONCE = 'nonce';
+    private const REQUEST_IS_NETWORK_TOKENIZED = 'isNetworkTokenized';
+    private const REQUEST_DEVICE_DATA = 'deviceData';
+    private const REQUEST_DETAILS = 'details';
+
     /**
      * @var QuoteUpdater
      */
-    private $quoteUpdater;
+    private QuoteUpdater $quoteUpdater;
 
     /**
-     * @var string
+     * @var SerializerInterface
      */
-    private static $paymentMethodNonce = 'payment_method_nonce';
-
-    /**
-     * @var Json
-     */
-    protected $json;
+    private SerializerInterface $serializer;
 
     /**
      * Constructor
@@ -41,41 +56,40 @@ class Review extends AbstractAction implements HttpPostActionInterface
      * @param Config $config
      * @param Session $checkoutSession
      * @param QuoteUpdater $quoteUpdater
-     * @param Json $json
+     * @param SerializerInterface $serializer
      */
     public function __construct(
         Context $context,
         Config $config,
         Session $checkoutSession,
         QuoteUpdater $quoteUpdater,
-        Json $json
+        SerializerInterface $serializer
     ) {
         parent::__construct($context, $config, $checkoutSession);
-        $this->json = $json;
+        $this->serializer = $serializer;
         $this->quoteUpdater = $quoteUpdater;
     }
 
     /**
      * @inheritdoc
      */
-    public function execute()
+    public function execute(): Page|Redirect
     {
-        $requestData = $this->json->unserialize(
-            $this->getRequest()->getPostValue('result', '{}')
-        );
-        $quote = $this->checkoutSession->getQuote();
+        $requestData = $this->serializer->unserialize($this->getRequest()->getPostValue('result', '{}'));
 
         try {
+            $quote = $this->checkoutSession->getQuote();
             $this->validateQuote($quote);
 
             if ($this->validateRequestData($requestData)) {
                 $this->quoteUpdater->execute(
-                    $requestData['nonce'],
-                    $requestData['deviceData'] ?? '',
-                    $requestData['details'],
+                    $requestData[self::REQUEST_NONCE],
+                    $requestData[self::REQUEST_IS_NETWORK_TOKENIZED],
+                    $requestData[self::REQUEST_DEVICE_DATA] ?? '',
+                    $requestData[self::REQUEST_DETAILS],
                     $quote
                 );
-            } elseif (!$quote->getPayment()->getAdditionalInformation(self::$paymentMethodNonce)) {
+            } elseif (!$this->validateQuotePaymentAdditionalInformation($quote)) {
                 throw new LocalizedException(__("We can't initialize checkout."));
             }
 
@@ -103,10 +117,33 @@ class Review extends AbstractAction implements HttpPostActionInterface
      * Validate request data
      *
      * @param array $requestData
-     * @return boolean
+     * @return bool
      */
     private function validateRequestData(array $requestData): bool
     {
-        return !empty($requestData['nonce']) && !empty($requestData['details']);
+        return !empty($requestData[self::REQUEST_NONCE])
+            && isset($requestData[self::REQUEST_IS_NETWORK_TOKENIZED])
+            && is_bool($requestData[self::REQUEST_IS_NETWORK_TOKENIZED])
+            && !empty($requestData[self::REQUEST_DETAILS]);
+    }
+
+    /**
+     * Validate that a quote has the nonce and the is_card_network tokenized params set.
+     *
+     * @param CartInterface $quote
+     * @return bool
+     */
+    private function validateQuotePaymentAdditionalInformation(CartInterface $quote): bool
+    {
+        $payment = $quote->getPayment();
+        if (!$payment->getAdditionalInformation(DataAssignObserver::PAYMENT_METHOD_NONCE)) {
+            return false;
+        }
+
+        if ($payment->getAdditionalInformation(GooglePayDataAssignObserver::IS_CARD_NETWORK_TOKENIZED) === null) {
+            return false;
+        }
+
+        return true;
     }
 }

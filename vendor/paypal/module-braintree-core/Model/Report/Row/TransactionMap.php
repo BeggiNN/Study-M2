@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Report\Row;
 
 use Braintree\Transaction;
@@ -13,17 +14,17 @@ use Magento\Framework\Api\Search\DocumentInterface;
 
 class TransactionMap implements DocumentInterface
 {
-    const TRANSACTION_FIELD_MAP_DELIMITER = '_';
+    private const TRANSACTION_FIELD_MAP_DELIMITER = '_';
 
     /**
      * @var AttributeValueFactory
      */
-    private $attributeValueFactory;
+    private AttributeValueFactory $attributeValueFactory;
 
     /**
      * @var Transaction
      */
-    private $transaction;
+    private Transaction $transaction;
 
     /**
      * @var array
@@ -66,10 +67,10 @@ class TransactionMap implements DocumentInterface
     }
 
     /**
-     * Set Id
+     * Set id
      *
      * @param int $id
-     * @return void
+     * @return void|null
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
     public function setId($id)
@@ -83,7 +84,7 @@ class TransactionMap implements DocumentInterface
      * @param string $attributeCode
      * @return AttributeInterface|null
      */
-    public function getCustomAttribute($attributeCode)
+    public function getCustomAttribute($attributeCode): ?AttributeInterface
     {
         /** @var AttributeInterface $attributeValue */
         $attributeValue = $this->attributeValueFactory->create();
@@ -106,7 +107,7 @@ class TransactionMap implements DocumentInterface
      *
      * @return AttributeInterface[]|null
      */
-    public function getCustomAttributes()
+    public function getCustomAttributes(): ?array
     {
         $shouldBeLocalized = ['paymentInstrumentType', 'type', 'status'];
         $output = [];
@@ -135,18 +136,19 @@ class TransactionMap implements DocumentInterface
      * @param string $key
      * @return mixed
      */
-    private function getMappedValue($key)
+    private function getMappedValue(string $key): mixed
     {
         if (!in_array($key, static::$simpleFieldsMap)) {
             return null;
         }
 
         $val = $this->getTransactionFieldValue($key);
-        $val = $this->convertToText($val);
-        return $val;
+        return $this->convertToText($val);
     }
 
     /**
+     * Get Mapped values
+     *
      * @return array
      */
     private function getMappedValues(): array
@@ -168,7 +170,7 @@ class TransactionMap implements DocumentInterface
      * @param string $key
      * @return Transaction|mixed|null
      */
-    private function getTransactionFieldValue($key)
+    private function getTransactionFieldValue(string $key): mixed
     {
         $keys = explode(self::TRANSACTION_FIELD_MAP_DELIMITER, $key);
         $result = $this->transaction;

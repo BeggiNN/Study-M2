@@ -73,7 +73,6 @@ class ImageTest extends TestCase
                     return "<$tag {$attrs->serialize()}>$content</$tag>";
                 }
             );
-
         $this->_image = $objectManager->getObject(
             Image::class,
             [
@@ -85,7 +84,6 @@ class ImageTest extends TestCase
                 'secureRenderer' => $secureRendererMock,
             ]
         );
-
         $this->testData = [
             'html_id_prefix' => 'test_id_prefix_',
             'html_id' => 'test_id',

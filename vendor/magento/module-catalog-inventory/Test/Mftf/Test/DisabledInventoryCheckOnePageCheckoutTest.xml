@@ -16,7 +16,6 @@
             <description value="Disabling Inventory and Doing Checkout For Out Of Stock Products"/>
             <severity value="CRITICAL"/>
             <testCaseId value="AC-5453"/>
-            <group value="guest_checkout"/>
         </annotations>
 
         <before>

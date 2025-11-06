@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\ObjectManager\Factory\Dynamic;
 
 /**
@@ -54,8 +55,8 @@ class Developer implements \Magento\FunctionalTestingFramework\ObjectManager\Fac
      */
     public function __construct(
         \Magento\FunctionalTestingFramework\ObjectManager\ConfigInterface $config,
-        \Magento\FunctionalTestingFramework\ObjectManagerInterface $objectManager = null,
-        \Magento\FunctionalTestingFramework\ObjectManager\DefinitionInterface $definitions = null,
+        ?\Magento\FunctionalTestingFramework\ObjectManagerInterface $objectManager = null,
+        ?\Magento\FunctionalTestingFramework\ObjectManager\DefinitionInterface $definitions = null,
         $globalArguments = []
     ) {
         $this->config = $config;

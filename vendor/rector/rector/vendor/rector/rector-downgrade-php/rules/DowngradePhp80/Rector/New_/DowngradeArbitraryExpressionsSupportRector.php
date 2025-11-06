@@ -15,9 +15,10 @@ use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticPropertyFetch;
 use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Stmt\Expression;
-use Rector\Core\Rector\AbstractRector;
 use Rector\NodeFactory\NamedVariableFactory;
 use Rector\NodeTypeResolver\Node\AttributeKey;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -32,9 +33,15 @@ final class DowngradeArbitraryExpressionsSupportRector extends AbstractRector
      * @var \Rector\NodeFactory\NamedVariableFactory
      */
     private $namedVariableFactory;
-    public function __construct(NamedVariableFactory $namedVariableFactory)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    public function __construct(NamedVariableFactory $namedVariableFactory, BetterNodeFinder $betterNodeFinder)
     {
         $this->namedVariableFactory = $namedVariableFactory;
+        $this->betterNodeFinder = $betterNodeFinder;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -108,7 +115,7 @@ CODE_SAMPLE
      * @param Assign[] $assigns
      * @return Node\Stmt[]|null
      */
-    private function refactorAssign($assigns, Expression $expression) : ?array
+    private function refactorAssign(array $assigns, Expression $expression) : ?array
     {
         foreach ($assigns as $assign) {
             if (!$assign->expr instanceof New_ && !$assign->expr instanceof Instanceof_) {

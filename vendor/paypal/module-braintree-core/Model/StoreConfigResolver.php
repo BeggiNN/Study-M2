@@ -1,8 +1,10 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
+
 namespace PayPal\Braintree\Model;
 
 use Magento\Framework\Exception\InputException;
@@ -11,7 +13,6 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\App\Request\Http as RequestHttp;
 use Magento\Sales\Model\OrderRepository;
 use Magento\Backend\Model\Session\Quote as SessionQuote;
-use Magento\Setup\Exception;
 
 /**
  * @codeCoverageIgnore
@@ -22,30 +23,30 @@ class StoreConfigResolver
     /**
      * @var StoreManagerInterface
      */
-    protected $storeManager;
+    protected StoreManagerInterface $storeManager;
 
     /**
      * @var RequestHttp
      */
-    protected $request;
+    protected RequestHttp $request;
 
     /**
      * @var OrderRepository
      */
-    protected $orderRepository;
+    protected OrderRepository $orderRepository;
 
     /**
      * @var SessionQuote
      */
-    protected $sessionQuote;
+    protected SessionQuote $sessionQuote;
 
     /**
      * StoreConfigResolver constructor.
      *
-     * @param StoreManagerInterface $storeManager    StoreManager
-     * @param RequestHttp           $request         HTTP request
-     * @param OrderRepository       $orderRepository Order repository
-     * @param SessionQuote          $sessionQuote    Session quote
+     * @param StoreManagerInterface $storeManager
+     * @param RequestHttp $request
+     * @param OrderRepository $orderRepository
+     * @param SessionQuote $sessionQuote
      */
     public function __construct(
         StoreManagerInterface $storeManager,
@@ -67,18 +68,18 @@ class StoreConfigResolver
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getStoreId()
+    public function getStoreId(): ?int
     {
         $currentStoreId = null;
-        $currentStoreIdInAdmin = $this->sessionQuote->getStoreId();
+        $currentStoreIdInAdmin = (int) $this->sessionQuote->getStoreId();
         if (!$currentStoreIdInAdmin) {
-            $currentStoreId = $this->storeManager->getStore()->getId();
+            $currentStoreId = (int) $this->storeManager->getStore()->getId();
         }
         $dataParams = $this->request->getParams();
         if (isset($dataParams['order_id'])) {
             $order = $this->orderRepository->get($dataParams['order_id']);
             if ($order->getEntityId()) {
-                return $order->getStoreId();
+                return (int) $order->getStoreId();
             }
         }
 

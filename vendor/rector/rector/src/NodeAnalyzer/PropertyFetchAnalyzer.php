@@ -1,12 +1,12 @@
 <?php
 
 declare (strict_types=1);
-namespace Rector\Core\NodeAnalyzer;
+namespace Rector\NodeAnalyzer;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\Assign;
 use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Expr\NullsafePropertyFetch;
 use PhpParser\Node\Expr\PropertyFetch;
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Expr\StaticPropertyFetch;
@@ -20,13 +20,13 @@ use PhpParser\Node\Stmt\Trait_;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
-use Rector\Core\Enum\ObjectReference;
-use Rector\Core\PhpParser\AstResolver;
-use Rector\Core\PhpParser\Node\BetterNodeFinder;
-use Rector\Core\Reflection\ReflectionResolver;
-use Rector\Core\ValueObject\MethodName;
+use Rector\Enum\ObjectReference;
 use Rector\NodeNameResolver\NodeNameResolver;
 use Rector\NodeTypeResolver\NodeTypeResolver;
+use Rector\PhpParser\AstResolver;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Reflection\ReflectionResolver;
+use Rector\ValueObject\MethodName;
 final class PropertyFetchAnalyzer
 {
     /**
@@ -36,12 +36,12 @@ final class PropertyFetchAnalyzer
     private $nodeNameResolver;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\Node\BetterNodeFinder
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
      */
     private $betterNodeFinder;
     /**
      * @readonly
-     * @var \Rector\Core\PhpParser\AstResolver
+     * @var \Rector\PhpParser\AstResolver
      */
     private $astResolver;
     /**
@@ -51,7 +51,7 @@ final class PropertyFetchAnalyzer
     private $nodeTypeResolver;
     /**
      * @readonly
-     * @var \Rector\Core\Reflection\ReflectionResolver
+     * @var \Rector\Reflection\ReflectionResolver
      */
     private $reflectionResolver;
     /**
@@ -68,10 +68,10 @@ final class PropertyFetchAnalyzer
     }
     public function isLocalPropertyFetch(Node $node) : bool
     {
-        if (!$node instanceof PropertyFetch && !$node instanceof StaticPropertyFetch) {
+        if (!$node instanceof PropertyFetch && !$node instanceof StaticPropertyFetch && !$node instanceof NullsafePropertyFetch) {
             return \false;
         }
-        $variableType = $node instanceof PropertyFetch ? $this->nodeTypeResolver->getType($node->var) : $this->nodeTypeResolver->getType($node->class);
+        $variableType = $node instanceof StaticPropertyFetch ? $this->nodeTypeResolver->getType($node->class) : $this->nodeTypeResolver->getType($node->var);
         if ($variableType instanceof ObjectType) {
             $classReflection = $this->reflectionResolver->resolveClassReflection($node);
             if ($classReflection instanceof ClassReflection) {
@@ -86,7 +86,7 @@ final class PropertyFetchAnalyzer
     }
     public function isLocalPropertyFetchName(Node $node, string $desiredPropertyName) : bool
     {
-        if (!$node instanceof PropertyFetch && !$node instanceof StaticPropertyFetch) {
+        if (!$node instanceof PropertyFetch && !$node instanceof StaticPropertyFetch && !$node instanceof NullsafePropertyFetch) {
             return \false;
         }
         if (!$this->nodeNameResolver->isName($node->name, $desiredPropertyName)) {
@@ -103,6 +103,9 @@ final class PropertyFetchAnalyzer
             return $this->isLocalPropertyFetchName($node, $propertyName);
         });
     }
+    /**
+     * @phpstan-assert-if-true PropertyFetch|StaticPropertyFetch $node
+     */
     public function isPropertyFetch(Node $node) : bool
     {
         if ($node instanceof PropertyFetch) {
@@ -157,17 +160,6 @@ final class PropertyFetchAnalyzer
             }
         }
         return \false;
-    }
-    /**
-     * @param string[] $propertyNames
-     */
-    public function isLocalPropertyOfNames(Expr $expr, array $propertyNames) : bool
-    {
-        if (!$this->isLocalPropertyFetch($expr)) {
-            return \false;
-        }
-        /** @var PropertyFetch $expr */
-        return $this->nodeNameResolver->isNames($expr->name, $propertyNames);
     }
     private function isTraitLocalPropertyFetch(Node $node) : bool
     {

@@ -6,8 +6,9 @@ namespace Rector\Symfony\CodeQuality\Rector\ClassMethod;
 use PhpParser\Node;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt\ClassMethod;
-use Rector\Core\Rector\AbstractRector;
 use Rector\PHPStanStaticTypeMapper\Enum\TypeKind;
+use Rector\Rector\AbstractRector;
+use Rector\StaticTypeMapper\StaticTypeMapper;
 use Rector\Symfony\NodeAnalyzer\RouteRequiredParamNameToTypesResolver;
 use Rector\Symfony\TypeAnalyzer\ControllerAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -27,10 +28,16 @@ final class ParamTypeFromRouteRequiredRegexRector extends AbstractRector
      * @var \Rector\Symfony\NodeAnalyzer\RouteRequiredParamNameToTypesResolver
      */
     private $routeRequiredParamNameToTypesResolver;
-    public function __construct(ControllerAnalyzer $controllerAnalyzer, RouteRequiredParamNameToTypesResolver $routeRequiredParamNameToTypesResolver)
+    /**
+     * @readonly
+     * @var \Rector\StaticTypeMapper\StaticTypeMapper
+     */
+    private $staticTypeMapper;
+    public function __construct(ControllerAnalyzer $controllerAnalyzer, RouteRequiredParamNameToTypesResolver $routeRequiredParamNameToTypesResolver, StaticTypeMapper $staticTypeMapper)
     {
         $this->controllerAnalyzer = $controllerAnalyzer;
         $this->routeRequiredParamNameToTypesResolver = $routeRequiredParamNameToTypesResolver;
+        $this->staticTypeMapper = $staticTypeMapper;
     }
     public function getRuleDefinition() : RuleDefinition
     {

@@ -8,16 +8,28 @@ define(
         'underscore',
         'uiComponent',
         'mage/translate',
-        'mage/storage',
-        'Magento_Customer/js/customer-data'
+        'Magento_Customer/js/customer-data',
+        'PayPal_Braintree/js/actions/create-payment',
+        'PayPal_Braintree/js/actions/get-shipping-methods',
+        'PayPal_Braintree/js/actions/set-shipping-information',
+        'PayPal_Braintree/js/actions/update-totals',
+        'PayPal_Braintree/js/helper/get-apple-pay-line-items',
+        'PayPal_Braintree/js/helper/remove-non-digit-characters',
+        'PayPal_Braintree/js/model/region-data',
     ],
     function (
         $,
         _,
         Component,
         $t,
-        storage,
-        customerData
+        customerData,
+        createPayment,
+        getShippingMethods,
+        setShippingInformation,
+        updateTotals,
+        getApplePayLineItems,
+        removeNonDigitCharacters,
+        regionDataModel,
     ) {
         'use strict';
 
@@ -28,48 +40,10 @@ define(
                 displayName: null,
                 actionSuccess: null,
                 grandTotalAmount: 0,
-                isLoggedIn: false,
-                storeCode: "default",
+                storeCode: 'default',
+                priceIncludesTax: true,
                 shippingAddress: {},
-                countryDirectory: null,
                 shippingMethods: {}
-            },
-
-            initialize: function () {
-                this._super();
-                if (!this.countryDirectory) {
-                    storage.get("rest/V1/directory/countries").done(function (result) {
-                        this.countryDirectory = {};
-                        let i, data, x, region;
-                        for (i = 0; i < result.length; ++i) {
-                            data = result[i];
-                            this.countryDirectory[data.two_letter_abbreviation] = {};
-                            if (typeof data.available_regions !== 'undefined') {
-                                for (x = 0; x < data.available_regions.length; ++x) {
-                                    region = data.available_regions[x];
-                                    this.countryDirectory[data.two_letter_abbreviation][region.name.toLowerCase().replace(/[^A-Z0-9]/ig, '')] = region.id;
-                                }
-                            }
-                        }
-                    }.bind(this));
-                }
-            },
-
-            /**
-             * Get region ID
-             */
-            getRegionId: function (countryCode, regionName) {
-                if (typeof regionName !== 'string') {
-                    return null;
-                }
-
-                regionName = regionName.toLowerCase().replace(/[^A-Z0-9]/ig, '');
-
-                if (typeof this.countryDirectory[countryCode] !== 'undefined' && typeof this.countryDirectory[countryCode][regionName] !== 'undefined') {
-                    return this.countryDirectory[countryCode][regionName];
-                }
-
-                return 0;
             },
 
             /**
@@ -123,16 +97,6 @@ define(
             },
 
             /**
-             * Set and get is logged in
-             */
-            setIsLoggedIn: function (value) {
-                this.isLoggedIn = value;
-            },
-            getIsLoggedIn: function () {
-                return this.isLoggedIn;
-            },
-
-            /**
              * Set and get store code
              */
             setStoreCode: function (value) {
@@ -143,14 +107,13 @@ define(
             },
 
             /**
-             * API Urls for logged in / guest
+             * Set and get store code
              */
-            getApiUrl: function (uri) {
-                if (this.getIsLoggedIn() === true) {
-                    return "rest/" + this.getStoreCode() + "/V1/carts/mine/" + uri;
-                } else {
-                    return "rest/" + this.getStoreCode() + "/V1/guest-carts/" + this.getQuoteId() + "/" + uri;
-                }
+            setPriceIncludesTax: function (value) {
+                this.priceIncludesTax = value;
+            },
+            getPriceIncludesTax: function () {
+                return this.priceIncludesTax;
             },
 
             /**
@@ -172,33 +135,34 @@ define(
              */
             onShippingContactSelect: function (event, session) {
                 // Get the address.
-                let address = event.shippingContact;
+                let address = event.shippingContact,
 
-                // Create a payload.
-                let payload = {
-                    address: {
-                        city: address.locality,
-                        region: address.administrativeArea,
-                        country_id: address.countryCode.toUpperCase(),
-                        postcode: address.postalCode,
-                        save_in_address_book: 0
-                    }
-                };
+                    // Create a payload.
+                    payload = {
+                        address: {
+                            city: address.locality,
+                            region: address.administrativeArea,
+                            country_id: address.countryCode.toUpperCase(),
+                            postcode: address.postalCode,
+                            save_in_address_book: 0
+                        }
+                    };
 
                 this.shippingAddress = payload.address;
 
-                // POST to endpoint for shipping methods.
-                storage.post(
-                    this.getApiUrl("estimate-shipping-methods"),
-                    JSON.stringify(payload)
-                ).done(function (result) {
+                getShippingMethods(payload, this.getStoreCode(), this.getQuoteId())
+                .done(function (result) {
                     // Stop if no shipping methods.
-                    let virtualFlag = false;
+                    let virtualFlag = false,
+                        shippingMethods = [],
+                        totalsPayload = {};
+
                     if (result.length === 0) {
                         let productItems = customerData.get('cart')().items;
+
                         _.each(productItems,
                             function (item) {
-                                if (item.is_virtual || item.product_type == 'bundle') {
+                                if (item.is_virtual || item.product_type === 'bundle') {
                                     virtualFlag = true;
                                 } else {
                                     virtualFlag = false;
@@ -207,12 +171,12 @@ define(
                         );
                         if (!virtualFlag) {
                             session.abort();
-                            alert($t("There are no shipping methods available for you right now. Please try again or use an alternative payment method."));
+                            // eslint-disable-next-line
+                            alert($t('There are no shipping methods available for you right now. Please try again or use an alternative payment method.'));
                             return false;
                         }
                     }
 
-                    let shippingMethods = [];
                     this.shippingMethods = {};
 
                     // Format shipping methods array.
@@ -224,7 +188,7 @@ define(
                         let method = {
                             identifier: result[i].method_code,
                             label: result[i].method_title,
-                            detail: result[i].carrier_title ? result[i].carrier_title : "",
+                            detail: result[i].carrier_title ? result[i].carrier_title : '',
                             amount: parseFloat(result[i].amount).toFixed(2)
                         };
 
@@ -239,52 +203,52 @@ define(
                     }
 
                     // Create payload to get totals
-                    let totalsPayload = {
-                        "addressInformation": {
-                            "address": {
-                                "countryId": this.shippingAddress.country_id,
-                                "region": this.shippingAddress.region,
-                                "regionId": this.getRegionId(this.shippingAddress.country_id, this.shippingAddress.region),
-                                "postcode": this.shippingAddress.postcode
+                    totalsPayload = {
+                        'addressInformation': {
+                            'address': {
+                                'countryId': this.shippingAddress.country_id,
+                                'region': this.shippingAddress.region,
+                                'regionId': regionDataModel.getRegionId(
+                                    this.shippingAddress.country_id, this.shippingAddress.region),
+                                'postcode': this.shippingAddress.postcode
                             },
-                            "shipping_method_code": virtualFlag ? null : this.shippingMethods[shippingMethods[0].identifier].method_code,
-                            "shipping_carrier_code": virtualFlag ? null : this.shippingMethods[shippingMethods[0].identifier].carrier_code
+                            'shipping_method_code': virtualFlag
+                                ? null : this.shippingMethods[shippingMethods[0].identifier].method_code,
+                            'shipping_carrier_code': virtualFlag
+                                ? null : this.shippingMethods[shippingMethods[0].identifier].carrier_code
                         }
                     };
 
                     // POST to endpoint to get totals, using 1st shipping method
-                    storage.post(
-                        this.getApiUrl("totals-information"),
-                        JSON.stringify(totalsPayload)
-                    ).done(function (result) {
+                    updateTotals(totalsPayload, this.getStoreCode(), this.getQuoteId())
+                    .done(function (totals) {
                         // Set total
-                        this.setGrandTotalAmount(result.base_grand_total);
+                        this.setGrandTotalAmount(totals.base_grand_total);
 
                         // Pass shipping methods back
                         session.completeShippingContactSelection(
-                            ApplePaySession.STATUS_SUCCESS,
+                            window.ApplePaySession.STATUS_SUCCESS,
                             shippingMethods,
                             {
                                 label: this.getDisplayName(),
                                 amount: this.getGrandTotalAmount()
                             },
-                            [{
-                                type: 'final',
-                                label: $t('Shipping'),
-                                amount: virtualFlag ? 0 : shippingMethods[0].amount
-                            }]
+                            getApplePayLineItems(totals, this.getPriceIncludesTax()),
                         );
-                    }.bind(this)).fail(function (result) {
+                    }.bind(this)).fail(function (error) {
                         session.abort();
-                        alert($t("We're unable to fetch the cart totals for you. Please try an alternative payment method."));
-                        console.error("Braintree ApplePay: Unable to get totals", result);
+                        // eslint-disable-next-line
+                        alert($t('We\'re unable to fetch the cart totals for you. Please try an alternative payment method.'));
+                        console.error('Braintree ApplePay: Unable to get totals', error);
                         return false;
                     });
 
                 }.bind(this)).fail(function (result) {
                     session.abort();
-                    alert($t("We're unable to find any shipping methods for you. Please try an alternative payment method."));
-                    console.error("Braintree ApplePay: Unable to find shipping methods for estimate-shipping-methods", result);
+                    // eslint-disable-next-line
+                    alert($t('We\'re unable to find any shipping methods for you. Please try an alternative payment method.'));
+                    // eslint-disable-next-line
+                    console.error('Braintree ApplePay: Unable to find shipping methods for estimate-shipping-methods', result);
                     return false;
                 });
             },
@@ -293,39 +257,34 @@ define(
              * Record which shipping method has been selected & Updated totals
              */
             onShippingMethodSelect: function (event, session) {
-                let shippingMethod = event.shippingMethod;
+                let shippingMethod = event.shippingMethod,
+                    payload = {
+                        'addressInformation': {
+                            'address': {
+                                'countryId': this.shippingAddress.country_id,
+                                'region': this.shippingAddress.region,
+                                'regionId': regionDataModel.getRegionId(this.shippingAddress.country_id,
+                                    this.shippingAddress.region),
+                                'postcode': this.shippingAddress.postcode
+                            },
+                            'shipping_method_code': this.shippingMethods[shippingMethod.identifier].method_code,
+                            'shipping_carrier_code': this.shippingMethods[shippingMethod.identifier].carrier_code
+                        }
+                    };
+
                 this.shippingMethod = shippingMethod.identifier;
 
-                let payload = {
-                    "addressInformation": {
-                        "address": {
-                            "countryId": this.shippingAddress.country_id,
-                            "region": this.shippingAddress.region,
-                            "regionId": this.getRegionId(this.shippingAddress.country_id, this.shippingAddress.region),
-                            "postcode": this.shippingAddress.postcode
-                        },
-                        "shipping_method_code": this.shippingMethods[this.shippingMethod].method_code,
-                        "shipping_carrier_code": this.shippingMethods[this.shippingMethod].carrier_code
-                    }
-                };
-
-                storage.post(
-                    this.getApiUrl("totals-information"),
-                    JSON.stringify(payload)
-                ).done(function (r) {
+                updateTotals(payload, this.getStoreCode(), this.getQuoteId())
+                .done(function (r) {
                     this.setGrandTotalAmount(r.base_grand_total);
 
                     session.completeShippingMethodSelection(
-                        ApplePaySession.STATUS_SUCCESS,
+                        window.ApplePaySession.STATUS_SUCCESS,
                         {
                             label: this.getDisplayName(),
                             amount: this.getGrandTotalAmount()
                         },
-                        [{
-                            type: 'final',
-                            label: $t('Shipping'),
-                            amount: shippingMethod.amount
-                        }]
+                        getApplePayLineItems(r, this.getPriceIncludesTax())
                     );
                 }.bind(this));
             },
@@ -337,83 +296,75 @@ define(
                 let shippingContact = event.payment.shippingContact,
                     billingContact = event.payment.billingContact,
                     payload = {
-                        "addressInformation": {
-                            "shipping_address": {
-                                "email": shippingContact.emailAddress,
-                                "telephone": shippingContact.phoneNumber,
-                                "firstname": shippingContact.givenName,
-                                "lastname": shippingContact.familyName,
-                                "street": shippingContact.addressLines,
-                                "city": shippingContact.locality,
-                                "region": shippingContact.administrativeArea,
-                                "region_id": this.getRegionId(shippingContact.countryCode.toUpperCase(), shippingContact.administrativeArea),
-                                "region_code": null,
-                                "country_id": shippingContact.countryCode.toUpperCase(),
-                                "postcode": shippingContact.postalCode,
-                                "same_as_billing": 0,
-                                "customer_address_id": 0,
-                                "save_in_address_book": 0
+                        'addressInformation': {
+                            'shipping_address': {
+                                'email': shippingContact.emailAddress,
+                                'telephone': removeNonDigitCharacters(_.get(shippingContact, 'phoneNumber', '')),
+                                'firstname': shippingContact.givenName,
+                                'lastname': shippingContact.familyName,
+                                'street': shippingContact.addressLines,
+                                'city': shippingContact.locality,
+                                'region': shippingContact.administrativeArea,
+                                'region_id': regionDataModel.getRegionId(
+                                    shippingContact.countryCode.toUpperCase(), shippingContact.administrativeArea),
+                                'region_code': null,
+                                'country_id': shippingContact.countryCode.toUpperCase(),
+                                'postcode': shippingContact.postalCode,
+                                'same_as_billing': 0,
+                                'customer_address_id': 0,
+                                'save_in_address_book': 0
                             },
-                            "billing_address": {
-                                "email": shippingContact.emailAddress,
-                                "telephone": shippingContact.phoneNumber,
-                                "firstname": billingContact.givenName,
-                                "lastname": billingContact.familyName,
-                                "street": billingContact.addressLines,
-                                "city": billingContact.locality,
-                                "region": billingContact.administrativeArea,
-                                "region_id": this.getRegionId(billingContact.countryCode.toUpperCase(), billingContact.administrativeArea),
-                                "region_code": null,
-                                "country_id": billingContact.countryCode.toUpperCase(),
-                                "postcode": billingContact.postalCode,
-                                "same_as_billing": 0,
-                                "customer_address_id": 0,
-                                "save_in_address_book": 0
+                            'billing_address': {
+                                'email': shippingContact.emailAddress,
+                                'telephone': removeNonDigitCharacters(_.get(shippingContact, 'phoneNumber', '')),
+                                'firstname': billingContact.givenName,
+                                'lastname': billingContact.familyName,
+                                'street': billingContact.addressLines,
+                                'city': billingContact.locality,
+                                'region': billingContact.administrativeArea,
+                                'region_id': regionDataModel.getRegionId(
+                                    billingContact.countryCode.toUpperCase(), billingContact.administrativeArea),
+                                'region_code': null,
+                                'country_id': billingContact.countryCode.toUpperCase(),
+                                'postcode': billingContact.postalCode,
+                                'same_as_billing': 0,
+                                'customer_address_id': 0,
+                                'save_in_address_book': 0
                             },
-                            "shipping_method_code": this.shippingMethod ? this.shippingMethods[this.shippingMethod].method_code : '' ,
-                            "shipping_carrier_code": this.shippingMethod ? this.shippingMethods[this.shippingMethod].carrier_code : ''
+                            'shipping_method_code': this.shippingMethod
+                                ? this.shippingMethods[this.shippingMethod].method_code : '' ,
+                            'shipping_carrier_code': this.shippingMethod
+                                ? this.shippingMethods[this.shippingMethod].carrier_code : ''
                         }
                     };
 
                 // Set addresses
-                storage.post(
-                    this.getApiUrl("shipping-information"),
-                    JSON.stringify(payload)
-                ).done(function () {
-                    // Submit payment information
-                    let paymentInformation = {
-                            "email": shippingContact.emailAddress,
-                            "paymentMethod": {
-                                "method": "braintree_applepay",
-                                "additional_data": {
-                                    "payment_method_nonce": nonce,
-                                    "device_data": device_data
+
+                setShippingInformation(payload, this.getStoreCode(), this.getQuoteId())
+                    .then(() => {
+                        // Submit payment information
+                        let paymentInformation = {
+                            'email': shippingContact.emailAddress,
+                            'paymentMethod': {
+                                'method': 'braintree_applepay',
+                                'additional_data': {
+                                    'payment_method_nonce': nonce,
+                                    'device_data': device_data
                                 }
                             }
                         };
-                    if (window.checkout && window.checkout.agreementIds) {
-                        paymentInformation.paymentMethod.extension_attributes = {
-                            "agreement_ids": window.checkout.agreementIds
-                        };
-                    }
-                    storage.post(
-                        this.getApiUrl("payment-information"),
-                        JSON.stringify(paymentInformation)
-                    ).done(function (r) {
+
+                        return createPayment(paymentInformation, this.getStoreCode(), this.getQuoteId())
+                    })
+                    .then(() => {
+                        session.completePayment(window.ApplePaySession.STATUS_SUCCESS);
                         document.location = this.getActionSuccess();
-                        session.completePayment(ApplePaySession.STATUS_SUCCESS);
-                    }.bind(this)).fail(function (r) {
-                        session.completePayment(ApplePaySession.STATUS_FAILURE);
-                        session.abort();
-                        alert($t("We're unable to take your payment through Apple Pay. Please try an again or use an alternative payment method."));
-                        console.error("Braintree ApplePay Unable to take payment", r);
+                    })
+                    .catch(function () {
+                        session.completePayment(window.ApplePaySession.STATUS_FAILURE);
+                        alert($t('We\'re unable to take your payment through Apple Pay. Please try an again or use an alternative payment method.'));
                         return false;
                     });
-
-                }.bind(this)).fail(function (r) {
-                    console.error("Braintree ApplePay Unable to set shipping information", r);
-                    session.completePayment(ApplePaySession.STATUS_INVALID_BILLING_POSTAL_ADDRESS);
-                });
             }
         });
     });

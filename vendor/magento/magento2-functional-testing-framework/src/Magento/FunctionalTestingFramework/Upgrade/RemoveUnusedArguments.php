@@ -1,12 +1,12 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\Upgrade;
 
-use Magento\FunctionalTestingFramework\StaticCheck\ActionGroupArgumentsCheck;
+use Magento\FunctionalTestingFramework\StaticCheck\ActionGroupStandardsCheck;
 use Magento\FunctionalTestingFramework\Util\Script\ScriptUtil;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -40,7 +40,7 @@ class RemoveUnusedArguments implements UpgradeInterface
         $fileSystem = new Filesystem();
         foreach ($xmlFiles as $file) {
             $contents = $file->getContents();
-            $argumentsCheck = new ActionGroupArgumentsCheck();
+            $argumentsCheck = new ActionGroupStandardsCheck();
             /** @var DOMElement $actionGroup */
             $actionGroup = $argumentsCheck->getActionGroupDomElement($contents);
             $allArguments = $argumentsCheck->extractActionGroupArguments($actionGroup);

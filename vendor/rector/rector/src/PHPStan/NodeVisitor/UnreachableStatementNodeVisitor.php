@@ -1,17 +1,17 @@
 <?php
 
 declare (strict_types=1);
-namespace Rector\Core\PHPStan\NodeVisitor;
+namespace Rector\PHPStan\NodeVisitor;
 
 use PhpParser\Node;
 use PhpParser\Node\Stmt\ClassLike;
 use PhpParser\Node\Stmt\Declare_;
 use PhpParser\NodeVisitorAbstract;
 use PHPStan\Analyser\MutatingScope;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
+use PHPStan\Analyser\Scope;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
 use Rector\NodeTypeResolver\Node\AttributeKey;
 use Rector\NodeTypeResolver\PHPStan\Scope\PHPStanNodeScopeResolver;
-use Rector\NodeTypeResolver\PHPStan\Scope\ScopeFactory;
 final class UnreachableStatementNodeVisitor extends NodeVisitorAbstract
 {
     /**
@@ -26,14 +26,14 @@ final class UnreachableStatementNodeVisitor extends NodeVisitorAbstract
     private $filePath;
     /**
      * @readonly
-     * @var \Rector\NodeTypeResolver\PHPStan\Scope\ScopeFactory
+     * @var \PHPStan\Analyser\MutatingScope
      */
-    private $scopeFactory;
-    public function __construct(PHPStanNodeScopeResolver $phpStanNodeScopeResolver, string $filePath, ScopeFactory $scopeFactory)
+    private $mutatingScope;
+    public function __construct(PHPStanNodeScopeResolver $phpStanNodeScopeResolver, string $filePath, MutatingScope $mutatingScope)
     {
         $this->phpStanNodeScopeResolver = $phpStanNodeScopeResolver;
         $this->filePath = $filePath;
-        $this->scopeFactory = $scopeFactory;
+        $this->mutatingScope = $mutatingScope;
     }
     public function enterNode(Node $node) : ?Node
     {
@@ -44,19 +44,25 @@ final class UnreachableStatementNodeVisitor extends NodeVisitorAbstract
             return null;
         }
         $isPassedUnreachableStmt = \false;
-        $mutatingScope = $node->getAttribute(AttributeKey::SCOPE);
-        $mutatingScope = $mutatingScope instanceof MutatingScope ? $mutatingScope : $this->scopeFactory->createFromFile($this->filePath);
+        $mutatingScope = $this->resolveScope($node->getAttribute(AttributeKey::SCOPE));
         foreach ($node->stmts as $stmt) {
+            $hasMutatingScope = $stmt->getAttribute(AttributeKey::SCOPE) instanceof MutatingScope;
+            if (!$hasMutatingScope) {
+                $stmt->setAttribute(AttributeKey::SCOPE, $mutatingScope);
+                $this->phpStanNodeScopeResolver->processNodes([$stmt], $this->filePath, $mutatingScope);
+            }
             if ($stmt->getAttribute(AttributeKey::IS_UNREACHABLE) === \true) {
                 $isPassedUnreachableStmt = \true;
                 continue;
             }
             if ($isPassedUnreachableStmt) {
                 $stmt->setAttribute(AttributeKey::IS_UNREACHABLE, \true);
-                $stmt->setAttribute(AttributeKey::SCOPE, $mutatingScope);
-                $this->phpStanNodeScopeResolver->processNodes([$stmt], $this->filePath, $mutatingScope);
             }
         }
         return null;
+    }
+    private function resolveScope(?Scope $mutatingScope) : MutatingScope
+    {
+        return $mutatingScope instanceof MutatingScope ? $mutatingScope : $this->mutatingScope;
     }
 }

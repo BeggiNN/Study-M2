@@ -3,11 +3,11 @@
 declare (strict_types=1);
 namespace Rector\Naming\ExpectedNameResolver;
 
-use RectorPrefix202308\Doctrine\Inflector\Inflector;
-use RectorPrefix202308\Nette\Utils\Strings;
-use Rector\Core\Util\StringUtils;
+use RectorPrefix202411\Doctrine\Inflector\Inflector;
+use RectorPrefix202411\Nette\Utils\Strings;
+use Rector\Util\StringUtils;
 /**
- * @see \Rector\Core\Tests\Naming\ExpectedNameResolver\InflectorSingularResolverTest
+ * @see \Rector\Tests\Naming\ExpectedNameResolver\InflectorSingularResolverTest
  */
 final class InflectorSingularResolver
 {
@@ -80,9 +80,10 @@ final class InflectorSingularResolver
         $camelCases = Strings::matchAll($currentName, self::CAMELCASE_REGEX);
         $resolvedName = '';
         foreach ($camelCases as $camelCase) {
-            $value = $this->inflector->singularize($camelCase[self::CAMELCASE]);
-            if (\in_array($camelCase[self::CAMELCASE], ['is', 'has'], \true)) {
+            if (\in_array($camelCase[self::CAMELCASE], ['is', 'has', 'cms', 'this'], \true)) {
                 $value = $camelCase[self::CAMELCASE];
+            } else {
+                $value = $this->inflector->singularize($camelCase[self::CAMELCASE]);
             }
             $resolvedName .= $value;
         }

@@ -6,9 +6,9 @@ declare(strict_types=1);
  * Copyright OpenSearch Contributors
  * SPDX-License-Identifier: Apache-2.0
  *
- * Elasticsearch PHP client
+ * OpenSearch PHP client
  *
- * @link      https://github.com/elastic/elasticsearch-php/
+ * @link      https://github.com/opensearch-project/opensearch-php/
  * @copyright Copyright (c) Elasticsearch B.V (https://www.elastic.co)
  * @license   http://www.apache.org/licenses/LICENSE-2.0 Apache License, Version 2.0
  * @license   https://www.gnu.org/licenses/lgpl-2.1.html GNU Lesser General Public License, Version 2.1
@@ -21,22 +21,55 @@ declare(strict_types=1);
 
 namespace OpenSearch\Namespaces;
 
+use GuzzleHttp\Ring\Future\FutureArrayInterface;
 use OpenSearch\Common\Exceptions\Missing404Exception;
 use OpenSearch\Common\Exceptions\RoutingMissingException;
 use OpenSearch\Endpoints\AbstractEndpoint;
+use OpenSearch\Exception\NotFoundHttpException;
 use OpenSearch\Transport;
-use GuzzleHttp\Ring\Future\FutureArrayInterface;
+use OpenSearch\TransportInterface;
 
 abstract class BooleanRequestWrapper
 {
+    /**
+     * Send a request with a boolean response.
+     *
+     * @return bool
+     *   Returns FALSE for a 404 error, otherwise TRUE.
+     *
+     * @throws \Psr\Http\Client\ClientExceptionInterface
+     */
+    public static function sendRequest(AbstractEndpoint $endpoint, TransportInterface $transport): bool
+    {
+        try {
+            $transport->sendRequest(
+                $endpoint->getMethod(),
+                $endpoint->getURI(),
+                $endpoint->getParams(),
+                $endpoint->getBody(),
+                $endpoint->getOptions()
+            );
+
+        } catch (NotFoundHttpException|RoutingMissingException $e) {
+            // Return false for 404 errors.
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Perform Request
      *
      * @throws Missing404Exception
      * @throws RoutingMissingException
+     *
+     * @deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\Namespaces\BooleanRequestWrapper::sendRequest() instead.
      */
     public static function performRequest(AbstractEndpoint $endpoint, Transport $transport)
     {
+        @trigger_error(
+            __METHOD__ . '() is deprecated in 2.4.0 and will be removed in 3.0.0. Use \OpenSearch\Namespaces\BooleanRequestWrapper::sendRequest() instead.'
+        );
         try {
             $response = $transport->performRequest(
                 $endpoint->getMethod(),

@@ -1,5 +1,9 @@
 <?php
-
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Console;
 
 use Magento\Store\Model\StoreManagerInterface;
@@ -12,49 +16,49 @@ use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Vault\Api\PaymentTokenRepositoryInterface;
 use Magento\Vault\Model\PaymentTokenFactory;
 use Magento\Vault\Test\Block\Onepage\Payment\Method\Vault;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Tester\CommandTester;
+use Symfony\Component\Console\Input\InputArgument;
 
 class VaultMigrateTest extends TestCase
 {
     /**
      * @var MockObject|ConnectionFactory
      */
-    private $connectionFactoryMock;
+    private MockObject|ConnectionFactory $connectionFactoryMock;
     /**
      * @var MockObject|BraintreeAdapter
      */
-    private $braintreeAdapterMock;
+    private MockObject|BraintreeAdapter $braintreeAdapterMock;
     /**
      * @var MockObject|CustomerRepositoryInterface
      */
-    private $customerRepositoryMock;
+    private MockObject|CustomerRepositoryInterface $customerRepositoryMock;
     /**
      * @var MockObject|PaymentTokenFactory
      */
-    private $paymentTokenFactoryMock;
+    private MockObject|PaymentTokenFactory $paymentTokenFactoryMock;
     /**
      * @var MockObject|PaymentTokenRepositoryInterface
      */
-    private $paymentTokenRepositoryMock;
+    private MockObject|PaymentTokenRepositoryInterface $paymentTokenRepositoryMock;
     /**
      * @var MockObject|EncryptorInterface
      */
-    private $encryptorMock;
+    private MockObject|EncryptorInterface $encryptorMock;
     /**
      * @var MockObject|SerializerInterface
      */
-    private $jsonMock;
+    private MockObject|SerializerInterface $jsonMock;
     /**
      * @var MockObject|StoreManagerInterface
      */
-    private $storeManagerMock;
+    private MockObject|StoreManagerInterface $storeManagerMock;
     /**
      * @var MockObject|VaultMigrate
      */
-    private $command;
+    private MockObject|VaultMigrate $command;
 
     protected function setUp(): void
     {
@@ -81,8 +85,8 @@ class VaultMigrateTest extends TestCase
 
     /**
      * @param $customers
-     * @dataProvider remapCustomerDataDataProvider
      */
+    #[DataProvider('remapCustomerDataDataProvider')]
     public function testRemapCustomerData($customers)
     {
         $foo = $this->command->remapCustomerData($customers);
@@ -93,9 +97,11 @@ class VaultMigrateTest extends TestCase
     }
 
     /**
+     * Remap customer data
+     *
      * @return array
      */
-    public function remapCustomerDataDataProvider(): array
+    public static function remapCustomerDataDataProvider(): array
     {
         return [
             [
@@ -120,11 +126,11 @@ class VaultMigrateTest extends TestCase
 
     /**
      * @param $description
-     * @dataProvider getOptionListDataProvider
      */
+    #[DataProvider('getOptionListDataProvider')]
     public function testGetOptionsList($description)
     {
-        /* @var \Symfony\Component\Console\Input\InputArgument[] $argsList */
+        /* @var InputArgument[] $argsList */
         $argsList = $this->command->getOptionsList();
 
         $this->assertEquals(VaultMigrate::HOST, $argsList[0]->getName());
@@ -134,7 +140,7 @@ class VaultMigrateTest extends TestCase
     /**
      * @return array
      */
-    public function getOptionListDataProvider()
+    public static function getOptionListDataProvider(): array
     {
         return [
             [

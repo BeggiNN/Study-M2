@@ -78,17 +78,14 @@ class Image extends AbstractElement
                 $url = $this->_urlBuilder->getBaseUrl(['_type' => UrlInterface::URL_TYPE_MEDIA]) . $url;
             }
 
-            $linkId = 'linkId' . $this->random->getRandomString(8);
-            $html = '<a previewlinkid="' .$linkId .'" href="' .
-                $url .
-                '" ' .
+            $linkId = 'linkId' .$this->random->getRandomString(8);
+            $html = '<a previewlinkid="' .$linkId  .'" href="' .
+                $url . '" ' .
                 $this->_getUiId(
                     'link'
                 ) .
                 '>' .
-                '<img src="' .
-                $url .
-                '" id="' .
+                '<img src="' . $url . '" id="' .
                 $this->getHtmlId() .
                 '_image" title="' .
                 $this->getEscapedValue() .

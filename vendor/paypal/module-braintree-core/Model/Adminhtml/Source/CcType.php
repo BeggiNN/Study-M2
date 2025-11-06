@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Model\Adminhtml\Source;
 
 /** @codeCoverageIgnore
@@ -14,7 +15,7 @@ class CcType extends \Magento\Payment\Model\Source\Cctype
      */
     public function getAllowedTypes(): array
     {
-        return ['VI', 'MC', 'AE', 'DI', 'JCB', 'MI', 'DN'];
+        return ['VI', 'MC', 'AE', 'DI', 'JCB', 'MI', 'DN', 'UPD'];
     }
 
     /**

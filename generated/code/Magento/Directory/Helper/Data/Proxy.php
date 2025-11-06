@@ -69,7 +69,17 @@ class Proxy extends \Magento\Directory\Helper\Data implements \Magento\Framework
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -197,6 +207,16 @@ class Proxy extends \Magento\Directory\Helper\Data implements \Magento\Framework
     public function getWeightUnit()
     {
         return $this->_getSubject()->getWeightUnit();
+    }
+
+    /**
+     * Reset state of proxied instance
+     */
+    public function _resetState() : void
+    {
+        if ($this->_subject) {
+            $this->_subject->_resetState(); 
+        }
     }
 
     /**

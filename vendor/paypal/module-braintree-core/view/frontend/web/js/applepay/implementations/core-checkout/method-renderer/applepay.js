@@ -2,13 +2,19 @@
  * Braintree Apple Pay payment method integration.
  **/
 define([
+    'underscore',
     'Magento_Checkout/js/view/payment/default',
     'Magento_Checkout/js/model/quote',
-    'PayPal_Braintree/js/applepay/button'
+    'Magento_Vault/js/view/payment/vault-enabler',
+    'PayPal_Braintree/js/applepay/button',
+    'PayPal_Braintree/js/helper/get-apple-pay-line-items'
 ], function (
+    _,
     Component,
     quote,
-    button
+    VaultEnabler,
+    button,
+    getApplePayLineItems
 ) {
     'use strict';
 
@@ -18,7 +24,20 @@ define([
             paymentMethodNonce: null,
             deviceData: null,
             grandTotalAmount: 0,
-            deviceSupported: button.deviceSupported()
+            deviceSupported: button.deviceSupported(),
+            vaultEnabler: null,
+            additionalData: {}
+        },
+
+        /**
+         * @returns {exports.initialize}
+         */
+        initialize: function () {
+            this._super();
+            this.vaultEnabler = new VaultEnabler();
+            this.vaultEnabler.setPaymentCode(this.getVaultCode());
+
+            return this;
         },
 
         /**
@@ -36,6 +55,10 @@ define([
          */
         initObservable: function () {
             this._super();
+
+            this.vaultEnabler = new VaultEnabler();
+            this.vaultEnabler.setPaymentCode(this.getVaultCode());
+
             this.grandTotalAmount = parseFloat(quote.totals()['base_grand_total']).toFixed(2);
 
             quote.totals.subscribe(function () {
@@ -55,7 +78,7 @@ define([
             this.setDeviceData(device_data);
             this.placeOrder();
 
-            session.completePayment(ApplePaySession.STATUS_SUCCESS);
+            session.completePayment(window.ApplePaySession.STATUS_SUCCESS);
         },
 
         /**
@@ -81,6 +104,14 @@ define([
         },
 
         /**
+         * Get price includes tax configuration.
+         * @returns bool
+         */
+        getPriceIncludesTax: function () {
+            return window.checkoutConfig.payment[this.getCode()].priceIncludesTax;
+        },
+
+        /**
          * Payment request data
          */
         getPaymentRequest: function () {
@@ -88,7 +119,8 @@ define([
                 total: {
                     label: this.getDisplayName(),
                     amount: this.grandTotalAmount
-                }
+                },
+                lineItems: getApplePayLineItems(quote.totals(), this.getPriceIncludesTax())
             };
         },
 
@@ -111,6 +143,11 @@ define([
                     'device_data': this.deviceData
                 }
             };
+
+            data['additional_data'] = _.extend(data['additional_data'], this.additionalData);
+
+            this.vaultEnabler.visitAdditionalData(data);
+
             return data;
         },
 
@@ -119,6 +156,20 @@ define([
          */
         getPaymentMarkSrc: function () {
             return window.checkoutConfig.payment[this.getCode()].paymentMarkSrc;
+        },
+
+        /**
+         * @returns {Boolean}
+         */
+        isVaultEnabled: function () {
+            return this.vaultEnabler.isVaultEnabled();
+        },
+
+        /**
+         * @returns {String}
+         */
+        getVaultCode: function () {
+            return window.checkoutConfig.payment[this.getCode()].vaultCode;
         }
     });
 });

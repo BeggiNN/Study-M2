@@ -69,7 +69,17 @@ class Proxy extends \Magento\Backend\Model\Auth implements \Magento\Framework\Ob
      */
     public function __clone()
     {
-        $this->_subject = clone $this->_getSubject();
+        if ($this->_subject) {
+            $this->_subject = clone $this->_getSubject();
+        }
+    }
+
+    /**
+     * Debug proxied instance
+     */
+    public function __debugInfo()
+    {
+        return ['i' => $this->_subject];
     }
 
     /**
@@ -141,5 +151,13 @@ class Proxy extends \Magento\Backend\Model\Auth implements \Magento\Framework\Ob
     public function isLoggedIn()
     {
         return $this->_getSubject()->isLoggedIn();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function throwException(?\Magento\Framework\Phrase $msg = null)
+    {
+        return $this->_getSubject()->throwException($msg);
     }
 }

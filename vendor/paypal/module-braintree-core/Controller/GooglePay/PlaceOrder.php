@@ -1,25 +1,27 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Controller\GooglePay;
 
 use Exception;
 use Magento\Checkout\Model\Session;
 use Magento\Framework\App\Action\Context;
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\ActionInterface;
 use Magento\Framework\Controller\Result\Redirect;
 use Magento\Framework\Controller\ResultFactory;
 use PayPal\Braintree\Model\GooglePay\Config;
 use PayPal\Braintree\Model\Paypal\Helper\OrderPlace;
 
-class PlaceOrder extends AbstractAction implements HttpPostActionInterface
+class PlaceOrder extends AbstractAction implements ActionInterface, HttpPostActionInterface
 {
     /**
      * @var OrderPlace
      */
-    private $orderPlace;
+    private OrderPlace $orderPlace;
 
     /**
      * Constructor
@@ -36,7 +38,6 @@ class PlaceOrder extends AbstractAction implements HttpPostActionInterface
         OrderPlace $orderPlace
     ) {
         parent::__construct($context, $config, $checkoutSession);
-
         $this->orderPlace = $orderPlace;
     }
 

@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 
 namespace tests\unit\Magento\FunctionalTestFramework\DataGenerator\Handlers\SecretStorage;
@@ -34,7 +34,7 @@ class AwsSecretsManagerStorageTest extends MagentoTestCase
 
         $mockClient = $this->getMockBuilder(SecretsManagerClient::class)
             ->disableOriginalConstructor()
-            ->setMethods(['__call'])
+            ->onlyMethods(['__call'])
             ->getMock();
 
         $mockClient->expects($this->once())

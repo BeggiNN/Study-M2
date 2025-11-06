@@ -17,9 +17,8 @@
             <severity value="AVERAGE"/>
             <testCaseId value="AC-3635"/>
             <group value="customer"/>
-            <group value="guest_checkout"/>
             <skip>
-                <issueId value="ACQE-4352"/>
+            <issueId value="ACQE-4352"/>
             </skip>
         </annotations>
         <before>
@@ -36,8 +35,12 @@
             <actionGroup ref="CliIndexerReindexActionGroup" stepKey="performReindex">
                 <argument name="indices" value=""/>
             </actionGroup>
-            <magentoCLI command="cache:clean" stepKey="cleanCache"/>
-            <magentoCLI command="cache:flush" stepKey="flushCache"/>
+            <actionGroup ref="CliCacheCleanActionGroup" stepKey="cleanCache">
+                <argument name="tags" value=""/>
+            </actionGroup>
+            <actionGroup ref="CliCacheFlushActionGroup" stepKey="flushCache">
+                <argument name="tags" value=""/>
+            </actionGroup>
         </after>
         <!--Login to storefront from customer-->
         <actionGroup ref="LoginToStorefrontActionGroup" stepKey="loginCustomer">
@@ -45,8 +48,12 @@
         </actionGroup>
         <see userInput="Welcome, $$createCustomer.firstname$$ $$createCustomer.lastname$$!" selector="{{StorefrontPanelHeaderSection.welcomeMessage}}" stepKey="checkWelcomeMessage"/>
 
+        <!--Grab timezone offset-->
+        <executeJS function="return new Date().getTimezoneOffset();" stepKey="getTimezoneOffset"/>
         <!--Verify default expiry date for cookies-->
-        <actionGroup ref="StorefrontVerifyCustomerDefaultCookieExpiryDateActionGroup" stepKey="VerifyCookiesExpiryDate"/>
+        <actionGroup ref="StorefrontVerifyCustomerDefaultCookieExpiryDateActionGroup" stepKey="VerifyCookiesExpiryDate">
+            <argument name="timezoneOffset" value="{$getTimezoneOffset}"/>
+        </actionGroup>
 
         <!--Logout customer before in case of it logged in from previous test-->
         <actionGroup ref="StorefrontCustomerLogoutActionGroup" stepKey="customerLogoutStorefront"/>
@@ -84,7 +91,7 @@
         <actionGroup ref="StorefrontClickSignOnCustomerLoginFormActionGroup" stepKey="clickSignInAccountButtonFirstAttempt"/>
 
         <!--Grab current timezone offset after 30 days-->
-        <executeJS function="return (30*24*60);" stepKey="getTimezoneOffsetAfterReset"/>
+        <executeJS function="return {$getTimezoneOffset} + (30*24*60);" stepKey="getTimezoneOffsetAfterReset"/>
         <actionGroup ref="StorefrontVerifyCustomerDefaultCookieExpiryDateActionGroup" stepKey="VerifyCookiesExpiryDateAfterReset">
             <argument name="timezoneOffset" value="{$getTimezoneOffsetAfterReset}"/>
         </actionGroup>

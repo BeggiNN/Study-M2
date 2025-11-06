@@ -40,6 +40,9 @@
             </actionGroup>
             <actionGroup ref="ResetAdminDataGridToDefaultViewActionGroup" stepKey="resetGrid"/>
             <actionGroup ref="AdminLogoutActionGroup" stepKey="adminLogout"/>
+            <actionGroup ref="CliIndexerReindexActionGroup" stepKey="reindex">
+                <argument name="indices" value=""/>
+            </actionGroup>
         </after>
 
         <!-- Create Cart Price Rule with a Specific Coupon Code -->
@@ -120,9 +123,7 @@
         <see selector="{{AdminProductGridSection.productSalableQty('1', 'Default Stock')}}" userInput="999" stepKey="verifyStockQuantity"/>
 
         <!-- Delete Cart Price Rule -->
-        <actionGroup ref="AdminDeleteCartPriceRuleActionGroup" stepKey="deleteCartPriceRule">
-            <argument name="ruleName" value="ApiSalesRule"/>
-        </actionGroup>
+        <actionGroup ref="AdminCartPriceRuleDeleteAllActionGroup" stepKey="deleteCartPriceRule"/>
 
         <!-- Trigger Async Place Order Consumer to Process the Order -->
         <actionGroup ref="CliConsumerStartActionGroup" stepKey="processFirstOrder">

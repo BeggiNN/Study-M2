@@ -35,11 +35,11 @@ use Codeception\Util\Uri;
 use Exception;
 use Facebook\WebDriver\Cookie;
 use Facebook\WebDriver\Cookie as WebDriverCookie;
+use Facebook\WebDriver\Exception\Internal\UnexpectedResponseException;
 use Facebook\WebDriver\Exception\InvalidElementStateException;
 use Facebook\WebDriver\Exception\InvalidSelectorException;
 use Facebook\WebDriver\Exception\NoSuchElementException;
-use Facebook\WebDriver\Exception\UnknownErrorException;
-use Facebook\WebDriver\Exception\WebDriverCurlException;
+use Facebook\WebDriver\Exception\PhpWebDriverExceptionInterface;
 use Facebook\WebDriver\Interactions\WebDriverActions;
 use Facebook\WebDriver\Remote\LocalFileDetector;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
@@ -75,7 +75,7 @@ use PHPUnit\Framework\SelfDescribing;
  * selenium-standalone start
  * ```
  *
- * Update configuration in `acceptance.suite.yml`:
+ * Update configuration in `Acceptance.suite.yml`:
  *
  * ```yaml
  * modules:
@@ -87,7 +87,7 @@ use PHPUnit\Framework\SelfDescribing;
  *
  * ## Headless Chrome Browser
  *
- * To enable headless mode (launch tests without showing a window) for Chrome browser using Selenium use this config in `acceptance.suite.yml`:
+ * To enable headless mode (launch tests without showing a window) for Chrome browser using Selenium use this config in `Acceptance.suite.yml`:
  *
  * ```yaml
  * modules:
@@ -96,8 +96,8 @@ use PHPUnit\Framework\SelfDescribing;
  *          url: 'http://localhost/'
  *          browser: chrome
  *          capabilities:
- *             chromeOptions:
- *                args: ["--headless", "--disable-gpu"]
+ *             goog:chromeOptions:
+ *                args: ["--headless"]
  * ```
  *
  * ## Headless Selenium in Docker
@@ -117,10 +117,10 @@ use PHPUnit\Framework\SelfDescribing;
  *
  * ### ChromeDriver
  *
- * * Download and install [ChromeDriver](https://sites.google.com/chromium.org/driver/downloads?authuser=0)
+ * * Download and install [ChromeDriver](https://sites.google.com/chromium.org/driver/downloads)
  * * Launch ChromeDriver in a separate console window: `chromedriver --url-base=/wd/hub`.
  *
- * Configuration in `acceptance.suite.yml`:
+ * Configuration in `Acceptance.suite.yml`:
  *
  * ```yaml
  * modules:
@@ -131,12 +131,12 @@ use PHPUnit\Framework\SelfDescribing;
  *          window_size: 2000x1000
  *          port: 9515
  *          capabilities:
- *              chromeOptions:
- *                  args: ["--headless", "--disable-gpu"] # Run Chrome in headless mode
+ *              goog:chromeOptions:
+ *                  args: ["--headless"] # Run Chrome in headless mode
  *                  prefs:
  *                      download.default_directory: "..."
  * ```
- * See here for additional [Chrome options](https://sites.google.com/a/chromium.org/chromedriver/capabilities)
+ * See here for additional [Chrome options](https://sites.google.com/chromium.org/driver/capabilities)
  *
  *
  * ### GeckoDriver
@@ -144,7 +144,7 @@ use PHPUnit\Framework\SelfDescribing;
  * * [GeckoDriver](https://github.com/mozilla/geckodriver/releases) must be installed
  * * Start GeckoDriver in a separate console window: `geckodriver`.
  *
- * Configuration in `acceptance.suite.yml`:
+ * Configuration in `Acceptance.suite.yml`:
  *
  * ```yaml
  * modules:
@@ -173,7 +173,7 @@ use PHPUnit\Framework\SelfDescribing;
  *
  * 1. Create an account at [SauceLabs.com](https://saucelabs.com/) to get your username and access key
  * 2. In the module configuration use the format `username`:`access_key`@ondemand.saucelabs.com' for `host`
- * 3. Configure `platform` under `capabilities` to define the [Operating System](https://docs.saucelabs.com/basics/platform-configurator/)
+ * 3. Configure `platformName` under `capabilities` to define the [Operating System](https://docs.saucelabs.com/basics/platform-configurator/)
  * 4. run a tunnel app if your site can't be accessed from Internet
  *
  * ```yaml
@@ -185,7 +185,7 @@ use PHPUnit\Framework\SelfDescribing;
  *              port: 80
  *              browser: chrome
  *              capabilities:
- *                  platform: 'Windows 10'
+ *                  platformName: 'Windows 10'
  * ```
  *
  * ### BrowserStack
@@ -196,17 +196,18 @@ use PHPUnit\Framework\SelfDescribing;
  * 4. If your site is available only locally or via VPN you should use a tunnel app. In this case add `browserstack.local` capability and set it to true.
  *
  * ```yaml
- *     modules:
- *        enabled:
- *           - WebDriver:
+ *  modules:
+ *      enabled:
+ *          - WebDriver:
  *              url: http://mysite.com
  *              host: '<username>:<access key>@hub.browserstack.com'
  *              port: 80
  *              browser: chrome
  *              capabilities:
- *                  os: Windows
- *                  os_version: 10
- *                  browserstack.local: true # for local testing
+ *                  bstack:options:
+ *                      os: Windows
+ *                      osVersion: 10
+ *                      local: true # for local testing
  * ```
  *
  * ### LambdaTest
@@ -217,38 +218,38 @@ use PHPUnit\Framework\SelfDescribing;
  * 4. If your website is available only locally or via VPN you should use LambdaTest tunnel. In this case, you can add capability "tunnel":true;.
  *
  * ```yaml
- *    modules:
- *  enabled:
- *    - WebDriver:
-              url: "https://openclassrooms.com"
-              host: 'hub.lambdatest.com'
-              port: 80
-              browser: 'Chrome'
-              capabilities:
-                 LT:Options:
-                  platformName: 'Windows 10'
-                  browserVersion: 'latest-5'
-                  browserName: 'Chrome'
-                  tunnel: true #for Local testing
+ *  modules:
+ *      enabled:
+ *            - WebDriver:
+                  url: "https://openclassrooms.com"
+                  host: 'hub.lambdatest.com'
+                  port: 80
+                  browser: 'Chrome'
+                  capabilities:
+                      LT:Options:
+                      platformName: 'Windows 10'
+                      browserVersion: 'latest-5'
+                      browserName: 'Chrome'
+                      tunnel: true #for Local testing
  * ```
  *
  * ### TestingBot
  *
  * 1. Create an account at [TestingBot](https://testingbot.com/) to get your key and secret
  * 2. In the module configuration use the format `key`:`secret`@hub.testingbot.com' for `host`
- * 3. Configure `platform` under `capabilities` to define the [Operating System](https://testingbot.com/support/getting-started/browsers.html)
+ * 3. Configure `platformName` under `capabilities` to define the [Operating System](https://testingbot.com/support/getting-started/browsers.html)
  * 4. Run [TestingBot Tunnel](https://testingbot.com/support/other/tunnel) if your site can't be accessed from Internet
  *
  * ```yaml
- *     modules:
- *        enabled:
- *           - WebDriver:
- *              url: http://mysite.com
- *              host: '<key>:<secret>@hub.testingbot.com'
- *              port: 80
- *              browser: chrome
- *              capabilities:
- *                  platform: Windows 10
+ * modules:
+ *    enabled:
+ *       - WebDriver:
+ *          url: http://mysite.com
+ *          host: '<key>:<secret>@hub.testingbot.com'
+ *          port: 80
+ *          browser: chrome
+ *          capabilities:
+ *              platformName: Windows 10
  * ```
  *
  * ## Configuration
@@ -271,22 +272,23 @@ use PHPUnit\Framework\SelfDescribing;
  * * `ssl_proxy` - sets ssl(https) proxy server url for testing a remote server.
  * * `ssl_proxy_port` - sets ssl(https) proxy server port
  * * `debug_log_entries` - how many selenium entries to print with `debugWebDriverLogs` or on fail (0 by default).
- * * `log_js_errors` - Set to true to include possible JavaScript to HTML report, or set to false (default) to deactivate.
+ * * `log_js_errors` - Set to true to include possible JavaScript to HTML report, or set to false (default) to deactivate. This will only work if `debug_log_entries` is set and its value is > 0. Also this will display JS errors as comments only if test fails.
  * * `webdriver_proxy` - sets http proxy to tunnel requests to the remote Selenium WebDriver through
  * * `webdriver_proxy_port` - sets http proxy server port to tunnel requests to the remote Selenium WebDriver through
  *
- * Example (`acceptance.suite.yml`)
+ * Example (`Acceptance.suite.yml`)
  *
  * ```yaml
- *     modules:
- *        enabled:
- *           - WebDriver:
- *              url: 'http://localhost/'
- *              browser: firefox
- *              window_size: 1024x768
- *              capabilities:
- *                  unexpectedAlertBehaviour: 'accept'
- *                  firefox_profile: '~/firefox-profiles/codeception-profile.zip.b64'
+ * modules:
+ *    enabled:
+ *       - WebDriver:
+ *          url: 'http://localhost/'
+ *          browser: firefox
+ *          window_size: 1024x768
+ *          capabilities:
+ *              unhandledPromptBehaviour: 'accept'
+ *              moz:firefoxOptions:
+ *                  profile: '~/firefox-profiles/codeception-profile.zip.b64'
  * ```
  *
  * ## Loading Parts from other Modules
@@ -354,7 +356,8 @@ use PHPUnit\Framework\SelfDescribing;
  *
  * You can inject `\Codeception\Scenario` into your test to get information about the current configuration:
  * ```php
- * use Codeception\Scenario
+ * use Codeception\Scenario;
+ *
  * public function myTest(AcceptanceTester $I, Scenario $scenario)
  * {
  *     if ('firefox' === $scenario->current('browser')) {
@@ -520,7 +523,8 @@ class WebDriver extends CodeceptionModule implements
      * This is how it can be done via `_capabilities` method from `Helper\Acceptance`:
      *
      * ```php
-     * <?php // inside Helper\Acceptance
+     * <?php
+     * // inside Helper\Acceptance
      * public function _before(TestInterface $test)
      * {
      *      $name = $test->getMetadata()->getName();
@@ -655,7 +659,7 @@ class WebDriver extends CodeceptionModule implements
     /**
      * Print out latest Selenium Logs in debug mode
      */
-    public function debugWebDriverLogs(TestInterface $test = null): void
+    public function debugWebDriverLogs(?TestInterface $test = null): void
     {
         if ($this->webDriver === null) {
             $this->debug('WebDriver::debugWebDriverLogs method has been called when webDriver is not set');
@@ -899,7 +903,7 @@ class WebDriver extends CodeceptionModule implements
      * // saved to: tests/_output/debug/2017-05-26_14-24-11_4b3403665fea6.png
      * ```
      */
-    public function makeScreenshot(string $name = null): void
+    public function makeScreenshot(?string $name = null): void
     {
         if (empty($name)) {
             $name = uniqid(date("Y-m-d_H-i-s_"));
@@ -929,7 +933,7 @@ class WebDriver extends CodeceptionModule implements
      *
      * @param WebDriverBy|array $selector
      */
-    public function makeElementScreenshot($selector, string $name = null): void
+    public function makeElementScreenshot($selector, ?string $name = null): void
     {
         if (empty($name)) {
             $name = uniqid(date("Y-m-d_H-i-s_"));
@@ -945,7 +949,7 @@ class WebDriver extends CodeceptionModule implements
         $this->debugSection('Screenshot Saved', "file://{$screenName}");
     }
 
-    public function makeHtmlSnapshot(string $name = null): void
+    public function makeHtmlSnapshot(?string $name = null): void
     {
         if (empty($name)) {
             $name = uniqid(date("Y-m-d_H-i-s_"));
@@ -1323,7 +1327,7 @@ class WebDriver extends CodeceptionModule implements
         return reset($arr);
     }
 
-    public function seeLink(string $text, string $url = null): void
+    public function seeLink(string $text, ?string $url = null): void
     {
         $this->enableImplicitWait();
         $nodes = $this->getBaseElement()->findElements(WebDriverBy::partialLinkText($text));
@@ -1367,7 +1371,7 @@ class WebDriver extends CodeceptionModule implements
         return array_filter(
             $nodes,
             function (WebDriverElement $e) use ($expectedUrl, $absoluteCurrentUrl): bool {
-                $elementHref = Uri::mergeUrls($absoluteCurrentUrl, $e->getAttribute('href'));
+                $elementHref = Uri::mergeUrls($absoluteCurrentUrl, $e->getAttribute('href') ?? '');
                 return $elementHref === $expectedUrl;
             }
         );
@@ -1686,7 +1690,7 @@ class WebDriver extends CodeceptionModule implements
 
             $this->setBaseElement();
             $this->initialWindowSize();
-        } catch (WebDriverCurlException $exception) {
+        } catch (UnexpectedResponseException $exception) {
             codecept_debug('Curl error: ' . $exception->getMessage());
             throw new ConnectionException(
                 "Can't connect to WebDriver at {$this->wdHost}."
@@ -1745,7 +1749,7 @@ class WebDriver extends CodeceptionModule implements
         try {
             $webDriver->quit();
             unset($webDriver);
-        } catch (UnknownErrorException $exception) {
+        } catch (PhpWebDriverExceptionInterface $exception) {
             // Session already closed so nothing to do
         }
     }
@@ -2279,7 +2283,7 @@ class WebDriver extends CodeceptionModule implements
     }
 
     /**
-     * Reloads the current page.
+     * Reloads the current page. All forms will be reset, so the outcome is as if the user would press <kbd>Ctrl</kbd>+<kbd>F5</kbd>.
      */
     public function reloadPage(): void
     {
@@ -2348,17 +2352,17 @@ class WebDriver extends CodeceptionModule implements
      * ``` html
      * <form action="/sign_up">
      *     Login:
-     *     <input type="text" name="user[login]" /><br/>
+     *     <input type="text" name="user[login]"><br>
      *     Password:
-     *     <input type="password" name="user[password]" /><br/>
+     *     <input type="password" name="user[password]"><br>
      *     Do you agree to our terms?
-     *     <input type="checkbox" name="user[agree]" /><br/>
+     *     <input type="checkbox" name="user[agree]"><br>
      *     Select pricing plan:
      *     <select name="plan">
      *         <option value="1">Free</option>
      *         <option value="2" selected="selected">Paid</option>
      *     </select>
-     *     <input type="submit" name="submitButton" value="Submit" />
+     *     <input type="submit" name="submitButton" value="Submit">
      * </form>
      * ```
      *
@@ -2458,7 +2462,7 @@ class WebDriver extends CodeceptionModule implements
      * For example, given the following HTML:
      *
      * ``` html
-     * <input type="submit" name="submitButton" value="Submit" />
+     * <input type="submit" name="submitButton" value="Submit">
      * ```
      *
      * `$button` could be any one of the following:
@@ -2554,16 +2558,17 @@ class WebDriver extends CodeceptionModule implements
     }
 
     /**
-     * Waits up to $timeout seconds for the given element to change.
+     * Waits up to `$timeout` seconds for the given element to change.
      * Element "change" is determined by a callback function which is called repeatedly
      * until the return value evaluates to true.
      *
      * ``` php
      * <?php
-     * use \Facebook\WebDriver\WebDriverElement
-     * $I->waitForElementChange('#menu', function(WebDriverElement $el) {
-     *     return $el->isDisplayed();
-     * }, 100);
+     * use Facebook\WebDriver\WebDriverElement;
+     *
+     * $I->waitForElementChange('#menu', function(WebDriverElement $element) {
+     *     return $element->isDisplayed();
+     * }, 5);
      * ```
      *
      * @param string|array|WebDriverBy $element
@@ -2763,7 +2768,7 @@ class WebDriver extends CodeceptionModule implements
      * });
      * ```
      */
-    public function switchToWindow(string $name = null): void
+    public function switchToWindow(?string $name = null): void
     {
         $this->webDriver->switchTo()->window($name);
     }
@@ -2790,7 +2795,7 @@ class WebDriver extends CodeceptionModule implements
      *
      * @param string|null $locator (name, CSS or XPath)
      */
-    public function switchToIFrame(string $locator = null): void
+    public function switchToIFrame(?string $locator = null): void
     {
         $this->findAndSwitchToFrame($locator, 'iframe');
     }
@@ -2817,12 +2822,12 @@ class WebDriver extends CodeceptionModule implements
      *
      * @param string|null $locator (name, CSS or XPath)
      */
-    public function switchToFrame(string $locator = null): void
+    public function switchToFrame(?string $locator = null): void
     {
         $this->findAndSwitchToFrame($locator);
     }
 
-    private function findAndSwitchToFrame(string $locator = null, string $tag = 'frame'): void
+    private function findAndSwitchToFrame(?string $locator = null, string $tag = 'frame'): void
     {
         if ($locator === null) {
             $this->webDriver->switchTo()->defaultContent();
@@ -2872,16 +2877,13 @@ class WebDriver extends CodeceptionModule implements
     }
 
     /**
-     * Executes custom JavaScript.
-     *
-     * This example uses jQuery to get a value and assigns that value to a PHP variable:
+     * Executes JavaScript commands.
      *
      * ```php
      * <?php
-     * $myVar = $I->executeJS('return $("#myField").val()');
+     * $myVar = $I->executeJS('return document.getElementById("myField").value');
      *
-     * // additional arguments can be passed as array
-     * // Example shows `Hello World` alert:
+     * // Additional arguments can be passed as array. E.g. this will alert `Hello World`:
      * $I->executeJS("window.alert(arguments[0])", ['Hello world']);
      * ```
      *
@@ -2960,7 +2962,7 @@ class WebDriver extends CodeceptionModule implements
      * @param null|string|array|WebDriverBy $cssOrXPath css or xpath of the web element
      * @throws ElementNotFound
      */
-    public function moveMouseOver($cssOrXPath = null, int $offsetX = null, int $offsetY = null): void
+    public function moveMouseOver($cssOrXPath = null, ?int $offsetX = null, ?int $offsetY = null): void
     {
         $where = null;
         if (null !== $cssOrXPath) {
@@ -2989,7 +2991,7 @@ class WebDriver extends CodeceptionModule implements
      *
      * @throws ElementNotFound
      */
-    public function clickWithLeftButton($cssOrXPath = null, int $offsetX = null, int $offsetY = null): void
+    public function clickWithLeftButton($cssOrXPath = null, ?int $offsetX = null, ?int $offsetY = null): void
     {
         $this->moveMouseOver($cssOrXPath, $offsetX, $offsetY);
         $this->webDriver->getMouse()->click();
@@ -3012,7 +3014,7 @@ class WebDriver extends CodeceptionModule implements
      * @param null|string|array|WebDriverBy $cssOrXPath css or xpath of the web element (body by default).
      * @throws ElementNotFound
      */
-    public function clickWithRightButton($cssOrXPath = null, int $offsetX = null, int $offsetY = null): void
+    public function clickWithRightButton($cssOrXPath = null, ?int $offsetX = null, ?int $offsetY = null): void
     {
         $this->moveMouseOver($cssOrXPath, $offsetX, $offsetY);
         $this->webDriver->getMouse()->contextClick();
@@ -3147,22 +3149,22 @@ class WebDriver extends CodeceptionModule implements
 
     /**
      * Presses the given key on the given element.
-     * To specify a character and modifier (e.g. <kbd>Ctrl</kbd>, Alt, Shift, Meta), pass an array for `$char` with
+     * To specify a character and modifier (e.g. <kbd>Ctrl</kbd>, <kbd>Alt</kbd>, <kbd>Shift</kbd>, <kbd>Meta</kbd>), pass an array for `$char` with
      * the modifier as the first element and the character as the second.
-     * For special keys, use the constants from [`Facebook\WebDriver\WebDriverKeys`](https://github.com/php-webdriver/php-webdriver/blob/main/lib/WebDriverKeys.php).
+     * For special keys, use the constants from [Facebook\WebDriver\WebDriverKeys](https://github.com/php-webdriver/php-webdriver/blob/main/lib/WebDriverKeys.php).
      *
      * ``` php
      * <?php
-     * // <input id="page" value="old" />
-     * $I->pressKey('#page','a'); // => olda
-     * $I->pressKey('#page',array('ctrl','a'),'new'); //=> new
-     * $I->pressKey('#page',array('shift','111'),'1','x'); //=> old!!!1x
-     * $I->pressKey('descendant-or-self::*[@id='page']','u'); //=> oldu
-     * $I->pressKey('#name', array('ctrl', 'a'), \Facebook\WebDriver\WebDriverKeys::DELETE); //=>''
+     * // <input id="page" value="old">
+     * $I->pressKey('#page', 'a'); // => olda
+     * $I->pressKey('#page', ['ctrl', 'a'],'new'); // => new
+     * $I->pressKey('#page', ['shift', '111'], '1', 'x'); // => old!!!1x
+     * $I->pressKey('descendant-or-self::*[@id='page']', 'u'); // => oldu
+     * $I->pressKey('#name', ['ctrl', 'a'], \Facebook\WebDriver\WebDriverKeys::DELETE); // =>''
      * ```
      *
      * @param string|array|WebDriverBy $element
-     * @param array<string|string[]>$chars Can be char or array with modifier. You can provide several chars.
+     * @param string|array<string, string> $chars Can be char or array with modifier. You can provide several chars.
      * @throws ElementNotFound
      */
     public function pressKey($element, ...$chars): void
@@ -3485,7 +3487,7 @@ class WebDriver extends CodeceptionModule implements
      *
      * @param string|array|WebDriverBy $selector
      */
-    public function scrollTo($selector, int $offsetX = null, int $offsetY = null): void
+    public function scrollTo($selector, ?int $offsetX = null, ?int $offsetY = null): void
     {
         $el = $this->matchFirstOrFail($this->getBaseElement(), $selector);
         $x = $el->getLocation()->getX() + $offsetX;
@@ -3633,7 +3635,7 @@ class WebDriver extends CodeceptionModule implements
      * In 3rd argument you can set number a seconds to wait for element to appear
      *
      * @param string|array|WebDriverBy $element
-     * @param callable|array|ActionSequence $actions
+     * @param callable|array|\Codeception\Util\ActionSequence $actions
      */
     public function performOn($element, $actions, int $timeout = 10): void
     {

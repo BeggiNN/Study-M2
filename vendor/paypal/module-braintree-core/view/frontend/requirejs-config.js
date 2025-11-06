@@ -9,6 +9,9 @@ var config = {
             },
             'Magento_ReCaptchaWebapiUi/js/webapiReCaptchaRegistry': {
                 'PayPal_Braintree/js/reCaptcha/webapiReCaptchaRegistry-mixin': true
+            },
+            'Magento_CheckoutAgreements/js/view/checkout-agreements': {
+                'PayPal_Braintree/js/checkoutAgreements/view/checkout-agreements-mixin': true
             }
         }
     },
@@ -16,5 +19,5 @@ var config = {
         '*': {
             braintreeCheckoutPayPalAdapter: 'PayPal_Braintree/js/view/payment/adapter'
         }
-    },
+    }
 };

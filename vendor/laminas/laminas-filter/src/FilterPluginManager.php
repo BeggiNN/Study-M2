@@ -32,10 +32,10 @@ class FilterPluginManager extends AbstractPluginManager
     protected $aliases = [
         // @codingStandardsIgnoreStart
         // For the future
-        'int'  => ToInt::class,
-        'Int'  => ToInt::class,
-        'null' => ToNull::class,
-        'Null' => ToNull::class,
+        'int'    => ToInt::class,
+        'Int'    => ToInt::class,
+        'null'   => ToNull::class,
+        'Null'   => ToNull::class,
 
         // I18n filters
         'alnum'        => Alnum::class,
@@ -357,10 +357,12 @@ class FilterPluginManager extends AbstractPluginManager
         File\Rename::class                 => InvokableFactory::class,
         File\RenameUpload::class           => InvokableFactory::class,
         File\UpperCase::class              => InvokableFactory::class,
+        ForceUriScheme::class              => InvokableFactory::class,
         HtmlEntities::class                => InvokableFactory::class,
         Inflector::class                   => InvokableFactory::class,
         ToInt::class                       => InvokableFactory::class,
         ToFloat::class                     => InvokableFactory::class,
+        ToString::class                    => InvokableFactory::class,
         MonthSelect::class                 => InvokableFactory::class,
         ToNull::class                      => InvokableFactory::class,
         UpperCaseWords::class              => InvokableFactory::class,

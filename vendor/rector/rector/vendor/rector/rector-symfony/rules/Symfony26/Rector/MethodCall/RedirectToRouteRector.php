@@ -6,9 +6,10 @@ namespace Rector\Symfony\Symfony26\Rector\MethodCall;
 use PhpParser\Node;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use Rector\Core\Rector\AbstractRector;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Rector\Symfony\TypeAnalyzer\ControllerAnalyzer;
-use RectorPrefix202308\Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use RectorPrefix202411\Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -21,9 +22,15 @@ final class RedirectToRouteRector extends AbstractRector
      * @var \Rector\Symfony\TypeAnalyzer\ControllerAnalyzer
      */
     private $controllerAnalyzer;
-    public function __construct(ControllerAnalyzer $controllerAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(ControllerAnalyzer $controllerAnalyzer, ValueResolver $valueResolver)
     {
         $this->controllerAnalyzer = $controllerAnalyzer;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {

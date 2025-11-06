@@ -30,9 +30,9 @@ use function sprintf;
  * Helper\HelperInterface. Additionally, it registers a number of default
  * helpers.
  *
- * @template InstanceType of HelperInterface|callable
  * @extends AbstractPluginManager<HelperInterface|callable>
  * @psalm-import-type ServiceManagerConfiguration from ServiceManager
+ * @final
  */
 class HelperPluginManager extends AbstractPluginManager
 {
@@ -41,6 +41,8 @@ class HelperPluginManager extends AbstractPluginManager
      *
      * Most of these are present for legacy purposes, as v2 of the service
      * manager normalized names when fetching services.
+     *
+     * @deprecated Since 2.40.0
      *
      * @psalm-suppress DeprecatedClass, NonInvariantDocblockPropertyType
      * @var non-empty-array<string, class-string>
@@ -242,6 +244,8 @@ class HelperPluginManager extends AbstractPluginManager
      * helper works fine as an invokable. The factory for doctype simply checks for the
      * config value from the merged config.
      *
+     * @deprecated Since 2.40.0
+     *
      * @psalm-suppress DeprecatedClass
      *
      * {@inheritDoc}
@@ -326,8 +330,11 @@ class HelperPluginManager extends AbstractPluginManager
         'laminasviewhelperurl'                 => InvokableFactory::class,
         'laminasviewhelperviewmodel'           => InvokableFactory::class,
     ];
-
-    /** @var Renderer\RendererInterface|null */
+    /**
+     * @deprecated Since 2.40.0
+     *
+     * @var Renderer\RendererInterface|null
+     */
     protected $renderer;
 
     /**
@@ -355,6 +362,9 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Set renderer
      *
+     * @deprecated Since 2.40.0. In 3.0, laminas-view will use dependency injection via constructors so this method
+     *             will become redundant.
+     *
      * @return HelperPluginManager
      */
     public function setRenderer(Renderer\RendererInterface $renderer)
@@ -367,6 +377,9 @@ class HelperPluginManager extends AbstractPluginManager
     /**
      * Retrieve renderer instance
      *
+     * @deprecated  Since 2.40.0. In 3.0, laminas-view will use dependency injection via constructors so this method
+     *              will become redundant.
+     *
      * @return null|Renderer\RendererInterface
      */
     public function getRenderer()
@@ -376,6 +389,9 @@ class HelperPluginManager extends AbstractPluginManager
 
     /**
      * Inject a helper instance with the registered renderer
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0 without replacement. If you have a view helper that
+     *             needs a reference to the `PhpRenderer`, use dependency injection
      *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.
@@ -403,6 +419,9 @@ class HelperPluginManager extends AbstractPluginManager
 
     /**
      * Inject a helper instance with the registered translator
+     *
+     * @deprecated Since 2.38.0 This method will be removed in 3.0 without replacement. If your view helper requires a
+     *             translator, you should instead create a factory and inject the translator into the helper constructor
      *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.
@@ -460,6 +479,10 @@ class HelperPluginManager extends AbstractPluginManager
 
     /**
      * Inject a helper instance with the registered event manager
+     *
+     * @deprecated Since 2.40.0. This method will be removed in 3.0. If you need a reference to a global event manager,
+     *             Use a factory for your view helper and inject the `EventManager` into your helper at construction
+     *             time.
      *
      * @param ContainerInterface|HelperInterface $first helper instance
      *     under laminas-servicemanager v2, ContainerInterface under v3.

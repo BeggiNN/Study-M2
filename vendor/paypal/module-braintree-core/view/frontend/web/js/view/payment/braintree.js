@@ -3,11 +3,12 @@
  * See COPYING.txt for license details.
  */
 /*browser:true*/
-/*global define*/
 define([
     'uiComponent',
-    'Magento_Checkout/js/model/payment/renderer-list'
-], function (Component, rendererList) {
+    'Magento_Checkout/js/model/payment/renderer-list',
+    'Magento_Customer/js/customer-data',
+    'Magento_Ui/js/model/messageList'
+], function (Component, rendererList, customerData, globalMessageList) {
     'use strict';
 
     let config = window.checkoutConfig.payment,
@@ -38,7 +39,8 @@ define([
         });
     }
 
-    if (config[braintreeAchDirectDebit] && config[braintreeAchDirectDebit].isActive && config[braintreeAchDirectDebit].clientToken) {
+    if (config[braintreeAchDirectDebit] && config[braintreeAchDirectDebit].isActive
+        && config[braintreeAchDirectDebit].clientToken) {
         rendererList.push({
             type: braintreeAchDirectDebit,
             component: 'PayPal_Braintree/js/view/payment/method-renderer/ach'
@@ -53,5 +55,20 @@ define([
     }
 
     /** Add view logic here if needed */
-    return Component.extend({});
+    return Component.extend({
+        initialize: function () {
+            this._super();
+
+            let braintreeData = customerData.get('braintree')(),
+                errors = braintreeData.errors || [];
+
+            errors.forEach(function (error) {
+                globalMessageList.addErrorMessage({ 'message': error });
+            });
+
+            customerData.set('braintree', { errors: [] });
+
+            return this;
+        }
+    });
 });

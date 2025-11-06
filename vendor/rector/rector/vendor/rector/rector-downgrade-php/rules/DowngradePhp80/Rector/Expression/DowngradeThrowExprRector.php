@@ -22,9 +22,10 @@ use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\If_;
 use PhpParser\Node\Stmt\Return_;
-use Rector\Core\NodeManipulator\BinaryOpManipulator;
-use Rector\Core\Rector\AbstractRector;
 use Rector\NodeAnalyzer\CoalesceAnalyzer;
+use Rector\NodeManipulator\BinaryOpManipulator;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -41,13 +42,19 @@ final class DowngradeThrowExprRector extends AbstractRector
     private $coalesceAnalyzer;
     /**
      * @readonly
-     * @var \Rector\Core\NodeManipulator\BinaryOpManipulator
+     * @var \Rector\NodeManipulator\BinaryOpManipulator
      */
     private $binaryOpManipulator;
-    public function __construct(CoalesceAnalyzer $coalesceAnalyzer, BinaryOpManipulator $binaryOpManipulator)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    public function __construct(CoalesceAnalyzer $coalesceAnalyzer, BinaryOpManipulator $binaryOpManipulator, BetterNodeFinder $betterNodeFinder)
     {
         $this->coalesceAnalyzer = $coalesceAnalyzer;
         $this->binaryOpManipulator = $binaryOpManipulator;
+        $this->betterNodeFinder = $betterNodeFinder;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -161,8 +168,8 @@ CODE_SAMPLE
      */
     private function refactorReturn(Return_ $return) : ?array
     {
-        $throwExpr = $this->betterNodeFinder->findFirstInstanceOf($return, Throw_::class);
-        if (!$throwExpr instanceof Throw_) {
+        $throw = $this->betterNodeFinder->findFirstInstanceOf($return, Throw_::class);
+        if (!$throw instanceof Throw_) {
             return null;
         }
         if ($return->expr instanceof Coalesce) {
@@ -175,6 +182,13 @@ CODE_SAMPLE
         }
         if ($return->expr instanceof Throw_) {
             return [new Expression($return->expr)];
+        }
+        if ($return->expr instanceof Ternary) {
+            $if = $this->refactorTernary($return->expr, null);
+            if (!$if instanceof If_) {
+                return null;
+            }
+            return [$if, new Return_($return->expr->cond)];
         }
         return null;
     }

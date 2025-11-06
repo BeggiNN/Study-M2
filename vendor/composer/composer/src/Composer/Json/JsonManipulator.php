@@ -214,6 +214,14 @@ class JsonManipulator
             return $this->removeSubNode('scripts', substr($name, 8));
         }
 
+        if (strpos($name, 'autoload.') === 0) {
+            return $this->removeSubNode('autoload', substr($name, 9));
+        }
+
+        if (strpos($name, 'autoload-dev.') === 0) {
+            return $this->removeSubNode('autoload-dev', substr($name, 13));
+        }
+
         return $this->removeMainKey($name);
     }
 
@@ -280,15 +288,9 @@ class JsonManipulator
 
                 return $matches['start'] . $this->format($value, 1) . $matches['end'];
             }, $children);
-        } else {
-            Preg::match('#^{ (?P<leadingspace>\s*?) (?P<content>\S+.*?)? (?P<trailingspace>\s*) }$#sx', $children, $match);
-
-            $whitespace = '';
-            if (!empty($match['trailingspace'])) {
-                $whitespace = $match['trailingspace'];
-            }
-
-            if (!empty($match['content'])) {
+        } elseif (Preg::isMatch('#^\{(?P<leadingspace>\s*?)(?P<content>\S+.*?)?(?P<trailingspace>\s*)\}$#s', $children, $match)) {
+            $whitespace = $match['trailingspace'];
+            if (null !== $match['content']) {
                 if ($subName !== null) {
                     $value = [$subName => $value];
                 }
@@ -301,11 +303,7 @@ class JsonManipulator
                         $children
                     );
                 } else {
-                    $whitespace = '';
-                    if (!empty($match['leadingspace'])) {
-                        $whitespace = $match['leadingspace'];
-                    }
-
+                    $whitespace = $match['leadingspace'];
                     $children = Preg::replace(
                         '#^{'.$whitespace.'#',
                         addcslashes('{' . $whitespace . JsonFile::encode($name).': '.$this->format($value, 1) . ',' . $this->newline . $this->indent . $this->indent, '\\$'),
@@ -320,6 +318,8 @@ class JsonManipulator
                 // children present but empty
                 $children = '{' . $this->newline . $this->indent . $this->indent . JsonFile::encode($name).': '.$this->format($value, 1) . $whitespace . '}';
             }
+        } else {
+            throw new \LogicException('Nothing matched above for: '.$children);
         }
 
         $this->contents = Preg::replaceCallback($nodeRegex, static function ($m) use ($children): string {
@@ -403,23 +403,27 @@ class JsonManipulator
 
         // no child data left, $name was the only key in
         unset($match);
-        Preg::match('#^{ \s*? (?P<content>\S+.*?)? (?P<trailingspace>\s*) }$#sx', $childrenClean, $match);
-        if (empty($match['content'])) {
-            $newline = $this->newline;
-            $indent = $this->indent;
+        if (Preg::isMatch('#^\{\s*?(?P<content>\S+.*?)?(?P<trailingspace>\s*)\}$#s', $childrenClean, $match)) {
+            if (null === $match['content']) {
+                $newline = $this->newline;
+                $indent = $this->indent;
 
-            $this->contents = Preg::replaceCallback($nodeRegex, static function ($matches) use ($indent, $newline): string {
-                return $matches['start'] . '{' . $newline . $indent . '}' . $matches['end'];
-            }, $this->contents);
+                $this->contents = Preg::replaceCallback($nodeRegex, static function ($matches) use ($indent, $newline): string {
+                    return $matches['start'] . '{' . $newline . $indent . '}' . $matches['end'];
+                }, $this->contents);
 
-            // we have a subname, so we restore the rest of $name
-            if ($subName !== null) {
-                $curVal = json_decode($children, true);
-                unset($curVal[$name][$subName]);
-                $this->addSubNode($mainNode, $name, $curVal[$name]);
+                // we have a subname, so we restore the rest of $name
+                if ($subName !== null) {
+                    $curVal = json_decode($children, true);
+                    unset($curVal[$name][$subName]);
+                    if ($curVal[$name] === []) {
+                        $curVal[$name] = new \ArrayObject();
+                    }
+                    $this->addSubNode($mainNode, $name, $curVal[$name]);
+                }
+
+                return true;
             }
-
-            return true;
         }
 
         $this->contents = Preg::replaceCallback($nodeRegex, function ($matches) use ($name, $subName, $childrenClean): string {
@@ -427,7 +431,10 @@ class JsonManipulator
             if ($subName !== null) {
                 $curVal = json_decode($matches['content'], true);
                 unset($curVal[$name][$subName]);
-                $childrenClean = $this->format($curVal);
+                if ($curVal[$name] === []) {
+                    $curVal[$name] = new \ArrayObject();
+                }
+                $childrenClean = $this->format($curVal, 0, true);
             }
 
             return $matches['start'] . $childrenClean . $matches['end'];
@@ -534,12 +541,19 @@ class JsonManipulator
     /**
      * @param mixed $data
      */
-    public function format($data, int $depth = 0): string
+    public function format($data, int $depth = 0, bool $wasObject = false): string
     {
-        if (is_array($data)) {
-            reset($data);
+        if ($data instanceof \stdClass || $data instanceof \ArrayObject) {
+            $data = (array) $data;
+            $wasObject = true;
+        }
 
-            if (is_numeric(key($data))) {
+        if (is_array($data)) {
+            if (\count($data) === 0) {
+                return $wasObject ? '{' . $this->newline . str_repeat($this->indent, $depth + 1) . '}' : '[]';
+            }
+
+            if (array_is_list($data)) {
                 foreach ($data as $key => $val) {
                     $data[$key] = $this->format($val, $depth + 1);
                 }
@@ -550,7 +564,7 @@ class JsonManipulator
             $out = '{' . $this->newline;
             $elems = [];
             foreach ($data as $key => $val) {
-                $elems[] = str_repeat($this->indent, $depth + 2) . JsonFile::encode($key). ': '.$this->format($val, $depth + 1);
+                $elems[] = str_repeat($this->indent, $depth + 2) . JsonFile::encode((string) $key). ': '.$this->format($val, $depth + 1);
             }
 
             return $out . implode(','.$this->newline, $elems) . $this->newline . str_repeat($this->indent, $depth + 1) . '}';

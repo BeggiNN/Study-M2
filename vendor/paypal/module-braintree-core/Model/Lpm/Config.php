@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
 declare(strict_types=1);
 
 namespace PayPal\Braintree\Model\Lpm;
@@ -6,6 +10,7 @@ namespace PayPal\Braintree\Model\Lpm;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\UrlInterface;
 use Magento\Framework\View\Asset\Repository;
 use PayPal\Braintree\Gateway\Config\Config as BraintreeConfig;
 use PayPal\Braintree\Gateway\Request\PaymentDataBuilder;
@@ -17,88 +22,109 @@ use PayPal\Braintree\Model\StoreConfigResolver;
  */
 class Config extends \Magento\Payment\Gateway\Config\Config
 {
-    const KEY_ACTIVE = 'active';
-    const KEY_ALLOWED_METHODS = 'allowed_methods';
-    const KEY_TITLE = 'title';
+    public const KEY_ACTIVE = 'active';
+    public const KEY_ALLOWED_METHODS = 'allowed_methods';
+    public const KEY_TITLE = 'title';
+    public const KEY_FALLBACK_BUTTON_TEXT = 'fallback_button_text';
+    public const KEY_REDIRECT_ON_FAIL = 'redirect_on_fail';
+    private const LPM_FALLBACK_ACTION_URL = 'braintree/lpm/fallback';
 
-    const VALUE_BANCONTACT = 'bancontact';
-    const VALUE_EPS = 'eps';
-    const VALUE_GIROPAY = 'giropay';
-    const VALUE_IDEAL = 'ideal';
-    const VALUE_SOFORT = 'sofort';
-    const VALUE_MYBANK = 'mybank';
-    const VALUE_P24 = 'p24';
-    const VALUE_SEPA = 'sepa';
+    public const VALUE_BANCONTACT = 'bancontact';
+    public const VALUE_EPS = 'eps';
+    public const VALUE_IDEAL = 'ideal';
+    public const VALUE_MYBANK = 'mybank';
+    public const VALUE_P24 = 'p24';
+    public const VALUE_SEPA = 'sepa';
 
-    const LABEL_BANCONTACT = 'Bancontact';
-    const LABEL_EPS = 'EPS';
-    const LABEL_GIROPAY = 'giropay';
-    const LABEL_IDEAL = 'iDEAL';
-    const LABEL_SOFORT = 'Klarna Pay Now / SOFORT';
-    const LABEL_MYBANK = 'MyBank';
-    const LABEL_P24 = 'P24';
-    const LABEL_SEPA = 'SEPA/ELV Direct Debit';
+    public const LABEL_BANCONTACT = 'Bancontact';
+    public const LABEL_EPS = 'EPS';
+    public const LABEL_IDEAL = 'iDEAL';
+    public const LABEL_MYBANK = 'MyBank';
+    public const LABEL_P24 = 'P24';
+    public const LABEL_SEPA = 'SEPA/ELV Direct Debit';
 
-    const COUNTRIES_BANCONTACT = 'BE';
-    const COUNTRIES_EPS = 'AT';
-    const COUNTRIES_GIROPAY = 'DE';
-    const COUNTRIES_IDEAL = 'NL';
-    const COUNTRIES_SOFORT = ['AT', 'BE', 'DE', 'ES', 'IT', 'NL', 'GB'];
-    const COUNTRIES_MYBANK = 'IT';
-    const COUNTRIES_P24 = 'PL';
-    const COUNTRIES_SEPA = ['AT', 'DE'];
-
-    /**
-     * @var StoreConfigResolver
-     */
-    private $storeConfigResolver;
-
-    /**
-     * @var string
-     */
-    private $clientToken = '';
-
-    /**
-     * @var BraintreeAdapter
-     */
-    private $adapter;
-
-    /**
-     * @var BraintreeConfig
-     */
-    private $braintreeConfig;
+    private const COUNTRIES_BANCONTACT = 'BE';
+    private const COUNTRIES_EPS = 'AT';
+    private const COUNTRIES_IDEAL = 'NL';
+    private const COUNTRIES_MYBANK = 'IT';
+    private const COUNTRIES_P24 = 'PL';
+    private const COUNTRIES_SEPA = ['AT', 'DE'];
 
     /**
      * @var array
      */
-    private $allowedMethods;
+    private array $removedLPMs = [
+        'sofort',
+        'giropay',
+        'sepa'
+    ];
+
+    /**
+     * @var StoreConfigResolver
+     */
+    private StoreConfigResolver $storeConfigResolver;
+
+    /**
+     * @var string
+     */
+    private string $clientToken = '';
+
+    /**
+     * @var BraintreeAdapter
+     */
+    private BraintreeAdapter $adapter;
+
+    /**
+     * @var BraintreeConfig
+     */
+    private BraintreeConfig $braintreeConfig;
+
+    /**
+     * @var array
+     */
+    private array $allowedMethods;
 
     /**
      * @var Repository
      */
-    private $assetRepo;
+    private Repository $assetRepo;
 
     /**
+     * @var UrlInterface
+     */
+    private UrlInterface $urlBuilder;
+
+    /**
+     * @param BraintreeAdapter $adapter
+     * @param BraintreeConfig $braintreeConfig
      * @param StoreConfigResolver $storeConfigResolver
-     * {@inheritDoc}
+     * @param Repository $assetRepo
+     * @param UrlInterface $urlBuilder
+     * @param ScopeConfigInterface $scopeConfig
+     * @param string|null $methodCode
+     * @param string $pathPattern
      */
     public function __construct(
         BraintreeAdapter $adapter,
         BraintreeConfig $braintreeConfig,
         StoreConfigResolver $storeConfigResolver,
         Repository $assetRepo,
+        UrlInterface $urlBuilder,
         ScopeConfigInterface $scopeConfig,
-        $methodCode = null,
-        $pathPattern = \Magento\Payment\Gateway\Config\Config::DEFAULT_PATH_PATTERN
+        ?string $methodCode = null,
+        string $pathPattern = \Magento\Payment\Gateway\Config\Config::DEFAULT_PATH_PATTERN
     ) {
         parent::__construct($scopeConfig, $methodCode, $pathPattern);
         $this->adapter = $adapter;
         $this->braintreeConfig = $braintreeConfig;
         $this->storeConfigResolver = $storeConfigResolver;
         $this->assetRepo = $assetRepo;
+        $this->urlBuilder = $urlBuilder;
     }
 
     /**
+     * Is method active
+     *
      * @return bool
      * @throws InputException
      * @throws NoSuchEntityException
@@ -112,6 +138,8 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
+     * Get allowed methods
+     *
      * @return array
      * @throws InputException
      * @throws NoSuchEntityException
@@ -122,7 +150,7 @@ class Config extends \Magento\Payment\Gateway\Config\Config
             self::KEY_ALLOWED_METHODS,
             $this->storeConfigResolver->getStoreId()
         );
-        if (is_null($allowedMethodsValue)) {
+        if ($allowedMethodsValue === null) {
             return [];
         }
         $allowedMethods = explode(
@@ -131,17 +159,21 @@ class Config extends \Magento\Payment\Gateway\Config\Config
         );
 
         foreach ($allowedMethods as $allowedMethod) {
-            $this->allowedMethods[] = [
-                'method' => $allowedMethod,
-                'label' => constant('self::LABEL_' . strtoupper($allowedMethod)),
-                'countries' => constant('self::COUNTRIES_' . strtoupper($allowedMethod))
-            ];
+            if (!in_array($allowedMethod, $this->removedLPMs)) {
+                $this->allowedMethods[] = [
+                    'method' => $allowedMethod,
+                    'label' => constant('self::LABEL_' . strtoupper($allowedMethod)),
+                    'countries' => constant('self::COUNTRIES_' . strtoupper($allowedMethod))
+                ];
+            }
         }
 
         return $this->allowedMethods;
     }
 
     /**
+     * Get client token
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -163,35 +195,43 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     }
 
     /**
-     * @return mixed|null
+     * Get merchant account id
+     *
+     * @return string|null
      * @throws InputException
      * @throws NoSuchEntityException
      */
-    public function getMerchantAccountId()
+    public function getMerchantAccountId(): ?string
     {
         return $this->braintreeConfig->getMerchantAccountId();
     }
 
     /**
+     * Get payment icons
+     *
      * @return array
      */
     public function getPaymentIcons(): array
     {
-        $icons = [
-            self::VALUE_BANCONTACT => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_BANCONTACT . '.svg'),
-            self::VALUE_EPS => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_EPS . '.svg'),
-            self::VALUE_GIROPAY => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_GIROPAY . '.svg'),
-            self::VALUE_IDEAL => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_IDEAL . '.svg'),
-            self::VALUE_SOFORT => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_SOFORT . '.svg'),
-            self::VALUE_MYBANK => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_MYBANK . '.svg'),
-            self::VALUE_P24 => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_P24 . '.svg'),
-            self::VALUE_SEPA => $this->assetRepo->getUrl('PayPal_Braintree::images/' . self::VALUE_SEPA . '.svg')
+        return [
+            self::VALUE_BANCONTACT => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_BANCONTACT . '.svg'),
+            self::VALUE_EPS => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_EPS . '.svg'),
+            self::VALUE_IDEAL => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_IDEAL . '.svg'),
+            self::VALUE_MYBANK => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_MYBANK . '.svg'),
+            self::VALUE_P24 => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_P24 . '.svg'),
+            self::VALUE_SEPA => $this->assetRepo
+                ->getUrl('PayPal_Braintree::images/' . self::VALUE_SEPA . '.svg')
         ];
-
-        return $icons;
     }
 
     /**
+     * Get title
+     *
      * @return string
      * @throws InputException
      * @throws NoSuchEntityException
@@ -200,6 +240,46 @@ class Config extends \Magento\Payment\Gateway\Config\Config
     {
         return $this->getValue(
             self::KEY_TITLE,
+            $this->storeConfigResolver->getStoreId()
+        );
+    }
+
+    /**
+     * Get fallback url
+     *
+     * @return string
+     */
+    public function getFallbackUrl(): string
+    {
+        return $this->urlBuilder->getDirectUrl(self::LPM_FALLBACK_ACTION_URL);
+    }
+
+    /**
+     * Get fallback button text
+     *
+     * @return string
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function getFallbackButtonText(): string
+    {
+        return $this->getValue(
+            self::KEY_FALLBACK_BUTTON_TEXT,
+            $this->storeConfigResolver->getStoreId()
+        );
+    }
+
+    /**
+     * Get redirect url on fail
+     *
+     * @return mixed|null
+     * @throws InputException
+     * @throws NoSuchEntityException
+     */
+    public function getRedirectUrlOnFail(): mixed
+    {
+        return $this->getValue(
+            self::KEY_REDIRECT_ON_FAIL,
             $this->storeConfigResolver->getStoreId()
         );
     }

@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Gateway\Request;
 
 use PayPal\Braintree\Gateway\Request\ChannelDataBuilder;
@@ -15,7 +16,7 @@ class ChannelDataBuilderTest extends \PHPUnit\Framework\TestCase
     /**
      * @var ChannelDataBuilder
      */
-    private $builder;
+    private ChannelDataBuilder $builder;
 
     /**
      * @inheritdoc
@@ -25,22 +26,11 @@ class ChannelDataBuilderTest extends \PHPUnit\Framework\TestCase
         $this->builder = new ChannelDataBuilder();
     }
 
-    /**
-     * @param array $expected
-     * @covers \PayPal\Braintree\Gateway\Request\ChannelDataBuilder::build
-     * @dataProvider buildDataProvider
-     */
-    public function testBuild(array $expected)
+    public function testBuild()
     {
+        $expected = [
+            'channel' => 'Magento2GeneBT'
+        ];
         self::assertEquals($expected, $this->builder->build([]));
-    }
-
-    /**
-     * Get list of variations for build test
-     * @return string
-     */
-    public function buildDataProvider()
-    {
-        return 'Magento2GeneBT';
     }
 }

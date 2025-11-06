@@ -1,19 +1,19 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Model\Report;
 
 use Braintree\Transaction;
 use Braintree\Transaction\PayPalDetails;
-use DateTime;
 use PayPal\Braintree\Model\Report\Row\TransactionMap;
 use Magento\Framework\Api\AttributeValue;
 use Magento\Framework\Api\AttributeValueFactory;
 use Magento\Framework\Phrase;
 use Magento\Framework\Phrase\RendererInterface;
-use Magento\Store\Model\StoreManagerInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
  * Test for class \PayPal\Braintree\Model\Report\\Row\TransactionMap
@@ -21,24 +21,24 @@ use Magento\Store\Model\StoreManagerInterface;
 class TransactionMapTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var Transaction|\PHPUnit\Framework\MockObject\MockObject
+     * @var Transaction|MockObject
      */
-    private $transactionStub;
+    private Transaction|MockObject $transactionStub;
 
     /**
-     * @var AttributeValueFactory|\PHPUnit\Framework\MockObject\MockObject
+     * @var AttributeValueFactory|MockObject
      */
-    private $attributeValueFactoryMock;
+    private AttributeValueFactory|MockObject $attributeValueFactoryMock;
 
     /**
-     * @var RendererInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RendererInterface|MockObject
      */
-    private $defaultRenderer;
+    private RendererInterface|MockObject $defaultRenderer;
 
     /**
-     * @var RendererInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RendererInterface|MockObject
      */
-    private $rendererMock;
+    private RendererInterface|MockObject $rendererMock;
 
     /**
      * Setup
@@ -46,7 +46,7 @@ class TransactionMapTest extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         $this->attributeValueFactoryMock = $this->getMockBuilder(AttributeValueFactory::class)
-            ->setMethods(['create'])
+            ->onlyMethods(['create'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->defaultRenderer = Phrase::getRenderer();
@@ -60,7 +60,7 @@ class TransactionMapTest extends \PHPUnit\Framework\TestCase
      * @param array $transaction
      * @dataProvider getConfigDataProvider
      */
-    public function testGetCustomAttributes($transaction)
+    public function testGetCustomAttributes(array $transaction)
     {
         $this->transactionStub = Transaction::factory($transaction);
 
@@ -122,7 +122,7 @@ class TransactionMapTest extends \PHPUnit\Framework\TestCase
      * @return array
      * @throws \Exception
      */
-    public function getConfigDataProvider()
+    public static function getConfigDataProvider()
     {
         return [
             [

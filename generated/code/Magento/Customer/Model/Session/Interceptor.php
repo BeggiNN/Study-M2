@@ -251,6 +251,15 @@ class Interceptor extends \Magento\Customer\Model\Session implements \Magento\Fr
     /**
      * {@inheritdoc}
      */
+    public function registerShutdown()
+    {
+        $pluginInfo = $this->pluginList->getNext($this->subjectType, 'registerShutdown');
+        return $pluginInfo ? $this->___callPlugins('registerShutdown', func_get_args(), $pluginInfo) : parent::registerShutdown();
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function isSessionExists()
     {
         $pluginInfo = $this->pluginList->getNext($this->subjectType, 'isSessionExists');

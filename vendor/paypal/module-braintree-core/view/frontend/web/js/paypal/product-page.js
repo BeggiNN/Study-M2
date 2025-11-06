@@ -1,35 +1,76 @@
-define(
-    ['PayPal_Braintree/js/paypal/button', 'jquery'],
-    function (button, $) {
-        'use strict';
+define([
+    'jquery',
+    'Magento_Customer/js/customer-data',
+    'PayPal_Braintree/js/helper/check-guest-checkout',
+    'PayPal_Braintree/js/paypal/button',
+], function ($, customerData, checkGuestCheckout, button) {
+    'use strict';
 
-        return button.extend({
+    return button.extend({
+        defaults: {
+            branding: true,
+            label: 'buynow',
+            productFormSelector: '#product_addtocart_form',
+            productAddedToCart: false,
+            addToCartPromise: null,
+        },
 
-            defaults: {
-                label: 'buynow',
-                branding: true,
-            },
-
-            /**
-             * The validation on the add-to-cart form is done after the PayPal window has opened.
-             * This is because the validate method exposed by the PP Button requires an event to disable/enable the button.
-             * We can't fire an event due to the way the mage.validation widget works and we can't do something gross like
-             * an interval because the validation() method shows the error messages and focuses the user's input on the
-             * first erroring input field.
-             * @param payload
-             * @returns {*}
-             */
-            beforeSubmit: function (payload) {
-                var form = $("#product_addtocart_form");
-
-                if (!(form.validation() && form.validation('isValid'))) {
+        createOrder: function (paypalCheckoutInstance, currentElement) {
+            return this.addToCartPromise.then((cartData) => {
+                if (!checkGuestCheckout()) {
                     return false;
                 }
 
-                payload.additionalData = form.serialize();
+                return paypalCheckoutInstance.createPayment({
+                    amount: cartData.subtotalAmount,
+                    locale: currentElement.data('locale'),
+                    currency: currentElement.data('currency'),
+                    flow: 'checkout',
+                    enableShippingAddress: true,
+                    displayName: currentElement.data('displayname'),
+                    shippingOptions: []
+                });
+            });
+        },
 
-                return payload;
+        /**
+         * On click add the current product to the quote and proceed with PayPal checkout.
+         */
+        onClick: function (data, actions) {
+            const isAllowed = this._super();
+
+            if (!isAllowed) {
+                return actions.reject();
             }
-        });
-    }
-);
+
+            let $form = $(this.productFormSelector);
+
+            if (!this.productAddedToCart) {
+                // Attach cart subscription to listen for the successful add to cart.
+                const cart = customerData.get('cart');
+
+                $form.trigger('submit');
+
+                if ($form.validation('isValid')) {
+                    $('body').trigger('processStart');
+
+                    this.addToCartPromise = new Promise((resolve) => {
+                        cart.subscribe((cartData) => {
+                            this.setQuoteId(cartData.braintree_masked_id);
+                            this.productAddedToCart = true;
+                            $('body').trigger('processStop');
+                            actions.resolve();
+                            resolve(cartData);
+                        });
+                    });
+
+                    return;
+                }
+
+                return actions.reject();
+            }
+
+            return actions.resolve();
+        }
+    });
+});

@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2017 Adobe
+ * All Rights Reserved.
  */
+
 namespace Magento\FunctionalTestingFramework\Config;
 
 /**
@@ -48,9 +49,9 @@ class Reader extends \Magento\FunctionalTestingFramework\Config\Reader\Filesyste
         $this->fileName = $fileName;
         $this->idAttributes = array_replace($this->idAttributes, $idAttributes);
         $this->schemaFile = $schemaLocator->getSchema();
-        $this->isValidated = $validationState->isValidated();
-        $this->perFileSchema = $schemaLocator->getPerFileSchema() &&
-        $this->isValidated ? $schemaLocator->getPerFileSchema() : null;
+        $isValidated = $validationState->isValidated();
+        $this->perFileSchema = $schemaLocator->getPerFileSchema() && $isValidated ?
+            $schemaLocator->getPerFileSchema() : null;
         $this->domDocumentClass = $domDocumentClass;
         $this->defaultScope = $defaultScope;
     }

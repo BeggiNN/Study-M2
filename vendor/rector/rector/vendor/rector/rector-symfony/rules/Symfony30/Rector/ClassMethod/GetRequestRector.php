@@ -11,8 +11,9 @@ use PhpParser\Node\Param;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Class_;
 use PhpParser\Node\Stmt\ClassMethod;
-use Rector\Core\Exception\ShouldNotHappenException;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Exception\ShouldNotHappenException;
+use Rector\PhpParser\Node\BetterNodeFinder;
+use Rector\Rector\AbstractRector;
 use Rector\Symfony\Bridge\NodeAnalyzer\ControllerMethodAnalyzer;
 use Rector\Symfony\TypeAnalyzer\ControllerAnalyzer;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
@@ -33,6 +34,11 @@ final class GetRequestRector extends AbstractRector
      */
     private $controllerAnalyzer;
     /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\BetterNodeFinder
+     */
+    private $betterNodeFinder;
+    /**
      * @var string
      */
     private const REQUEST_CLASS = 'Symfony\\Component\\HttpFoundation\\Request';
@@ -40,10 +46,11 @@ final class GetRequestRector extends AbstractRector
      * @var string|null
      */
     private $requestVariableAndParamName;
-    public function __construct(ControllerMethodAnalyzer $controllerMethodAnalyzer, ControllerAnalyzer $controllerAnalyzer)
+    public function __construct(ControllerMethodAnalyzer $controllerMethodAnalyzer, ControllerAnalyzer $controllerAnalyzer, BetterNodeFinder $betterNodeFinder)
     {
         $this->controllerMethodAnalyzer = $controllerMethodAnalyzer;
         $this->controllerAnalyzer = $controllerAnalyzer;
+        $this->betterNodeFinder = $betterNodeFinder;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -194,7 +201,7 @@ CODE_SAMPLE
         }
         $fullyQualified = new FullyQualified(self::REQUEST_CLASS);
         $classMethod->params[] = new Param(new Variable($this->getRequestVariableAndParamName()), null, $fullyQualified);
-        $this->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($classMethod) {
+        $this->traverseNodesWithCallable((array) $classMethod->stmts, function (Node $node) use($classMethod) : ?Variable {
             if (!$node instanceof MethodCall) {
                 return null;
             }

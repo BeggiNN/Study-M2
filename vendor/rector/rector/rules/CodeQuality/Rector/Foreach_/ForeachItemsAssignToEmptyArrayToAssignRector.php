@@ -13,8 +13,9 @@ use PhpParser\Node\Stmt\Expression;
 use PhpParser\Node\Stmt\Foreach_;
 use PhpParser\NodeTraverser;
 use Rector\CodeQuality\NodeAnalyzer\ForeachAnalyzer;
-use Rector\Core\Contract\PhpParser\Node\StmtsAwareInterface;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Contract\PhpParser\Node\StmtsAwareInterface;
+use Rector\PhpParser\Node\Value\ValueResolver;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -27,9 +28,15 @@ final class ForeachItemsAssignToEmptyArrayToAssignRector extends AbstractRector
      * @var \Rector\CodeQuality\NodeAnalyzer\ForeachAnalyzer
      */
     private $foreachAnalyzer;
-    public function __construct(ForeachAnalyzer $foreachAnalyzer)
+    /**
+     * @readonly
+     * @var \Rector\PhpParser\Node\Value\ValueResolver
+     */
+    private $valueResolver;
+    public function __construct(ForeachAnalyzer $foreachAnalyzer, ValueResolver $valueResolver)
     {
         $this->foreachAnalyzer = $foreachAnalyzer;
+        $this->valueResolver = $valueResolver;
     }
     public function getRuleDefinition() : RuleDefinition
     {
@@ -112,6 +119,10 @@ CODE_SAMPLE
                     return NodeTraverser::STOP_TRAVERSAL;
                 }
             }
+            if ($subNode instanceof Assign && $subNode->var instanceof Variable && $this->isNames($subNode->var, $emptyArrayVariables) && !$this->valueResolver->isValue($subNode->expr, [])) {
+                $isAppend = \true;
+                return NodeTraverser::STOP_TRAVERSAL;
+            }
             return null;
         });
         return $isAppend;
@@ -125,7 +136,7 @@ CODE_SAMPLE
         if (!$assignVariableExpr instanceof Expr) {
             return \true;
         }
-        $foreachedExprType = $this->getType($foreach->expr);
+        $foreachedExprType = $this->nodeTypeResolver->getNativeType($foreach->expr);
         // only arrays, not traversable/iterable
         if (!$foreachedExprType->isArray()->yes()) {
             return \true;

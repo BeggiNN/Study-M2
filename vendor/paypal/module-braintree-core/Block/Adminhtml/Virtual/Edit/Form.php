@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Block\Adminhtml\Virtual\Edit;
 
@@ -8,6 +13,8 @@ use Magento\Framework\Exception\LocalizedException;
 class Form extends Generic
 {
     /**
+     * Prepare form
+     *
      * @return Generic
      * @throws LocalizedException
      */

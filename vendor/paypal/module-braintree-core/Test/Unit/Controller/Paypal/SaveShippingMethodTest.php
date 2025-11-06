@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 namespace PayPal\Braintree\Test\Unit\Controller\Paypal;
 
 use Magento\Quote\Model\Quote;
@@ -20,66 +21,67 @@ use PayPal\Braintree\Block\Paypal\Checkout\Review;
 use PayPal\Braintree\Gateway\Config\PayPal\Config;
 use PayPal\Braintree\Controller\Paypal\SaveShippingMethod;
 use PayPal\Braintree\Model\Paypal\Helper\ShippingMethodUpdater;
+use PHPUnit\Framework\MockObject\MockObject;
 
 /**
- * @see \PayPal\Braintree\Controller\Paypal\SaveShippingMethod
+ * @see SaveShippingMethod
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var ShippingMethodUpdater|\PHPUnit\Framework\MockObject\MockObject
+     * @var ShippingMethodUpdater|MockObject
      */
-    private $shippingMethodUpdaterMock;
+    private ShippingMethodUpdater|MockObject $shippingMethodUpdaterMock;
 
     /**
-     * @var Config|\PHPUnit\Framework\MockObject\MockObject
+     * @var Config|MockObject
      */
-    private $configMock;
+    private Config|MockObject $configMock;
 
     /**
-     * @var Session|\PHPUnit\Framework\MockObject\MockObject
+     * @var Session|MockObject
      */
-    private $checkoutSessionMock;
+    private Session|MockObject $checkoutSessionMock;
 
     /**
-     * @var RequestInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RequestInterface|MockObject
      */
-    private $requestMock;
+    private RequestInterface|MockObject $requestMock;
 
     /**
-     * @var ResponseInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var ResponseInterface|MockObject
      */
-    private $responseMock;
+    private ResponseInterface|MockObject $responseMock;
 
     /**
-     * @var RedirectInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var RedirectInterface|MockObject
      */
-    protected $redirectMock;
+    protected RedirectInterface|MockObject $redirectMock;
 
     /**
-     * @var UrlInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var UrlInterface|MockObject
      */
-    private $urlMock;
+    private UrlInterface|MockObject $urlMock;
 
     /**
-     * @var ResultFactory|\PHPUnit\Framework\MockObject\MockObject
+     * @var ResultFactory|MockObject
      */
-    private $resultFactoryMock;
+    private ResultFactory|MockObject $resultFactoryMock;
 
     /**
-     * @var ManagerInterface|\PHPUnit\Framework\MockObject\MockObject
+     * @var ManagerInterface|MockObject
      */
-    private $messageManagerMock;
+    private ManagerInterface|MockObject $messageManagerMock;
 
     /**
      * @var SaveShippingMethod
      */
-    private $saveShippingMethod;
+    private SaveShippingMethod $saveShippingMethod;
 
     protected function setUp(): void
     {
-        /** @var Context|\PHPUnit\Framework\MockObject\MockObject $contextMock */
+        /** @var Context|MockObject $contextMock */
         $contextMock = $this->getMockBuilder(Context::class)
             ->disableOriginalConstructor()
             ->getMock();
@@ -90,7 +92,7 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
         $this->urlMock = $this->getMockBuilder(UrlInterface::class)
             ->getMockForAbstractClass();
         $this->responseMock = $this->getMockBuilder(ResponseInterface::class)
-            ->setMethods(['setBody'])
+            ->addMethods(['setBody'])
             ->getMockForAbstractClass();
         $this->resultFactoryMock = $this->getMockBuilder(ResultFactory::class)
             ->disableOriginalConstructor()
@@ -222,7 +224,10 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
 
         $this->messageManagerMock->expects(self::once())
             ->method('addExceptionMessage')
-            ->with(self::isInstanceOf('\InvalidArgumentException'), 'We can\'t initialize checkout.');
+            ->with(
+                self::isInstanceOf('\Magento\Framework\Exception\InvalidArgumentException'),
+                'We can\'t initialize checkout.'
+            );
 
         $this->urlMock->expects(self::once())
             ->method('getUrl')
@@ -262,7 +267,10 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
 
         $this->messageManagerMock->expects(self::once())
             ->method('addExceptionMessage')
-            ->with(self::isInstanceOf('\InvalidArgumentException'), 'We can\'t initialize checkout.');
+            ->with(
+                self::isInstanceOf('\Magento\Framework\Exception\InvalidArgumentException'),
+                'We can\'t initialize checkout.'
+            );
 
         $this->urlMock->expects(self::once())
             ->method('getUrl')
@@ -277,9 +285,9 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Review|\PHPUnit\Framework\MockObject\MockObject
+     * @return Review|MockObject
      */
-    private function getBlockMock()
+    private function getBlockMock(): MockObject|Review
     {
         return $this->getMockBuilder(Review::class)
             ->disableOriginalConstructor()
@@ -287,9 +295,9 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Layout|\PHPUnit\Framework\MockObject\MockObject
+     * @return Layout|MockObject
      */
-    private function getLayoutMock()
+    private function getLayoutMock(): Layout|MockObject
     {
         return $this->getMockBuilder(Layout::class)
             ->disableOriginalConstructor()
@@ -297,9 +305,9 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Quote|\PHPUnit\Framework\MockObject\MockObject
+     * @return Quote|MockObject
      */
-    private function getQuoteMock()
+    private function getQuoteMock(): MockObject|Quote
     {
         return $this->getMockBuilder(Quote::class)
             ->disableOriginalConstructor()
@@ -307,9 +315,9 @@ class SaveShippingMethodTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
-     * @return Page|\PHPUnit\Framework\MockObject\MockObject
+     * @return Page|MockObject
      */
-    private function getResponsePageMock()
+    private function getResponsePageMock(): Page|MockObject
     {
         return $this->getMockBuilder(Page::class)
             ->disableOriginalConstructor()

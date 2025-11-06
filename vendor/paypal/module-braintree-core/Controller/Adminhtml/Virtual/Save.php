@@ -1,4 +1,9 @@
 <?php
+/**
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
+ */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Controller\Adminhtml\Virtual;
 
@@ -14,17 +19,17 @@ use Magento\Framework\Exception\LocalizedException;
 
 class Save extends Action
 {
-    const ADMIN_RESOURCE = 'Magento_Sales::create';
+    public const ADMIN_RESOURCE = 'Magento_Sales::create';
 
     /**
      * @var BraintreeAdapter
      */
-    protected $braintreeAdapter;
+    protected BraintreeAdapter $braintreeAdapter;
 
     /**
      * @var ChannelDataBuilder
      */
-    protected $channelDataBuilder;
+    protected ChannelDataBuilder $channelDataBuilder;
 
     /**
      * Save constructor.
@@ -63,7 +68,7 @@ class Save extends Action
             $response = $this->braintreeAdapter->sale($request);
             if ($response instanceof Successful) {
                 $message = sprintf(
-                    __('A payment has been made on the %s card ending %s for %s %s (Braintree Transaction ID: %s)'),
+                    'A payment has been made on the %s card ending %s for %s %s (Braintree Transaction ID: %s)',
                     $response->transaction->creditCard['cardType'],
                     $response->transaction->creditCard['last4'],
                     $response->transaction->currencyIsoCode,

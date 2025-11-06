@@ -1,23 +1,41 @@
 <?php
 namespace Gt\Dom\Test;
 
+use Gt\Dom\Attr;
+use Gt\Dom\Element;
 use Gt\Dom\HTMLDocument;
-use Gt\Dom\Test\Helper\Helper;
-use Gt\Dom\TokenList;
 use PHPUnit\Framework\TestCase;
 
 class AttrTest extends TestCase {
-	public function testAttrMove() {
-		$document = new HTMLDocument(Helper::DOCS_ATTR_GETATTRIBUTENODE);
-		$arduinoElement = $document->getElementById("arduino");
-		$raspberryPiElement = $document->getElementById("raspberry-pi");
+	public function testPrefixNoNamespace():void {
+		$document = new HTMLDocument();
+		$testElement = $document->createElement("test-element");
+		$testElement->innerHTML = "<example abc:example='123'></example>";
+		$document->body->appendChild($testElement);
+		$node = $testElement->children[0];
+		$sut = $node->attributes[0];
+		self::assertEquals("", $sut->prefix);
+		self::assertEquals("abc:example", $sut->name);
+	}
 
-		// Reference the attribute, remove it from its current parent, reattach it to new parent.
-		$attribute = $raspberryPiElement->getAttributeNode("class");
-		$raspberryPiElement->removeAttributeNode($attribute);
-		$arduinoElement->setAttributeNode($attribute);
+	public function testOwnerElementEmpty():void {
+		$document = new HTMLDocument();
+		$root = $document->createElement("root");
+		$document->body->appendChild($root);
+		$sut = $document->createAttribute("example");
+		self::assertNull($sut->ownerElement);
+	}
+//
+	public function testSpecified():void {
+		$sut = (new HTMLDocument())->createAttribute("example");
+// Another weird DOM quirk, but again, true to spec. Always true.
+		self::assertTrue($sut->specified);
+	}
 
-		$this->assertSame($attribute, $arduinoElement->getAttributeNode("class"));
-		$this->assertFalse($raspberryPiElement->getAttributeNode("class"));
+	public function testValue():void {
+		$sut = (new HTMLDocument())->createAttribute("example");
+		self::assertEquals("", $sut->value);
+		$sut->value = "test";
+		self::assertEquals("test", $sut->value);
 	}
 }

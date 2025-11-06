@@ -3,6 +3,7 @@
   <component name="PHPUnit">
     <option name="directories">
       <list>
+        <option value="$PROJECT_DIR$/app/code/Perspective/CheckoutField/Test" />
         <option value="$PROJECT_DIR$/setup/src/Magento/Setup/Test" />
         <option value="$PROJECT_DIR$/vendor/magento/framework/Test" />
         <option value="$PROJECT_DIR$/vendor/magento/framework/DB/Test" />

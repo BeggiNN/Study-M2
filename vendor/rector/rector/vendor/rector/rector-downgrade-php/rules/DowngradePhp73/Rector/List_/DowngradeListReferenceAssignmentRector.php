@@ -15,7 +15,7 @@ use PhpParser\Node\Expr\Variable;
 use PhpParser\Node\Scalar\LNumber;
 use PhpParser\Node\Scalar\String_;
 use PhpParser\Node\Stmt\Expression;
-use Rector\Core\Rector\AbstractRector;
+use Rector\Rector\AbstractRector;
 use Symplify\RuleDocGenerator\ValueObject\CodeSample\CodeSample;
 use Symplify\RuleDocGenerator\ValueObject\RuleDefinition;
 /**
@@ -77,8 +77,9 @@ CODE_SAMPLE
     }
     /**
      * @param Expression $node
+     * @return Node[]|null
      */
-    public function refactor(Node $node)
+    public function refactor(Node $node) : ?array
     {
         if (!$node->expr instanceof Assign) {
             return null;

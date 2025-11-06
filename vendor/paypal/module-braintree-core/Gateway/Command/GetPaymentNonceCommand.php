@@ -1,8 +1,9 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
+declare(strict_types=1);
 
 namespace PayPal\Braintree\Gateway\Command;
 
@@ -76,7 +77,8 @@ class GetPaymentNonceCommand implements CommandInterface
         $publicHash = $this->subjectReader->readPublicHash($commandSubject);
         $customerId = $this->subjectReader->readCustomerId($commandSubject);
         $paymentToken = $this->tokenManagement->getByPublicHash($publicHash, $customerId);
-        if (!$paymentToken) {
+
+        if (!$paymentToken || !$paymentToken->getIsActive()) {
             throw new LocalizedException(__('No available payment tokens'));
         }
 

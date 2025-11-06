@@ -1,7 +1,7 @@
 <?php
 /**
- * Copyright © Magento, Inc. All rights reserved.
- * See COPYING.txt for license details.
+ * Copyright 2020 Adobe
+ * All Rights Reserved.
  */
 
 namespace Magento\FunctionalTestingFramework\DataTransport\Protocol;
@@ -47,7 +47,7 @@ interface CurlInterface
      * @param string|null $returnIndex
      * @return string|array
      */
-    public function read($successRegex = null, $returnRegex = null, $returnIndex = null);
+    public function read(?string $successRegex = null, ?string  $returnRegex = null, ?string  $returnIndex = null);
 
     /**
      * Close the connection to the server.
