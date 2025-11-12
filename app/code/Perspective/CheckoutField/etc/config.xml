@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <checkout_field>
+            <vat_validation>
+                <enabled>1</enabled>
+                <required>0</required>
+                <allowed_countries>AT,BE,BG,HR,CY,CZ,DK,EE,FI,FR,DE,GR,HU,IE,IT,LV,LT,LU,MT,NL,PL,PT,RO,SK,SI,ES,SE</allowed_countries>
+                <show_in_order_details>1</show_in_order_details>
+            </vat_validation>
+        </checkout_field>
+    </default>
+</config>
