@@ -20,8 +20,10 @@ class GuestShippingInformationManagementPlugin
     }
 
     /**
+     * Save VAT number before saving guest shipping address information
+     *
      * @param GuestShippingInformationManagement $subject
-     * @param $cartId
+     * @param string $cartId
      * @param ShippingInformationInterface $addressInformation
      * @throws NoSuchEntityException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)

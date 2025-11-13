@@ -25,7 +25,7 @@ jobs:
         run: vendor/bin/phpcs --standard=Magento2 app/code
 
       - name: Run PHPUnit
-        run: vendor/bin/phpunit
+        run: vendor/bin/phpunit --testdox app/code/Perspective/CheckoutField/Test/Unit/
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest

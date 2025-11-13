@@ -20,8 +20,10 @@ class ShippingInformationManagementPlugin
     }
 
     /**
+     * Save VAT number before saving shipping address information
+     *
      * @param ShippingInformationManagement $subject
-     * @param $cartId
+     * @param int $cartId
      * @param ShippingInformationInterface $addressInformation
      * @throws NoSuchEntityException
      * @SuppressWarnings(PHPMD.UnusedFormalParameter)

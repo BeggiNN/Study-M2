@@ -20,6 +20,8 @@ class SaveVatNumberObserver implements ObserverInterface
     }
 
     /**
+     * Execute observer to save VAT number from quote to order
+     *
      * @param EventObserver $observer
      * @return void
      * @throws NoSuchEntityException

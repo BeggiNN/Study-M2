@@ -11,6 +11,13 @@ class VatCheckClientFactory
 {
     private const XML_PATH_BASE_URL = 'web/unsecure/base_url';
 
+    /**
+     * Constructor
+     *
+     * @param ObjectManagerInterface $objectManager
+     * @param ScopeConfigInterface $scopeConfig
+     * @param LoggerInterface $logger
+     */
     public function __construct(
         private readonly ObjectManagerInterface $objectManager,
         private readonly ScopeConfigInterface $scopeConfig,

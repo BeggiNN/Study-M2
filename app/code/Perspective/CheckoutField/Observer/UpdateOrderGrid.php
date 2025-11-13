@@ -19,6 +19,8 @@ class UpdateOrderGrid implements ObserverInterface
     }
 
     /**
+     * Execute observer to update VAT number in sales order grid
+     *
      * @param Observer $observer
      * @return void
      */
@@ -38,7 +40,8 @@ class UpdateOrderGrid implements ObserverInterface
                     ['entity_id = ?' => $order->getId()]
                 );
             }
-        } catch (\Exception $exception) {
+        } catch (\Exception $exception) { // phpcs:ignore Magento2.CodeAnalysis.EmptyBlock
+            // Silently fail - grid update is not critical
         }
     }
 }

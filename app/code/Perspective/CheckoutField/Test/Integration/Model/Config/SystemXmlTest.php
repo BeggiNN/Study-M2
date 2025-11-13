@@ -85,7 +85,9 @@ class SystemXmlTest extends TestCase
 
         $requiredFields = ['enabled', 'required', 'allowed_countries', 'show_in_order_details'];
         foreach ($requiredFields as $fieldId) {
-            $fields = $xml->xpath("//section[@id='checkout_field']//group[@id='vat_validation']//field[@id='$fieldId']");
+            $fields = $xml->xpath(
+                "//section[@id='checkout_field']//group[@id='vat_validation']//field[@id='$fieldId']"
+            );
             $this->assertNotEmpty($fields, "Field $fieldId does not exist in vat_validation group");
         }
     }
@@ -147,13 +149,18 @@ class SystemXmlTest extends TestCase
         $systemXmlPath = $this->getSystemXmlPath();
         $xml = simplexml_load_file($systemXmlPath);
         $requiredFieldDepends = $xml->xpath(
-            "//section[@id='checkout_field']//group[@id='vat_validation']//field[@id='required']//depends/field[@id='enabled']"
+            "//section[@id='checkout_field']//group[@id='vat_validation']" .
+            "//field[@id='required']//depends/field[@id='enabled']"
         );
         $this->assertNotEmpty($requiredFieldDepends, 'Field "required" should depend on "enabled" field');
         $allowedCountriesDepends = $xml->xpath(
-            "//section[@id='checkout_field']//group[@id='vat_validation']//field[@id='allowed_countries']//depends/field[@id='enabled']"
+            "//section[@id='checkout_field']//group[@id='vat_validation']" .
+            "//field[@id='allowed_countries']//depends/field[@id='enabled']"
         );
-        $this->assertNotEmpty($allowedCountriesDepends, 'Field "allowed_countries" should depend on "enabled" field');
+        $this->assertNotEmpty(
+            $allowedCountriesDepends,
+            'Field "allowed_countries" should depend on "enabled" field'
+        );
     }
 
     /**

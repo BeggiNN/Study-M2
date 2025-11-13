@@ -11,6 +11,8 @@ class LayoutProcessorPlugin
     public const VAT_NUMBER_ATTRIBUTE_CODE = 'vat_number';
 
     /**
+     * Add VAT number field to checkout layout
+     *
      * @param LayoutProcessor $subject
      * @param array $jsLayout
      * @return array

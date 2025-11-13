@@ -28,6 +28,8 @@ class TestSoapVat extends Command
     }
 
     /**
+     * Configure the command
+     *
      * @return void
      */
     protected function configure(): void
@@ -52,6 +54,13 @@ class TestSoapVat extends Command
             );
     }
 
+    /**
+     * Execute the command
+     *
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @return int
+     */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $countryCode = $input->getArgument(self::ARGUMENT_COUNTRY);
