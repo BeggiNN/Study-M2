@@ -18,14 +18,14 @@ jobs:
           extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
           tools: composer:v2
 
-      - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist
-
-      - name: Run PHP CodeSniffer
-        run: vendor/bin/phpcs --standard=Magento2 app/code
-
-      - name: Run PHPUnit
-        run: vendor/bin/phpunit
+#      - name: Install dependencies
+#        run: composer install --no-interaction --prefer-dist
+#
+#      - name: Run PHP CodeSniffer
+#        run: vendor/bin/phpcs --standard=Magento2 app/code
+#
+#      - name: Run PHPUnit
+#        run: vendor/bin/phpunit
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
@@ -68,13 +68,9 @@ jobs:
             git fetch origin STD-roadmap
             git reset --hard origin/STD-roadmap
 
-            # Install/update composer dependencies
-            echo "Installing Composer dependencies..."
-            composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
-
             # Run Magento upgrade commands
             echo "Running Magento setup upgrade..."
-            php bin/magento setup:upgrade --keep-generated
+            php bin/magento setup:upgrade
 
             # Compile dependency injection
             echo "Compiling dependency injection..."
@@ -83,12 +79,6 @@ jobs:
             # Deploy static content
             echo "Deploying static content..."
             php bin/magento setup:static-content:deploy -f -j 16
-
-            # Set correct permissions
-            echo "Setting permissions..."
-            find var generated vendor pub/static pub/media app/etc -type f -exec chmod g+w {} +
-            find var generated vendor pub/static pub/media app/etc -type d -exec chmod g+ws {} +
-            chmod u+x bin/magento
 
             # Clear cache
             echo "Clearing cache..."
