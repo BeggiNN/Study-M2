@@ -13,7 +13,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
+      - name: Debug
+        run: echo ${{ secrets.SSH_PRIVATE_KEY }}
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
