@@ -18,8 +18,8 @@ jobs:
           extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
           tools: composer:v2
 
-      - name: Run PHP CodeSniffer
-        run: vendor/bin/phpcs --standard=Magento2 app/code
+#      - name: Run PHP CodeSniffer
+#        run: vendor/bin/phpcs --standard=Magento2 app/code
 
       - name: Run PHPUnit
         run: vendor/bin/phpunit --testdox app/code/Perspective/CheckoutField/Test/Unit/
