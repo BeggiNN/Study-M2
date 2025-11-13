@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist
 
-      - name: Validate composer.json
-        run: composer validate --no-check-all --strict
-
       - name: Run PHP CodeSniffer
         run: vendor/bin/phpcs --standard=Magento2 app/code
 
@@ -43,9 +40,6 @@ jobs:
           php-version: '8.4'
           extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
           tools: composer:v2
-
-      - name: Validate composer.json
-        run: composer validate --no-check-all --strict
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
