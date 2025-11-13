@@ -6,6 +6,29 @@ on:
       - STD-roadmap
 
 jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all --strict
+
+      - name: Run PHP CodeSniffer
+        run: vendor/bin/phpcs --standard=Magento2 app/code
+
+      - name: Run PHPUnit
+        run: vendor/bin/phpunit
   deploy:
     name: Deploy to AWS EC2
     runs-on: ubuntu-latest
@@ -13,14 +36,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Debug
-        run: echo ${{ secrets.SSH_PRIVATE_KEY }}
+
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
           extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
           tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --no-check-all --strict
 
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -63,7 +88,7 @@ jobs:
 
             # Deploy static content
             echo "Deploying static content..."
-            php bin/magento setup:static-content:deploy -f
+            php bin/magento setup:static-content:deploy -f -j 16
 
             # Set correct permissions
             echo "Setting permissions..."
