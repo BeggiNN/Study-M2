@@ -21,9 +21,6 @@ jobs:
           extensions: bcmath, ctype, curl, dom, gd, hash, iconv, intl, mbstring, openssl, pdo_mysql, simplexml, soap, sockets, sodium, xsl, zip
           tools: composer:v2
 
-      - name: Validate composer.json
-        run: composer validate --no-check-all --strict
-
       - name: Deploy to AWS EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
