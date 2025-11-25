@@ -384,6 +384,7 @@ return [
         'PayPal_BraintreeGiftWrapping' => 1,
         'PayPal_BraintreeGraphQl' => 1,
         'PayPal_BraintreeReward' => 1,
+        'Perspective_CategoryImport' => 1,
         'Perspective_CheckoutField' => 1
     ]
 ];
