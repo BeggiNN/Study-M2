@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="catalog_product_save_after">
+        <observer name="perspective_inventory_sync_product_save"
+                  instance="Perspective\InventorySync\Observer\ProductSaveAfterObserver"/>
+    </event>
+    <event name="sales_order_place_after">
+        <observer name="perspective_inventory_sync_order_place"
+                  instance="Perspective\InventorySync\Observer\OrderPlaceAfterObserver"/>
+    </event>
+    <event name="inventory_source_item_save_after">
+        <observer name="perspective_inventory_sync_source_item_save"
+                  instance="Perspective\InventorySync\Observer\SourceItemSaveAfterObserver"/>
+    </event>
+</config>

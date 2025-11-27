@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="Perspective\InventorySync\Api\InventoryUpdateInterface"
+                type="Perspective\InventorySync\Model\InventoryUpdate"/>
+
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="inventory_sync_all" xsi:type="object">Perspective\InventorySync\Console\Command\SyncAllCommand</item>
+                <item name="inventory_sync_product" xsi:type="object">Perspective\InventorySync\Console\Command\SyncProductCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>
