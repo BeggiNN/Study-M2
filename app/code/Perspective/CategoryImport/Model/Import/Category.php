@@ -41,8 +41,25 @@ class Category extends AbstractEntity
     public const COL_STORE_ID = 'store_id';
     public const COL_ENTITY_ID = 'entity_id';
 
+    /**
+     * Enable column name check during import
+     *
+     * @var bool
+     */
     protected $needColumnCheck = true;
+
+    /**
+     * Log import process in history
+     *
+     * @var bool
+     */
     protected $logInHistory = true;
+
+    /**
+     * Permanent entity attributes
+     *
+     * @var string[]
+     */
     protected $_permanentAttributes = [
         self::COL_NAME,
         self::COL_PARENT_ID,
@@ -52,6 +69,11 @@ class Category extends AbstractEntity
         self::COL_IS_ACTIVE,
     ];
 
+    /**
+     * Valid column names for import
+     *
+     * @var string[]
+     */
     protected $_validColumnNames = [
         self::COL_ENTITY_ID,
         self::COL_NAME,
@@ -72,13 +94,55 @@ class Category extends AbstractEntity
         self::COL_STORE_ID,
     ];
 
+    /**
+     * @var CategoryFactory
+     */
     private CategoryFactory $categoryFactory;
+
+    /**
+     * @var CategoryRepositoryInterface
+     */
     private CategoryRepositoryInterface $categoryRepository;
+
+    /**
+     * @var CollectionFactory
+     */
     private CollectionFactory $categoryCollectionFactory;
+
+    /**
+     * @var StoreManagerInterface
+     */
     private StoreManagerInterface $storeManager;
+
+    /**
+     * @var LoggerInterface
+     */
     private LoggerInterface $logger;
+
+    /**
+     * Cache for loaded categories
+     *
+     * @var array
+     */
     private array $categoriesCache = [];
 
+    /**
+     * Constructor
+     *
+     * @param JsonHelper $jsonHelper
+     * @param ImportHelper $importExportData
+     * @param Data $importData
+     * @param Config $config
+     * @param ResourceConnection $resource
+     * @param Helper $resourceHelper
+     * @param StringUtils $string
+     * @param ProcessingErrorAggregatorInterface $errorAggregator
+     * @param CategoryFactory $categoryFactory
+     * @param CategoryRepositoryInterface $categoryRepository
+     * @param CollectionFactory $categoryCollectionFactory
+     * @param StoreManagerInterface $storeManager
+     * @param LoggerInterface $logger
+     */
     public function __construct(
         JsonHelper $jsonHelper,
         ImportHelper $importExportData,
@@ -112,11 +176,23 @@ class Category extends AbstractEntity
         );
     }
 
+    /**
+     * Get entity type code
+     *
+     * @return string
+     */
     public function getEntityTypeCode(): string
     {
         return self::ENTITY_CODE;
     }
 
+    /**
+     * Validate row data for import
+     *
+     * @param array $rowData
+     * @param int $rowNum
+     * @return bool
+     */
     public function validateRow(array $rowData, $rowNum): bool
     {
         if (isset($this->_validatedRows[$rowNum])) {
@@ -141,6 +217,11 @@ class Category extends AbstractEntity
         return !$this->getErrorAggregator()->isRowInvalid($rowNum);
     }
 
+    /**
+     * Import data rows
+     *
+     * @return bool
+     */
     protected function _importData(): bool
     {
         if (Import::BEHAVIOR_DELETE === $this->getBehavior()) {
@@ -154,6 +235,11 @@ class Category extends AbstractEntity
         return true;
     }
 
+    /**
+     * Save new categories from import data
+     *
+     * @return void
+     */
     protected function saveCategories(): void
     {
         while ($bunch = $this->_dataSourceModel->getNextBunch()) {
@@ -172,6 +258,11 @@ class Category extends AbstractEntity
         }
     }
 
+    /**
+     * Replace existing categories with import data
+     *
+     * @return void
+     */
     protected function replaceCategories(): void
     {
         while ($bunch = $this->_dataSourceModel->getNextBunch()) {
@@ -195,6 +286,11 @@ class Category extends AbstractEntity
         }
     }
 
+    /**
+     * Delete categories based on import data
+     *
+     * @return void
+     */
     protected function deleteCategories(): void
     {
         while ($bunch = $this->_dataSourceModel->getNextBunch()) {
@@ -213,20 +309,23 @@ class Category extends AbstractEntity
         }
     }
 
+    /**
+     * Save single category
+     *
+     * @param array $rowData
+     * @return void
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
     protected function saveCategory(array $rowData): void
     {
         $category = $this->categoryFactory->create();
 
-        $storeId = !empty($rowData[self::COL_STORE_ID])
-            ? (int)$rowData[self::COL_STORE_ID]
-            : \Magento\Store\Model\Store::DEFAULT_STORE_ID;
+        // Set store ID from row data or use admin store
+        $storeId = $this->getStoreId($rowData);
         $category->setStoreId($storeId);
 
         $category->setName($rowData[self::COL_NAME]);
-
-        $parentId = !empty($rowData[self::COL_PARENT_ID])
-            ? (int)$rowData[self::COL_PARENT_ID]
-            : $this->storeManager->getStore()->getRootCategoryId();
+        $parentId = $this->getParentId($rowData, $storeId);
         $category->setParentId($parentId);
 
         $this->setCategoryAttributes($category, $rowData);
@@ -235,11 +334,17 @@ class Category extends AbstractEntity
         $this->countItemsCreated++;
     }
 
+    /**
+     * Update existing category
+     *
+     * @param \Magento\Catalog\Api\Data\CategoryInterface $category
+     * @param array $rowData
+     * @return void
+     * @throws \Magento\Framework\Exception\CouldNotSaveException
+     */
     protected function updateCategory($category, array $rowData): void
     {
-        $storeId = !empty($rowData[self::COL_STORE_ID])
-            ? (int)$rowData[self::COL_STORE_ID]
-            : \Magento\Store\Model\Store::DEFAULT_STORE_ID;
+        $storeId = $this->getStoreId($rowData);
         $category->setStoreId($storeId);
 
         if (isset($rowData[self::COL_NAME])) {
@@ -252,6 +357,13 @@ class Category extends AbstractEntity
         $this->countItemsUpdated++;
     }
 
+    /**
+     * Set category attributes from row data
+     *
+     * @param \Magento\Catalog\Api\Data\CategoryInterface $category
+     * @param array $rowData
+     * @return void
+     */
     protected function setCategoryAttributes($category, array $rowData): void
     {
         if (isset($rowData[self::COL_POSITION])) {
@@ -300,6 +412,12 @@ class Category extends AbstractEntity
         }
     }
 
+    /**
+     * Find exist category
+     *
+     * @param array $rowData
+     * @return \Magento\Catalog\Api\Data\CategoryInterface|mixed|null
+     */
     protected function findExistingCategory(array $rowData)
     {
         if (!empty($rowData[self::COL_ENTITY_ID])) {
@@ -330,8 +448,53 @@ class Category extends AbstractEntity
         return null;
     }
 
+    /**
+     * Get colum names
+     *
+     * @return string[]
+     */
     public function getValidColumnNames(): array
     {
         return $this->_validColumnNames;
+    }
+
+    /**
+     * Get store ID from row data or return admin store ID
+     *
+     * @param array $rowData
+     * @return int
+     */
+    protected function getStoreId(array $rowData): int
+    {
+        if (!empty($rowData[self::COL_STORE_ID])) {
+            return (int)$rowData[self::COL_STORE_ID];
+        }
+
+        return \Magento\Store\Model\Store::DEFAULT_STORE_ID;
+    }
+
+    /**
+     * Get parent ID from row data or return root category ID for specified store
+     *
+     * @param array $rowData
+     * @param int $storeId
+     * @return int
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    protected function getParentId(array $rowData, int $storeId): int
+    {
+        if (!empty($rowData[self::COL_PARENT_ID])) {
+            return (int)$rowData[self::COL_PARENT_ID];
+        }
+
+        try {
+            $store = $this->storeManager->getStore($storeId);
+            return (int)$store->getRootCategoryId();
+        } catch (\Exception $e) {
+            $this->logger->warning(
+                sprintf('Could not get root category for store %d: %s', $storeId, $e->getMessage())
+            );
+            return $this->storeManager->getDefaultStoreView()->getRootCategoryId();
+        }
     }
 }
