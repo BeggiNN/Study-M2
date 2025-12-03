@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="AdminEnableInventorySyncTest">
+        <annotations>
+            <features value="InventorySync"/>
+            <stories value="Enable/Disable Module"/>
+            <title value="Admin can enable Inventory Sync module"/>
+            <description value="Verify that admin user can enable Inventory Sync module and save configuration"/>
+            <severity value="CRITICAL"/>
+            <testCaseId value="INVENTORY-SYNC-002"/>
+            <group value="inventory_sync"/>
+            <group value="configuration"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+
+        <after>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
+        </after>
+
+        <actionGroup ref="AdminNavigateToInventorySyncConfigActionGroup" stepKey="navigateToConfig"/>
+
+        <selectOption selector="{{AdminInventorySyncConfigSection.enabledField}}" userInput="Yes" stepKey="enableModule"/>
+
+        <fillField selector="{{AdminInventorySyncConfigSection.apiUrlField}}" userInput="http://laravel-nginx-1/api/inventory" stepKey="fillApiUrl"/>
+
+        <actionGroup ref="AdminSaveInventorySyncConfigActionGroup" stepKey="saveConfig"/>
+    </test>
+</tests>

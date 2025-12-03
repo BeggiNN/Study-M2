@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sections xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/sectionObject.xsd">
+    <section name="AdminInventorySyncConfigSection">
+        <element name="inventorySyncTab" type="button" selector="#inventory_sync-head"/>
+        <element name="generalGroup" type="button" selector="#inventory_sync_general-head"/>
+        <element name="enabledField" type="select" selector="#inventory_sync_general_enabled"/>
+        <element name="apiUrlField" type="input" selector="#inventory_sync_general_api_url"/>
+        <element name="timeoutField" type="input" selector="#inventory_sync_general_timeout"/>
+        <element name="autoSyncField" type="select" selector="#inventory_sync_general_auto_sync"/>
+        <element name="syncOnSaveField" type="select" selector="#inventory_sync_general_sync_on_save"/>
+        <element name="syncOnOrderField" type="select" selector="#inventory_sync_general_sync_on_order"/>
+        <element name="debugModeField" type="select" selector="#inventory_sync_general_debug_mode"/>
+        <element name="saveConfigButton" type="button" selector="#save"/>
+        <element name="successMessage" type="text" selector="div.message-success"/>
+    </section>
+</sections>

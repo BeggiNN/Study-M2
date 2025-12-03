@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pages xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Page/etc/pageSchema.xsd">
+    <page name="AdminInventorySyncConfigPage" url="admin/system_config/edit/section/inventory_sync" area="admin" module="Magento_Config">
+        <section name="AdminInventorySyncConfigSection"/>
+    </page>
+</pages>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="SimpleConnectionTest">
+        <annotations>
+            <features value="InventorySync"/>
+            <stories value="Test Selenium Connection"/>
+            <title value="Simple connection test"/>
+            <description value="Test if Selenium can connect to Magento"/>
+            <severity value="CRITICAL"/>
+            <testCaseId value="CONN-001"/>
+            <group value="inventory_sync"/>
+        </annotations>
+
+        <amOnPage url="/" stepKey="openHomePage"/>
+        <waitForPageLoad stepKey="waitForPage"/>
+        <see userInput="Magento" stepKey="seeMagento"/>
+    </test>
+</tests>

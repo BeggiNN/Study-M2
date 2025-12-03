@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actionGroups xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/actionGroupSchema.xsd">
+    <actionGroup name="AdminNavigateToInventorySyncConfigActionGroup">
+        <annotations>
+            <description>Navigate to Inventory Sync configuration page in admin</description>
+        </annotations>
+        <amOnPage url="{{AdminInventorySyncConfigPage.url}}" stepKey="navigateToInventorySyncConfig"/>
+        <waitForPageLoad stepKey="waitForConfigPageLoad"/>
+        <conditionalClick selector="{{AdminInventorySyncConfigSection.inventorySyncTab}}" dependentSelector="{{AdminInventorySyncConfigSection.generalGroup}}" visible="false" stepKey="expandInventorySyncTab"/>
+        <waitForElementVisible selector="{{AdminInventorySyncConfigSection.generalGroup}}" stepKey="waitForGeneralGroup"/>
+        <conditionalClick selector="{{AdminInventorySyncConfigSection.generalGroup}}" dependentSelector="{{AdminInventorySyncConfigSection.enabledField}}" visible="false" stepKey="expandGeneralGroup"/>
+        <waitForElementVisible selector="{{AdminInventorySyncConfigSection.enabledField}}" stepKey="waitForEnabledField"/>
+    </actionGroup>
+</actionGroups>

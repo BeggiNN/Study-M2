@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tests xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:noNamespaceSchemaLocation="urn:magento:mftf:Test/etc/testSchema.xsd">
+    <test name="AdminInventorySyncConfigTest">
+        <annotations>
+            <features value="InventorySync"/>
+            <stories value="Admin Configuration"/>
+            <title value="Admin can access and view Inventory Sync configuration"/>
+            <description value="Verify that admin user can navigate to Inventory Sync configuration page and see all configuration fields"/>
+            <severity value="CRITICAL"/>
+            <testCaseId value="INVENTORY-SYNC-001"/>
+            <group value="inventory_sync"/>
+            <group value="configuration"/>
+        </annotations>
+
+        <before>
+            <actionGroup ref="AdminLoginActionGroup" stepKey="loginAsAdmin"/>
+        </before>
+
+        <after>
+            <actionGroup ref="AdminLogoutActionGroup" stepKey="logout"/>
+        </after>
+
+        <amOnPage url="{{AdminInventorySyncConfigPage.url}}" stepKey="navigateToConfig"/>
+        <waitForPageLoad stepKey="waitForPage"/>
+
+        <see userInput="Inventory Sync" stepKey="seePageTitle"/>
+    </test>
+</tests>
